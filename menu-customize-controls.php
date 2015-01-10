@@ -198,10 +198,10 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 		<div id="menu-item-{{ data.menu_item_id }}" class="{{ data.el_classes }}" data-item-depth="{{ data.depth }}">
 			<dl class="menu-item-bar">
 				<dt class="menu-item-handle">
-					<span class="item-type">{{ data.item_type_label }}</span>
+					<span class="item-type">{{{ data.item_type_label }}}</span>
 					<span class="item-title">
 						<span class="spinner"></span>
-						<span class="menu-item-title">{{ data.title }}</span>
+						<span class="menu-item-title">{{{ data.title }}}</span>
 						<span class="is-submenu"><?php _e( 'sub item' ); ?></span>
 					</span>
 					<span class="item-controls">
@@ -222,7 +222,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 				<p class="description description-thin">
 					<label for="edit-menu-item-title-{{ data.menu_item_id }}">
 						<?php _e( 'Navigation Label' ); ?><br />
-						<input type="text" id="edit-menu-item-title-{{ data.menu_item_id }}" class="widefat edit-menu-item-title" name="menu-item-title" value="{{ data.title }}" />
+						<input type="text" id="edit-menu-item-title-{{ data.menu_item_id }}" class="widefat edit-menu-item-title" name="menu-item-title" value="{{{ data.title }}}" />
 					</label>
 				</p>
 				<p class="field-link-target description description-thin">
@@ -260,7 +260,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 				<div class="menu-item-actions description-thin submitbox">
 					<# if ( 'custom' != data.item_type && data.original_title !== false ) { #>
 						<p class="link-to-original">
-							<?php _e( 'Original:' ); ?> <a href="{{ data.url }}" target="_blank">{{ data.original_title }}</a>
+							<?php _e( 'Original:' ); ?> <a href="{{ data.url }}" target="_blank">{{{ data.original_title }}}</a>
 						</p>
 					<# } #>
 					<a class="item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}" href="#"><?php _e( 'Remove' ); ?></a>
