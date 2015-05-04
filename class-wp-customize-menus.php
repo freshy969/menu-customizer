@@ -37,19 +37,19 @@ class WP_Customize_Menus {
 		$this->previewed_menus = array();
 		$this->manager = $manager;
 
-		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'menu_customizer_new_menu_ajax' ) );
-		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'menu_customizer_delete_menu_ajax' ) );
-		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'menu_customizer_update_item_ajax' ) );
-		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'menu_customizer_add_item_ajax' ) );
-		add_action( 'customize_controls_enqueue_scripts', array( $this, 'menu_customizer_enqueue' ) );
-		add_action( 'customize_register', array( $this, 'menu_customizer_customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
-		add_action( 'customize_update_menu_name', array( $this, 'menu_customizer_update_menu_name' ), 10, 2 );
-		add_action( 'customize_update_menu_autoadd', array( $this, 'menu_customizer_update_menu_autoadd' ), 10, 2 );
-		add_action( 'customize_preview_nav_menu', array( $this, 'menu_customizer_preview_nav_menu' ), 10, 1 );
-		add_filter( 'wp_get_nav_menu_items', array( $this, 'menu_customizer_filter_nav_menu_items_for_preview' ), 10, 2 );
-		add_action( 'customize_update_nav_menu', array( $this, 'menu_customizer_update_nav_menu' ), 10, 2 );
-		add_action( 'customize_controls_print_footer_scripts', array( $this, 'menu_customizer_print_templates' ) );
-		add_action( 'customize_controls_print_footer_scripts', array( $this, 'menu_customizer_available_items_template' ) );
+		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'new_menu_ajax' ) );
+		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) );
+		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) );
+		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) );
+		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
+		add_action( 'customize_update_menu_name', array( $this, 'update_menu_name' ), 10, 2 );
+		add_action( 'customize_update_menu_autoadd', array( $this, 'update_menu_autoadd' ), 10, 2 );
+		add_action( 'customize_preview_nav_menu', array( $this, 'preview_nav_menu' ), 10, 1 );
+		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_nav_menu_items_for_preview' ), 10, 2 );
+		add_action( 'customize_update_nav_menu', array( $this, 'update_nav_menu' ), 10, 2 );
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 
 	}
 
@@ -59,7 +59,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.0.
 	 * @access public
 	 */
-	public function menu_customizer_new_menu_ajax() {
+	public function new_menu_ajax() {
 		check_ajax_referer( 'customize-menus', 'customize-nav-menu-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
@@ -88,7 +88,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.0.
 	 * @access public
 	 */
-	public function menu_customizer_delete_menu_ajax() {
+	public function delete_menu_ajax() {
 		check_ajax_referer( 'customize-menus', 'customize-nav-menu-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
@@ -115,7 +115,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.0.
 	 * @access public
 	 */
-	public function menu_customizer_update_item_ajax() {
+	public function update_item_ajax() {
 		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
@@ -126,7 +126,7 @@ class WP_Customize_Menus {
 		$item_id = $_POST['item_id'];
 		$menu_item_data = (array) $_POST['menu-item'];
 
-		$id = $this->menu_customizer_update_item( 0, $item_id, $menu_item_data, $clone );
+		$id = $this->update_item( 0, $item_id, $menu_item_data, $clone );
 
 		if ( ! is_wp_error( $id ) ) {
 			echo $id;
@@ -143,7 +143,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.0.
 	 * @access public
 	 */
-	public function menu_customizer_add_item_ajax() {
+	public function add_item_ajax() {
 		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
@@ -237,7 +237,7 @@ class WP_Customize_Menus {
 		wp_die();
 	}
 
-	public function menu_customizer_enqueue() {
+	public function enqueue() {
 		wp_enqueue_style( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.css' );
 		wp_enqueue_script( 'menu-customizer-options', plugin_dir_url( __FILE__ ) . 'menu-customizer-options.js', array( 'jquery' ) );
 		wp_enqueue_script( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.js', array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion' ) );
@@ -248,8 +248,8 @@ class WP_Customize_Menus {
 		$settings = array(
 			'nonce'                => wp_create_nonce( 'customize-menus' ),
 			'allMenus'             => wp_get_nav_menus(),
-			'availableMenuItems'   => $this->menu_customizer_available_items(),
-			'itemTypes'            => $this->menu_customizer_available_item_types(),
+			'availableMenuItems'   => $this->available_items(),
+			'itemTypes'            => $this->available_item_types(),
 			'l10n'                 => array(
 				'untitled'        => _x( '(no label)', 'Missing menu item navigation label.' ),
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
@@ -267,7 +267,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.0
 	 * @param WP_Customize_Manager $manager Theme Customizer object.
 	 */
-	public function menu_customizer_customize_register( $manager ) {
+	public function customize_register( $manager ) {
 		require_once( plugin_dir_path( __FILE__ ) . '/menu-customize-controls.php' );
 
 		// Require JS-rendered control types.
@@ -463,7 +463,7 @@ class WP_Customize_Menus {
 	 * @param mixed                $value   Value of the setting.
 	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
 	 */
-	public function menu_customizer_update_menu_name( $value, $setting ) {
+	public function update_menu_name( $value, $setting ) {
 		if ( ! $value || ! $setting ) {
 			return;
 		}
@@ -490,7 +490,7 @@ class WP_Customize_Menus {
 	 * @param mixed                $value   Value of the setting.
 	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
 	 */
-	public function menu_customizer_update_menu_autoadd( $value, $setting ) {
+	public function update_menu_autoadd( $value, $setting ) {
 		if ( ! $setting ) {
 			return;
 		}
@@ -532,7 +532,7 @@ class WP_Customize_Menus {
 	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
 	 * @return WP_Post|WP_Error The nav_menu post that corresponds to a setting, or a WP_Error if it doesn't exist.
 	 */
-	public function menu_customizer_preview_nav_menu( $setting ) {
+	public function preview_nav_menu( $setting ) {
 		$menu_id = str_replace( 'nav_menu_', '', $setting->id );
 
 		// Ensure that $menu_id is valid.
@@ -556,7 +556,7 @@ class WP_Customize_Menus {
 	 * @param stdClass $menu aka WP_Term
 	 * @return array
 	 */
-	public function menu_customizer_filter_nav_menu_items_for_preview( $items, $menu ) {
+	public function filter_nav_menu_items_for_preview( $items, $menu ) {
 		if ( ! isset( $this->previewed_menus[ $menu->term_id ] ) ) {
 			return $items;
 		}
@@ -593,7 +593,7 @@ class WP_Customize_Menus {
 	 * @param array                $value   Ordered array of the new menu item ids.
 	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
 	 */
-	public function menu_customizer_update_nav_menu( $value, $setting ) {
+	public function update_nav_menu( $value, $setting ) {
 		$menu_id = str_replace( 'nav_menu_', '', $setting->id );
 
 		// Ensure that $menu_id is valid.
@@ -628,7 +628,7 @@ class WP_Customize_Menus {
 		$i = 1;
 		foreach ( $items as $item_id ) {
 			// Assign the existing item to this menu, in case it's orphaned. Update the order, regardless.
-			$this->menu_customizer_update_item_order( $menu_id, $item_id, $i );
+			$this->update_item_order( $menu_id, $item_id, $i );
 			$i++;
 		}
 
@@ -639,7 +639,7 @@ class WP_Customize_Menus {
 		}
 	}
 
-	 public function menu_customizer_update_menu_item_order( $menu_id, $item_id, $order ) {
+	 public function update_menu_item_order( $menu_id, $item_id, $order ) {
 		$item_id = (int) $item_id;
 
 		// Make sure that we don't convert non-nav_menu objects into nav_menu_item_objects.
@@ -680,7 +680,7 @@ class WP_Customize_Menus {
 	 * @param array $data    The new data for the menu item.
 	 * @param int|WP_Error   The menu item's database ID or WP_Error object on failure.
 	 */
-	public function menu_customizer_update_item( $menu_id, $item_id, $data, $clone = false ) {
+	public function update_item( $menu_id, $item_id, $data, $clone = false ) {
 		$item = get_post( $item_id );
 		$item = wp_setup_nav_menu_item( $item );
 		$defaults = array(
@@ -718,7 +718,7 @@ class WP_Customize_Menus {
 	 *
 	 * @return array All potential menu items' names, object ids, and types.
 	 */
-	public function menu_customizer_available_items() {
+	public function available_items() {
 		$items = array();
 
 		$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'object' );
@@ -800,7 +800,7 @@ class WP_Customize_Menus {
 	/**
 	 * No docs yet
 	 */
-	public function menu_customizer_available_item_types() {
+	public function available_item_types() {
 		$types = get_post_types( array( 'show_in_nav_menus' => true ), 'names' );
 		$taxes = get_taxonomies( array( 'show_in_nav_menus' => true ), 'names' );
 		return array_merge( $types, $taxes );
@@ -813,7 +813,7 @@ class WP_Customize_Menus {
 	 *
 	 * @since Menu Customizer 0.0
 	 */
-	public function menu_customizer_print_templates() {
+	public function print_templates() {
 		?>
 		<script type="text/html" id="tmpl-available-menu-item">
 			<div id="menu-item-tpl-{{ data.id }}" class="menu-item-tpl" data-menu-item-id="{{ data.id }}">
@@ -878,7 +878,7 @@ class WP_Customize_Menus {
 	 *
 	 * @since Menu Customizer 0.0
 	 */
-	public function menu_customizer_available_items_template() {
+	public function available_items_template() {
 		?>
 		<div id="available-menu-items" class="accordion-container">
 			<div id="new-custom-menu-item" class="accordion-section">
