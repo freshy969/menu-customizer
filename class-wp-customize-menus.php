@@ -296,7 +296,7 @@ class WP_Customize_Menus {
 		$this->manager->add_setting( 'menu_customizer_options', array(
 			'type' => 'menu_options',
 		) );
-		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $manager, 'menu_customizer_options', array(
+		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $this->manager, 'menu_customizer_options', array(
 			'section' => 'nav',
 			'priority' => 20,
 		) ) );
@@ -375,7 +375,7 @@ class WP_Customize_Menus {
 				) );
 
 				// Create a control for each menu item.
-				$this->manager->add_control( new WP_Customize_Menu_Item_Control( $manager, $menu_item_setting_id, array(
+				$this->manager->add_control( new WP_Customize_Menu_Item_Control( $this->manager, $menu_item_setting_id, array(
 					'label'       => $item->title,
 					'section'     => $section_id,
 					'priority'    => 10 + $i,
@@ -391,7 +391,7 @@ class WP_Customize_Menus {
 				'default'   => $item_ids,
 			) );
 
-			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $manager, $nav_menu_setting_id, array(
+			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $this->manager, $nav_menu_setting_id, array(
 				'section'   => $section_id,
 				'menu_id'   => $menu_id,
 				'priority'  => 998,
@@ -449,7 +449,7 @@ class WP_Customize_Menus {
 			'type' => 'new_menu',
 		) );
 
-		$this->manager->add_control( new WP_New_Menu_Customize_Control( $manager, 'create_new_menu', array(
+		$this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
 			'section'  => 'add_menu',
 		) ) );
 	}
