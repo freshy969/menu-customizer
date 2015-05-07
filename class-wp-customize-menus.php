@@ -737,7 +737,7 @@ class WP_Customize_Menus {
 				);
 				$allposts = get_posts( $args );
 				foreach ( $allposts as $post ) {
-					$item[] = array(
+					$items[] = array(
 						'id'          => 'post-' . $post->ID,
 						'name'        => $post->post_title,
 						'type'        => $post_type->name,
