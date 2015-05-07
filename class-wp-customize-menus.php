@@ -432,7 +432,7 @@ class WP_Customize_Menus {
 		$this->manager->add_section( 'add_menu', array(
 			'title'     => __( 'New Menu' ),
 			'panel'     => 'menus',
-			'priority'  => 99,
+			'priority'  => 999,
 		) );
 
 		$this->manager->add_setting( 'new_menu_name', array(
