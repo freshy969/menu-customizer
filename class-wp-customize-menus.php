@@ -237,6 +237,11 @@ class WP_Customize_Menus {
 		wp_die();
 	}
 
+	/**
+	 * Enqueue scripts and styles.
+	 *
+	 * @since Menu Customizer 0.0
+	 */
 	public function enqueue() {
 		wp_enqueue_style( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.css', '0.0' );
 		wp_enqueue_script( 'menu-customizer-options', plugin_dir_url( __FILE__ ) . 'menu-customizer-options.js', array( 'jquery' ) );
@@ -645,8 +650,10 @@ class WP_Customize_Menus {
 	 * Skips the mess that is wp_update_nav_menu_item() and avoids
 	 * handling menu item fields that are not changed.
 	 *
-	 * Based on the parts of wp_update_nav_menu_item() that are needed here.
-	 * $menu_id must already be validated before running this function (to avoid re-validating for each item in the menu).
+	 * Based on the parts of wp_update_nav_menu_item() that are needed here. $menu_id must already be 
+	 * validated before running this function (to avoid re-validating for each item in the menu).
+	 *
+	 * @since Menu Customizer 0.0
 	 *
 	 * @param int $menu_id The valid ID of the menu.
 	 * @param int $item_id The ID of the (existing) menu item.
@@ -812,7 +819,9 @@ class WP_Customize_Menus {
 	}
 
 	/**
-	 * No docs yet
+	 * Return an array of all the available item types.
+	 *
+	 * @since Menu Customizer 0.0
 	 */
 	public function available_item_types() {
 		$types = get_post_types( array( 'show_in_nav_menus' => true ), 'names' );
