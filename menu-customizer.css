@@ -21,12 +21,12 @@
 .wp-customizer .menu-item-settings,
 .wp-customizer .menu-item-settings .description-thin {
 	-webkit-box-sizing: border-box;
-	-moz-box-sizing:    border-box;
-	box-sizing:         border-box;
+	-moz-box-sizing:	border-box;
+	box-sizing: 		border-box;
 }
 
 .wp-customizer .menu-item-bar {
-    margin: 0;
+	margin: 0;
 }
 
 .wp-customizer .menu-item-bar .menu-item-handle {
@@ -201,7 +201,7 @@
 }
 
 .reordering .menu-item-reorder-nav {
-    display: block;
+	display: block;
 }
 
 /* Targets the menu name inputs. */
@@ -295,7 +295,7 @@
 
 /* Screen Options */
 #customizer-menu-screen-options-button {
-    position: absolute;
+	position: absolute;
 	top: 36px;
 	right: 56px;
 	color: #555;
@@ -313,11 +313,11 @@
 }
 
 #customizer-menu-screen-options-button:after {
-    position: absolute;
+	position: absolute;
 	top: 0;
 	left: 0;
 	font: normal 20px/1 'dashicons';
-    content: "\f180";
+	content: "\f180";
 	display: block;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
@@ -559,15 +559,15 @@
 }
 
 #available-menu-items .menu-item-handle .item-type {
-    padding-right: 0;
+	padding-right: 0;
 }
 
 #available-menu-items .menu-item-handle .item-title {
-    padding-left: 20px;
+	padding-left: 20px;
 }
 
 #available-menu-items .menu-item-handle {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 #available-menu-items .item-top,
