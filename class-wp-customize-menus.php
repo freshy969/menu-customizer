@@ -628,7 +628,7 @@ class WP_Customize_Menus {
 		$i = 1;
 		foreach ( $items as $item_id ) {
 			// Assign the existing item to this menu, in case it's orphaned. Update the order, regardless.
-			$this->update_item_order( $menu_id, $item_id, $i );
+			$this->update_menu_item_order( $menu_id, $item_id, $i );
 			$i++;
 		}
 
@@ -639,7 +639,21 @@ class WP_Customize_Menus {
 		}
 	}
 
-	 public function update_menu_item_order( $menu_id, $item_id, $order ) {
+	/**
+	 * Updates the order for and publishes an existing menu item.
+	 *
+	 * Skips the mess that is wp_update_nav_menu_item() and avoids
+	 * handling menu item fields that are not changed.
+	 *
+	 * Based on the parts of wp_update_nav_menu_item() that are needed here.
+	 * $menu_id must already be validated before running this function (to avoid re-validating for each item in the menu).
+	 *
+	 * @param int $menu_id The valid ID of the menu.
+	 * @param int $item_id The ID of the (existing) menu item.
+	 * @param int $order   The menu item's new order/position.
+	 * @return int|WP_Error The menu item's database ID or WP_Error object on failure.
+	 */
+	public function update_menu_item_order( $menu_id, $item_id, $order ) {
 		$item_id = (int) $item_id;
 
 		// Make sure that we don't convert non-nav_menu objects into nav_menu_item_objects.
