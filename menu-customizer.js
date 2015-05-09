@@ -1655,11 +1655,10 @@
 		// Deletes a menu (pending user confirmation).
 		submitDelete: function( el ) {
 			var params, dropdowns,
-				menu_id = $( el) .attr( 'id' ),
+				menuId = $( el ).attr( 'id' ).replace( 'delete-menu-', '' ),
 				section = $( el ).closest( '.accordion-section' ),
 				next = section.next().find( '.accordion-section-title' );
-			menu_id = menu_id.replace( 'delete-menu-', '' );
-			if ( menu_id ) {
+			if ( menuId ) {
 				// Prompt user with an AYS.
 				if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
 					section.addClass( 'deleting' );
@@ -1667,18 +1666,18 @@
 					// Delete the menu.
 					params = {
 						'action': 'delete-menu-customizer',
-						'menu_id': menu_id,
+						'menu': menuId,
 						'customize-nav-menu-nonce': api.Menus.data.nonce
 					};
 					$.post( wp.ajax.settings.url, params, function() {
 						// Remove the UI, once menu has been deleted.
-						section.slideUp( 'slow', function() {
+						section.slideUp( 'fast', function() {
 							section.remove(); // @todo core there should be API methods for deleting sections.
 						} );
 
 						// Remove the option from the theme location dropdowns.
 						dropdowns = $( '#accordion-section-nav .customize-control select' );
-						dropdowns.find( 'option[value=' + menu_id + ']' ).remove();
+						dropdowns.find( 'option[value=' + menuId + ']' ).remove();
 					} );
 				}
 			}

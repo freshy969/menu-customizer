@@ -95,7 +95,7 @@ class WP_Customize_Menus {
 			wp_die( -1 );
 		}
 
-		$menu_id = absint( $_POST['menu_id'] );
+		$menu_id = absint( $_POST['menu'] );
 
 		if ( is_nav_menu( $menu_id ) ) {
 			$deletion = wp_delete_nav_menu( $menu_id );
