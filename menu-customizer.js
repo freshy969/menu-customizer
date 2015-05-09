@@ -1666,6 +1666,7 @@
 					// Delete the menu.
 					params = {
 						'action': 'delete-menu-customizer',
+						'wp_customize': 'on',
 						'menu': menuId,
 						'customize-nav-menu-nonce': api.Menus.data.nonce
 					};
