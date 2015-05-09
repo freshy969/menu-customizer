@@ -286,13 +286,13 @@ class WP_Customize_Menus {
 			'priority'     => 30,
 		) );
 
-		// Rebrand the existing "Navigation" section to the global theme locations section.
+		// Rebrand the existing "Navigation" section title and add it to the global 'menus' panel.
 		$locations = get_registered_nav_menus();
 		$num_locations = count( array_keys( $locations ) );
 		$description = sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
 		$description .= '<br>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' );
 
-		$this->manager->get_section( 'nav' )->title = __( 'Theme Locations' );
+		$this->manager->get_section( 'nav' )->title = __( 'Menu Locations' );
 		$this->manager->get_section( 'nav' )->description = $description;
 		$this->manager->get_section( 'nav' )->priority = 5;
 		$this->manager->get_section( 'nav' )->panel = 'menus';
