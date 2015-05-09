@@ -184,6 +184,7 @@ class WP_Customize_Menus {
 		}
 
 		// make the "Home" item into the custom link that it actually is.
+		// @todo: do we really need this - the standard menu screen doesn't, so why are we doing it?
 		if ( 'page' == $menu_item_data['type'] && 'custom' == $menu_item_data['obj_type'] ) {
 			$menu_item_data['type'] = 'custom';
 			$menu_item_data['url'] = home_url( '/' );
