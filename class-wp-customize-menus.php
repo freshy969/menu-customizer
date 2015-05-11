@@ -95,7 +95,7 @@ class WP_Customize_Menus {
 			wp_die( -1 );
 		}
 
-		$menu_id = absint( $_POST['menu_id'] );
+		$menu_id = absint( $_POST['menu'] );
 
 		if ( is_nav_menu( $menu_id ) ) {
 			$deletion = wp_delete_nav_menu( $menu_id );
@@ -184,6 +184,7 @@ class WP_Customize_Menus {
 		}
 
 		// make the "Home" item into the custom link that it actually is.
+		// @todo: do we really need this - the standard menu screen doesn't, so why are we doing it?
 		if ( 'page' == $menu_item_data['type'] && 'custom' == $menu_item_data['obj_type'] ) {
 			$menu_item_data['type'] = 'custom';
 			$menu_item_data['url'] = home_url( '/' );
@@ -237,6 +238,11 @@ class WP_Customize_Menus {
 		wp_die();
 	}
 
+	/**
+	 * Enqueue scripts and styles.
+	 *
+	 * @since Menu Customizer 0.0
+	 */
 	public function enqueue() {
 		wp_enqueue_style( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.css' );
 		wp_enqueue_script( 'menu-customizer-options', plugin_dir_url( __FILE__ ) . 'menu-customizer-options.js', array( 'jquery' ) );
@@ -281,13 +287,13 @@ class WP_Customize_Menus {
 			'priority'     => 30,
 		) );
 
-		// Rebrand the existing "Navigation" section to the global theme locations section.
+		// Rebrand the existing "Navigation" section title and add it to the global 'menus' panel.
 		$locations = get_registered_nav_menus();
 		$num_locations = count( array_keys( $locations ) );
 		$description = sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
 		$description .= '<br>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' );
 
-		$this->manager->get_section( 'nav' )->title = __( 'Theme Locations' );
+		$this->manager->get_section( 'nav' )->title = __( 'Menu Locations' );
 		$this->manager->get_section( 'nav' )->description = $description;
 		$this->manager->get_section( 'nav' )->priority = 5;
 		$this->manager->get_section( 'nav' )->panel = 'menus';
@@ -296,7 +302,7 @@ class WP_Customize_Menus {
 		$this->manager->add_setting( 'menu_customizer_options', array(
 			'type' => 'menu_options',
 		) );
-		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $manager, 'menu_customizer_options', array(
+		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $this->manager, 'menu_customizer_options', array(
 			'section' => 'nav',
 			'priority' => 20,
 		) ) );
@@ -375,7 +381,7 @@ class WP_Customize_Menus {
 				) );
 
 				// Create a control for each menu item.
-				$this->manager->add_control( new WP_Customize_Menu_Item_Control( $manager, $menu_item_setting_id, array(
+				$this->manager->add_control( new WP_Customize_Menu_Item_Control( $this->manager, $menu_item_setting_id, array(
 					'label'       => $item->title,
 					'section'     => $section_id,
 					'priority'    => 10 + $i,
@@ -391,7 +397,7 @@ class WP_Customize_Menus {
 				'default'   => $item_ids,
 			) );
 
-			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $manager, $nav_menu_setting_id, array(
+			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $this->manager, $nav_menu_setting_id, array(
 				'section'   => $section_id,
 				'menu_id'   => $menu_id,
 				'priority'  => 998,
@@ -427,7 +433,7 @@ class WP_Customize_Menus {
 		$this->manager->add_section( 'add_menu', array(
 			'title'     => __( 'New Menu' ),
 			'panel'     => 'menus',
-			'priority'  => 99,
+			'priority'  => 999,
 		) );
 
 		$this->manager->add_setting( 'new_menu_name', array(
@@ -449,7 +455,7 @@ class WP_Customize_Menus {
 			'type' => 'new_menu',
 		) );
 
-		$this->manager->add_control( new WP_New_Menu_Customize_Control( $manager, 'create_new_menu', array(
+		$this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
 			'section'  => 'add_menu',
 		) ) );
 	}
@@ -628,7 +634,7 @@ class WP_Customize_Menus {
 		$i = 1;
 		foreach ( $items as $item_id ) {
 			// Assign the existing item to this menu, in case it's orphaned. Update the order, regardless.
-			$this->update_item_order( $menu_id, $item_id, $i );
+			$this->update_menu_item_order( $menu_id, $item_id, $i );
 			$i++;
 		}
 
@@ -639,7 +645,23 @@ class WP_Customize_Menus {
 		}
 	}
 
-	 public function update_menu_item_order( $menu_id, $item_id, $order ) {
+	/**
+	 * Updates the order for and publishes an existing menu item.
+	 *
+	 * Skips the mess that is wp_update_nav_menu_item() and avoids
+	 * handling menu item fields that are not changed.
+	 *
+	 * Based on the parts of wp_update_nav_menu_item() that are needed here. $menu_id must already be 
+	 * validated before running this function (to avoid re-validating for each item in the menu).
+	 *
+	 * @since Menu Customizer 0.0
+	 *
+	 * @param int $menu_id The valid ID of the menu.
+	 * @param int $item_id The ID of the (existing) menu item.
+	 * @param int $order   The menu item's new order/position.
+	 * @return int|WP_Error The menu item's database ID or WP_Error object on failure.
+	 */
+	public function update_menu_item_order( $menu_id, $item_id, $order ) {
 		$item_id = (int) $item_id;
 
 		// Make sure that we don't convert non-nav_menu objects into nav_menu_item_objects.
@@ -737,7 +759,7 @@ class WP_Customize_Menus {
 				);
 				$allposts = get_posts( $args );
 				foreach ( $allposts as $post ) {
-					$item[] = array(
+					$items[] = array(
 						'id'          => 'post-' . $post->ID,
 						'name'        => $post->post_title,
 						'type'        => $post_type->name,
@@ -798,7 +820,9 @@ class WP_Customize_Menus {
 	}
 
 	/**
-	 * No docs yet
+	 * Return an array of all the available item types.
+	 *
+	 * @since Menu Customizer 0.0
 	 */
 	public function available_item_types() {
 		$types = get_post_types( array( 'show_in_nav_menus' => true ), 'names' );
