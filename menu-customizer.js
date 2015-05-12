@@ -1,4 +1,4 @@
-/* global _wpCustomizeMenusSettings, confirm */
+/* global _wpCustomizeMenusSettings, confirm, JSON */
 (function( wp, $ ){
 	'use strict';
 

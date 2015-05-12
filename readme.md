@@ -3,12 +3,12 @@
 
 == Description ==
 
-**Contributors:** [celloexpressions](http://profiles.wordpress.org/celloexpressions), [wordpressdotorg](http://profiles.wordpress.org/wordpressdotorg)  
-**Tags:** [menus](http://wordpress.org/plugins/tags/menus), [custom menus](http://wordpress.org/plugins/tags/custom menus), [customizer](http://wordpress.org/plugins/tags/customizer), [theme customizer](http://wordpress.org/plugins/tags/theme customizer), [gsoc](http://wordpress.org/plugins/tags/gsoc)  
+**Contributors:** [celloexpressions](https://profiles.wordpress.org/celloexpressions), [wordpressdotorg](https://profiles.wordpress.org/wordpressdotorg)  
+**Tags:** [menus](https://wordpress.org/plugins/tags/menus), [custom menus](https://wordpress.org/plugins/tags/custom menus), [customizer](https://wordpress.org/plugins/tags/customizer), [theme customizer](https://wordpress.org/plugins/tags/theme customizer), [gsoc](https://wordpress.org/plugins/tags/gsoc)  
 **Requires at least:** 4.1  
 **Tested up to:** 4.1  
 **Stable tag:** 0.2  
-**License:** [GPLv2]()  
+**License:** GPLv2  
 **Description:** Manage your Menus in the Customizer. WordPress core feature-plugin.  
 
 [![Build Status](https://travis-ci.org/voldemortensen/menu-customizer.png?branch=master)](https://travis-ci.org/voldemortensen/menu-customizer) 
@@ -23,7 +23,6 @@
 ## Changelog ##
 
 See full details here: https://plugins.trac.wordpress.org/log/menu-customizer
-
 ### 0.2 ###
 * Leverage all of the new core Customizer API features that were developed in WordPress 4.1. 4.1 is required, and while we'll try to keep the plugin compatible with 4.1 for as long as possible, we may bump the requirement to 4.2-alpha eventually. Menu Customizer development was on hold while the 4.1 Customizer work happened; we'll pick things back up here now that the needed core APIs are mostly in place. If all goes well, depending on contributor interest and release timing, we may be able to propose Menu Customizer for core merge in WordPress 4.2.
 * Adding new menus should work without a page refresh now.
