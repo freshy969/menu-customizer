@@ -536,7 +536,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.0
 	 *
 	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
-	 * @return WP_Post|WP_Error The nav_menu post that corresponds to a setting, or a WP_Error if it doesn't exist.
+	 * @return WP_Nav_Menu_Object|WP_Error The nav_menu term that corresponds to a setting, or a WP_Error if it doesn't exist.
 	 */
 	public function preview_nav_menu( $setting ) {
 		$menu_id = str_replace( 'nav_menu_', '', $setting->id );
