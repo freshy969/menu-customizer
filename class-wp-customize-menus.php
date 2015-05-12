@@ -407,11 +407,9 @@ class WP_Customize_Menus {
 			$auto_add = get_option( 'nav_menu_options' );
 			if ( ! isset( $auto_add['auto_add'] ) ) {
 				$auto_add = false;
-			}
-			elseif ( false !== array_search( $menu_id, $auto_add['auto_add'] ) ) {
+			} elseif ( false !== array_search( $menu_id, $auto_add['auto_add'] ) ) {
 				$auto_add = true;
-			}
-			else {
+			} else {
 				$auto_add = false;
 			}
 
@@ -519,7 +517,7 @@ class WP_Customize_Menus {
 			}
 		} else {
 			if ( false !== ( $key = array_search( $id, $nav_menu_option['auto_add'] ) ) ) {
-				unset( $nav_menu_option['auto_add'][$key] );
+				unset( $nav_menu_option['auto_add'][ $key ] );
 			}
 		}
 
@@ -651,7 +649,7 @@ class WP_Customize_Menus {
 	 * Skips the mess that is wp_update_nav_menu_item() and avoids
 	 * handling menu item fields that are not changed.
 	 *
-	 * Based on the parts of wp_update_nav_menu_item() that are needed here. $menu_id must already be 
+	 * Based on the parts of wp_update_nav_menu_item() that are needed here. $menu_id must already be
 	 * validated before running this function (to avoid re-validating for each item in the menu).
 	 *
 	 * @since Menu Customizer 0.0
