@@ -20,7 +20,7 @@ class WP_Customize_Menus {
 	public $manager;
 
 	/**
-	 * Previewed Menus (used to be $menu_customizer_previewed_settings in menu-customizer.php)
+	 * Previewed Menus.
 	 *
 	 * @access public
 	 */
@@ -49,7 +49,7 @@ class WP_Customize_Menus {
 		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_nav_menu_items_for_preview' ), 10, 2 );
 		add_action( 'customize_update_nav_menu', array( $this, 'update_nav_menu' ), 10, 2 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
-		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) ); // @todo ajaxify
 
 	}
 
@@ -232,7 +232,7 @@ class WP_Customize_Menus {
 				'menu_id'     => $menu_id,
 				'item'        => $item,
 			) );
-			echo wp_json_encode( $control->json() );// @todo convert to json
+			echo wp_json_encode( $control->json() );
 		}
 
 		wp_die();
@@ -283,7 +283,7 @@ class WP_Customize_Menus {
 		// Create a panel for Menus.
 		$this->manager->add_panel( 'menus', array(
 			'title'        => __( 'Menus' ),
-			'description'  => __( '<p>This panel is user for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.</p><p>Menus can be displayed in locations definedd by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.</p>' ),
+			'description'  => __( '<p>This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.</p><p>Menus can be displayed in locations definedd by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.</p>' ),
 			'priority'     => 30,
 		) );
 
@@ -307,7 +307,7 @@ class WP_Customize_Menus {
 			'priority' => 20,
 		) ) );
 
-		// Register each custom menu as a Customizer section, and add each menu item to each menu.
+		// Register each menu as a Customizer section, and add each menu item to each menu.
 		$menus = wp_get_nav_menus();
 
 		foreach ( $menus as $menu ) {
