@@ -158,7 +158,7 @@ class WP_Customize_Menus {
 
 		// For performance reasons, we omit some object properties from the checklist.
 		// The following is a hacky way to restore them when adding non-custom items.
-		// @todo: do we really need this - do we need to populate the description field here?
+		// @todo: do we really need this - do we need to populate the description field here? (note: copied from existing core system)
 
 		if ( ! empty( $menu_item_data['obj_type'] ) &&
 			'custom' != $menu_item_data['obj_type'] &&
@@ -183,8 +183,7 @@ class WP_Customize_Menus {
 			$menu_item_data['menu-item-description'] = $_menu_item->description;
 		}
 
-		// make the "Home" item into the custom link that it actually is.
-		// @todo: do we really need this - the standard menu screen doesn't, so why are we doing it?
+		// Make the "Home" item into the custom link that it actually is.
 		if ( 'page' == $menu_item_data['type'] && 'custom' == $menu_item_data['obj_type'] ) {
 			$menu_item_data['type'] = 'custom';
 			$menu_item_data['url'] = home_url( '/' );
