@@ -75,25 +75,12 @@
 	padding: 0;
 }
 
-.wp-customizer .menu-item .submitbox .submitdelete {
-	padding: 2px 0;
-}
-
-.wp-customizer .menu-item .item-delete:before {
-	content: "\f158";
-	font: normal 20px/1 dashicons;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	position: relative;
-	top: 5px;
-	right: 1px;
-}
-
 .wp-customizer .menu-item-settings .link-to-original {
 	padding: 5px 0;
 	border: none;
 	font-style: normal;
 	margin: 0;
+	width: 100%;
 }
 
 .wp-customizer .menu-item-settings .link-to-original a {
@@ -110,6 +97,13 @@
 	top: 4px;
 	left: 2px;
 	display: inline-block;
+}
+
+.wp-customizer .menu-item .submitbox .submitdelete {
+	display: block;
+	float: left;
+	margin: .5em 0;
+	padding: 0;
 }
 
 /* Menu-item reordering nav. */
