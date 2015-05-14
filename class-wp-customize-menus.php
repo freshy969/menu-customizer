@@ -130,7 +130,7 @@ class WP_Customize_Menus {
 		$id = $this->update_item( 0, $item_id, $menu_item_data, $clone );
 
 		if ( is_wp_error( $id ) ) {
-		  wp_send_json_error( array( 'message' => wp_strip_all_tags( $id->get_error_message(), true ) ) );
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( $id->get_error_message(), true ) ) );
 		} else {
 			wp_send_json_success( $id );
 		}
