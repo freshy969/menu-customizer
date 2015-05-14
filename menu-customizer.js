@@ -1,4 +1,4 @@
-/* global _wpCustomizeMenusSettings, confirm */
+/* global _wpCustomizeMenusSettings, confirm, alert */
 (function( wp, $ ){
 	'use strict';
 
@@ -482,7 +482,7 @@
 			var container = this;
 			container.contentEmbedded = false;
 
-			api.Section.prototype.initialize.apply( this, arguments );
+			api.Section.prototype.initialize.call( this, id, options );
 		},
 
 		/**
@@ -503,7 +503,7 @@
 				} );
 				section.contentEmbedded = true;
 			}
-			api.Section.prototype.onChangeExpanded.apply( this, arguments );
+			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
 		}
 	});
 
