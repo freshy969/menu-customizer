@@ -471,6 +471,52 @@
 	});
 
 	/**
+	 * wp.customize.Menus.MenuSection
+	 *
+	 * Customizer section for menus. This is used only for lazy-loading child controls.
+	 * Note that 'menu' must match the WP_Customize_Menu_Section::$type.
+	 *
+	 * @constructor
+	 * @augments wp.customize.Control
+	 */
+	api.Menus.MenuSection = api.Section.extend({
+
+		/**
+		 * @since Menu Customizer 0.3
+		 *
+		 * @param {String} id
+		 * @param {Object} options
+		 */
+		initialize: function ( id, options ) {
+			var container = this;
+			container.contentEmbedded = false;
+
+			api.Section.prototype.initialize.apply( this, arguments );
+		},
+
+		/**
+		 * Update UI to reflect expanded state.
+		 *
+		 * @since Menu Customizer 0.3
+		 *
+		 * @param {Boolean} expanded
+		 * @param {Object}  args
+		 */		
+		onChangeExpanded :  function( expanded, args ) {
+			var section = this;
+			if ( expanded && ! section.contentEmbedded ) {
+				_.each( wp.customize.section( section.id ).controls(), function( control ) {
+					if ( 'menu_item' === control.params.type ) {
+						control.actuallyEmbed();
+					}
+				} );
+				section.contentEmbedded = true;
+			}
+			api.Section.prototype.onChangeExpanded.apply( this, arguments );
+		}
+	});
+
+	/**
 	 * wp.customize.Menus.MenuItemControl
 	 *
 	 * Customizer control for menu items.
@@ -483,7 +529,7 @@
 		/**
 		 * Set up the control.
 		 */
-		ready: function() {
+		actuallyReady: function() {
 			this._setupModel();
 			this._setupControlToggle();
 			this._setupReorderUI();
@@ -650,6 +696,22 @@
 					$adjacentFocusTarget.focus(); // keyboard accessibility
 				} );
 			} );
+		},
+
+		/**
+		 * @since Menu Customizer 0.3
+		 *
+		 * Override the embed() method to do nothing,
+		 * so that the control isn't embedded on load.
+		 */
+		embed: function () {},
+
+		/**
+		 * @since Menu Customizer 0.3
+		 */
+		actuallyEmbed: function () {
+			this.renderContent();
+			this.actuallyReady();
 		},
 
 		/***********************************************************************
@@ -1463,6 +1525,7 @@
 					previewer: self.setting.previewer
 				} );
 				api.control.add( settingId, menuItemControl );
+				api.control( settingId ).actuallyEmbed();
 
 				// Make sure the panel hasn't been closed in the meantime.
 				if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
@@ -1686,13 +1749,20 @@
 	});
 
 	/**
-	 * Extends wp.customizer.controlConstructor with control constructor for
+	 * Extends wp.customize.controlConstructor with control constructor for
 	 * menu_item, nav_menu, and new_menu.
 	 */
 	$.extend( api.controlConstructor, {
 		menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
 		new_menu: api.Menus.NewMenuControl
+	});
+
+	/**
+	 * Extends wp.customize.sectionConstructor with section constructor for menu.
+	 */
+	$.extend( api.sectionConstructor, {
+		menu: api.Menus.MenuSection
 	});
 
 	/**
