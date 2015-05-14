@@ -676,6 +676,7 @@ body.adding-menu-items #customize-preview {
 
 #toggle-menu-delete {
 	float: right;
+	margin: .5em 0;
 }
 
 .menu-delete {
@@ -718,7 +719,7 @@ body.adding-menu-items #customize-preview {
 	display: none;
 }
 
-.deleting-menus #toggle-menu-delete {
+#toggle-menu-delete.deleting-menus {
 	background: #eee;
 	border-color: #999;
 	color: #333;
@@ -726,7 +727,7 @@ body.adding-menu-items #customize-preview {
 	box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
 }
 
-.deleting-menus #toggle-menu-delete:before {
+#toggle-menu-delete.deleting-menus:before {
 	content: "\f132";
 	display: inline-block;
 	position: relative;

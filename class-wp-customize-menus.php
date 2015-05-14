@@ -282,7 +282,7 @@ class WP_Customize_Menus {
 		// Create a panel for Menus.
 		$this->manager->add_panel( 'menus', array(
 			'title'        => __( 'Menus' ),
-			'description'  => __( '<p>This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.</p><p>Menus can be displayed in locations definedd by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.</p>' ),
+			'description'  => '<p>' . __( 'This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.</p><p>Menus can be displayed in locations defined by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.' ) . '</p><span class="button" id="toggle-menu-delete" tabindex="0">' . __( 'Delete an Existing Menu' ) . '</span>',
 			'priority'     => 30,
 		) );
 

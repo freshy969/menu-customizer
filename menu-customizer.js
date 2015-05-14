@@ -1645,9 +1645,13 @@
 
 		// Toggles menu-deletion mode for all menus.
 		toggleDelete: function() {
-			var container = $( '#accordion-panel-menus' );
+			$( '#toggle-menu-delete' ).toggleClass( 'deleting-menus' );
 
-			container.toggleClass( 'deleting-menus' );
+			$( '#accordion-panel-menus .accordion-section' ).each( function() {
+				if ( $( this ).find( '.menu-delete' ).length ) {
+					$( this ).toggleClass( 'deleting-menus' );
+				}
+			} );
 
 			return false;
 		},
