@@ -1662,7 +1662,7 @@
 				// Prompt user with an AYS.
 				if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
 					section.addClass( 'deleting' );
-					next.focus();
+
 					// Delete the menu.
 					params = {
 						'action': 'delete-menu-customizer',
@@ -1670,15 +1670,26 @@
 						'menu': menuId,
 						'customize-nav-menu-nonce': api.Menus.data.nonce
 					};
-					$.post( wp.ajax.settings.url, params, function() {
-						// Remove the UI, once menu has been deleted.
-						section.slideUp( 'fast', function() {
-							section.remove(); // @todo core there should be API methods for deleting sections.
-						} );
+					$.post( wp.ajax.settings.url, params, function( response ) {
+						if ( response.data && response.data.message ) {
+							// Display error message
+							alert( response.data.message );
 
-						// Remove the option from the theme location dropdowns.
-						dropdowns = $( '#accordion-section-nav .customize-control select' );
-						dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+							// Remove the CSS class
+							section.removeClass( 'deleting' );
+						} else if ( response.success ) {
+							// Focus the next menu item
+							next.focus();
+
+							// Remove the UI, once menu has been deleted.
+							section.slideUp( 'fast', function() {
+								section.remove(); // @todo core there should be API methods for deleting sections.
+							} );
+
+							// Remove the option from the theme location dropdowns.
+							dropdowns = $( '#accordion-section-nav .customize-control select' );
+							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+						}
 					} );
 				}
 			}

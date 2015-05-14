@@ -92,7 +92,7 @@ class WP_Customize_Menus {
 		check_ajax_referer( 'customize-menus', 'customize-nav-menu-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_die( -1 );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
 
 		$menu_id = absint( $_POST['menu'] );
@@ -100,13 +100,13 @@ class WP_Customize_Menus {
 		if ( is_nav_menu( $menu_id ) ) {
 			$deletion = wp_delete_nav_menu( $menu_id );
 			if ( is_wp_error( $deletion ) ) {
-				echo $deletion->message();
+				wp_send_json_error( array( 'message' => $deletion->get_error_message() ) );
+			} else {
+				wp_send_json_success();
 			}
 		} else {
-			_e( 'Error: invalid menu to delete.' );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid menu to delete.' ) ) );
 		}
-
-		wp_die();
 	}
 
 	/**
