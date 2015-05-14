@@ -287,12 +287,6 @@
 	margin-top: 4px;
 }
 
-/* Updating Indicator */
-.nav-menu-item-wrap.saving .menu-item-handle .spinner {
-	display: inline;
-	margin-top: -1px;
-}
-
 /* Screen Options */
 #customizer-menu-screen-options-button {
 	position: absolute;
@@ -474,12 +468,7 @@
 	transform: rotate(45deg);
 }
 
-/* Existing menu item bar, with item delete button. */
 .adding-menu-items .menu-item .item-delete {
-	position: absolute;
-	top: 0;
-	right: 0;
-	font-size: 0;
 	color: #a00;
 }
 
@@ -488,20 +477,9 @@
 	color: #f00;
 }
 
-.adding-menu-items .menu-item .item-delete:before {
-	content: "\f335";
-	font-size: 30px;
-	top: 6px;
-	right: 4px;
-}
-
 .adding-menu-items .menu-item-handle .is-submenu,
 .adding-menu-items .menu-item-handle .item-edit {
 	display: none;
-}
-
-.adding-menu-items .menu-item-handle .item-type {
-	padding-right: 24px;
 }
 
 #available-menu-items .item {
@@ -648,9 +626,14 @@ body.adding-menu-items #customize-preview {
 	opacity: 0.4;
 }
 
-.nav-menu-inserted-item-loading .spinner {
+.menu-item-handle .spinner {
+	display: none;
 	float: left;
 	margin: 0 8px 0 0;
+}
+
+.nav-menu-inserted-item-loading .spinner {
+	display: block;
 }
 
 .nav-menu-inserted-item-loading .menu-item-handle .item-type {

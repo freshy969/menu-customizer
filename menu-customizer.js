@@ -650,12 +650,18 @@
 		 * Set up event handlers for menu item deletion.
 		 */
 		_setupRemoveUI: function() {
-			var self = this, $removeBtn;
+			var self = this, $removeBtn, spinner;
 
 			// Configure delete button.
 			$removeBtn = this.container.find( 'a.item-delete' );
+			spinner = this.container.find( '.item-title .spinner' );
+
 			$removeBtn.on( 'click', function( e ) {
 				e.preventDefault();
+
+				// Show spinner.
+				spinner.show();
+				spinner.css( 'visibility', 'visible' );
 
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
@@ -685,6 +691,10 @@
 					menuControl.setting( menuItemIds );
 
 					$adjacentFocusTarget.focus(); // keyboard accessibility
+					
+					// Hide spinner.
+					spinner.hide();
+					spinner.css( 'visibility', 'hidden' );
 				} );
 			} );
 		},
@@ -732,11 +742,16 @@
 		 * @param {object} [args]
 		 */
 		updateMenuItem: function( args ) {
-			var self = this, clone = 0, processing, inputs, item, params;
+			var self = this, clone = 0, processing, inputs, item, params, spinner;
 			// Check whether this menu item is cloned already; if not, let's clone it.
 			if ( this.params.original_id === this.params.menu_item_id ) {
 				clone = 1;
 			}
+
+			spinner = $( self.container ).find( '.menu-item-actions .spinner' );
+
+			// Show spinner.
+			spinner.css( 'visibility', 'visible' );
 
 			// Trigger processing states.
 			self.container.addClass( 'saving' );
@@ -764,9 +779,14 @@
 				'customize-menu-item-nonce': api.Menus.data.nonce
 			};
 
-			$.post( wp.ajax.settings.url, params, function( id ) {
-				var menuControl, menuItemIds, i;
-				if ( id && clone ) {
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				var id, menuControl, menuItemIds, i;
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
+				} else if ( response.success && response.data && clone ) {
+					id = response.data;
+
 					// Update item control accordingly with new id.
 					// Note that the id is only updated where necessary - the original id
 					// is still maintained for the setting and in the UI.
@@ -791,13 +811,14 @@
 							control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
 						}
 					} );
-				} else {
-					// @todo trigger a preview refresh.
 				}
 
 				// Remove processing states.
 				self.container.removeClass( 'saving' );
 				processing( processing() - 1 );
+				
+				// Hide spinner.
+				spinner.css( 'visibility', 'hidden' );
 			} );
 		},
 

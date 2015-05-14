@@ -120,7 +120,7 @@ class WP_Customize_Menus {
 		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_die( -1 );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
 
 		$clone = $_POST['clone'];
@@ -129,13 +129,11 @@ class WP_Customize_Menus {
 
 		$id = $this->update_item( 0, $item_id, $menu_item_data, $clone );
 
-		if ( ! is_wp_error( $id ) ) {
-			echo $id;
+		if ( is_wp_error( $id ) ) {
+		  wp_send_json_error( array( 'message' => wp_strip_all_tags( $id->get_error_message(), true ) ) );
 		} else {
-			echo $id->message();
+			wp_send_json_success( $id );
 		}
-
-		wp_die();
 	}
 
 	/**

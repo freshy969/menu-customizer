@@ -275,6 +275,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 						</p>
 					<# } #>
 					<a class="item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}" href="#"><?php _e( 'Remove' ); ?></a>
+					<span class="spinner"></span>
 				</div>
 				<input type="hidden" name="menu-item-parent-id" class="menu-item-parent-id" id="edit-menu-item-parent-id-{{ data.menu_item_id }}" value="{{ data.parent }}" />
 			</div><!-- .menu-item-settings-->
