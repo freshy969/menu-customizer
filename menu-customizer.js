@@ -1493,58 +1493,62 @@
 				'priority': self.setting._value.length + 10
 			};
 
-			$.post( wp.ajax.settings.url, params, function( menuItemJson ) {
-				var dbid, settingId, settingArgs, ControlConstructor, menuItemControl, menuItems,
-					menuItemParams;
-				menuItemParams = JSON.parse( menuItemJson );
-				menuItemParams.priority = parseInt( menuItemParams.priority, 10 );
-				menuItemParams.original_id = 0; // Set to 0 to avoid cloning when updated before publish.
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
+				} else if ( response.success && response.data ) {
+					var dbid, settingId, settingArgs, ControlConstructor, menuItemControl, menuItems;
 
-				dbid = menuItemParams.menu_item_id;
+					response.data.priority = parseInt( response.data.priority, 10 );
+					response.data.original_id = 0; // Set to 0 to avoid cloning when updated before publish.
+
+					dbid = response.data.menu_item_id;
+
+					// Register the new setting.
+					settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
+					settingArgs = {
+						transport: 'refresh',
+						previewer: self.setting.previewer
+					};
+					api.create( settingId, settingId, '', settingArgs );
+					api( settingId ).set( {} ); // Change from '' to {} to mark as dirty
+					// @todo: Instead of {}, the initial setting should have an ID, title, and menu_item_parent
+
+					// Register the new control.
+					ControlConstructor = api.controlConstructor.menu_item;
+					menuItemControl = new ControlConstructor( settingId, {
+						params: response.data,
+						active: true,
+						type: 'menu_item',
+						depth: 0,
+						section: 'nav_menus[' + menuId + ']',
+						previewer: self.setting.previewer
+					} );
+					api.control.add( settingId, menuItemControl );
+					api.control( settingId ).actuallyEmbed();
+
+					// Make sure the panel hasn't been closed in the meantime.
+					if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						api.Menus.refreshVisibleMenuOptions();
+					}
+
+					// Add item to this menu.
+					menuItems = self.setting().slice();
+					if ( -1 === _.indexOf( menuItems, dbid ) ) {
+						menuItems.push( dbid );
+						self.setting( menuItems );
+					}
+
+					$( document ).trigger( 'menu-item-added', [ item ] );
+
+					callback();
+				}
 				// Remove the placeholder.
 				placeholderContainer.remove();
-
-				// Register the new setting.
-				settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
-				settingArgs = {
-					transport: 'refresh',
-					previewer: self.setting.previewer
-				};
-				api.create( settingId, settingId, '', settingArgs );
-				api( settingId ).set( {} ); // Change from '' to {} to mark as dirty
-				// @todo: Instead of {}, the initial setting should have an ID, title, and menu_item_parent
-
-				// Register the new control.
-				ControlConstructor = api.controlConstructor.menu_item;
-				menuItemControl = new ControlConstructor( settingId, {
-					params: menuItemParams,
-					active: true,
-					type: 'menu_item',
-					depth: 0,
-					section: 'nav_menus[' + menuId + ']',
-					previewer: self.setting.previewer
-				} );
-				api.control.add( settingId, menuItemControl );
-				api.control( settingId ).actuallyEmbed();
-
-				// Make sure the panel hasn't been closed in the meantime.
-				if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
-					api.Menus.refreshVisibleMenuOptions();
-				}
-
-				// Add item to this menu.
-				menuItems = self.setting().slice();
-				if ( -1 === _.indexOf( menuItems, dbid ) ) {
-					menuItems.push( dbid );
-					self.setting( menuItems );
-				}
-
+					
 				// Remove this level of the customizer processing state.
 				processing( processing() - 1 );
-
-				$( document ).trigger( 'menu-item-added', [ item ] );
-
-				callback();
 			});
 
 		}

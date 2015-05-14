@@ -146,7 +146,7 @@ class WP_Customize_Menus {
 		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_die( -1 );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
@@ -205,8 +205,10 @@ class WP_Customize_Menus {
 		}
 
 		$items_id = wp_save_nav_menu_items( 0, array( 0 => $item_data ) );
-		if ( is_wp_error( $items_id ) || empty( $items_id ) ) {
-			wp_die( 0 );
+		if ( is_wp_error( $items_id ) ) {
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( $items_id->get_error_message(), true ) ) );
+		} else if ( empty( $items_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Menu ID is required.' ) ) );
 		}
 
 		$item = get_post( $items_id[0] );
@@ -230,10 +232,10 @@ class WP_Customize_Menus {
 				'menu_id'     => $menu_id,
 				'item'        => $item,
 			) );
-			echo wp_json_encode( $control->json() );
+			wp_send_json_success( $control->json() );
 		}
 
-		wp_die();
+		wp_send_json_error( array( 'message' => __( 'The menu item could not be added.' ) ) );
 	}
 
 	/**
