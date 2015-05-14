@@ -1512,13 +1512,8 @@
 				name = container.find( '.menu-name-field' ).first(),
 				spinner = container.find( '.spinner' );
 
-			// Menu name is required.
-			if ( ! name.val() ) {
-				return false;
-			}
-
 			// Show spinner.
-			spinner.show();
+			spinner.css( 'visibility', 'visible' );
 
 			// Trigger customizer processing state.
 			processing = wp.customize.state( 'processing' );
@@ -1531,85 +1526,95 @@
 				'customize-nav-menu-nonce': api.Menus.data.nonce
 			};
 
-			$.post( wp.ajax.settings.url, params, function( menuJson ) {
-				var priority, menuParams, sectionId, SectionConstructor, menuSection,
-					menuSettingId, settingArgs, ControlConstructor, menuControl, sectionContent,
-					template, sectionParams, option;
-				menuParams = JSON.parse( menuJson );
-				menuParams.id = parseInt( menuParams.id, 10 );
-				sectionId = 'nav_menus[' + menuParams.id + ']';
-				sectionParams = {
-					id: sectionId,
-					active: true,
-					panel: 'menus',
-					title: menuParams.name,
-					priority: priority
-				};
-				// @todo this should happen by default when adding a panel or section dynamically
-				// @todo sections and panels should have content_template() like controls
-				// @link https://core.trac.wordpress.org/ticket/30737
-				if ( 0 !== $( '#tmpl-menu-section-for-core' ).length ) {
-					template = wp.template( 'menu-section-for-core' );
-					if ( template ) {
-						sectionContent = template( sectionParams );
-						sectionParams.content = sectionContent;
-					}
-				}
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
 
-				// Add the menu section.
-				SectionConstructor = api.Section;
-				menuSection = new SectionConstructor( sectionId, {
-					params: sectionParams
-				} );
-				api.section.add( sectionId, menuSection );
-				api.section( sectionId ).activate(); // @todo core this shouldn't be necessary.
+					// Remove this level of the customizer processing state.
+					processing( processing() - 1 );
 
-				// Register the menu control setting.
-				menuSettingId = 'nav_menu_' + menuParams.id;
-				settingArgs = {
-					type: 'nav_menu',
-					transport: 'refresh',
-					previewer: self.setting.previewer
-				};
-				api.create( menuSettingId, menuSettingId, '', settingArgs );
-				api( menuSettingId ).set( [] ); // Change to mark as dirty.
-				
-				// Add the menu control.
-				ControlConstructor = api.controlConstructor.nav_menu;
-				menuControl = new ControlConstructor( menuSettingId, {
-					params: {
-						type: 'nav_menu',
-						content: '<li id="customize-control-nav_menu_' + menuParams.id + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
-						menu_id: menuParams.id,
-						section: sectionId,
-						priority: 998,
+					// Hide spinner.
+					spinner.css( 'visibility', 'hidden' );
+				} else if ( response.success && response.data && response.data.id && response.data.name ) {
+					var priority, sectionId, SectionConstructor, menuSection,
+						menuSettingId, settingArgs, ControlConstructor, menuControl, sectionContent,
+						template, sectionParams, option;
+					response.data.id = parseInt( response.data.id, 10 );
+					sectionId = 'nav_menus[' + response.data.id + ']';
+					sectionParams = {
+						id: sectionId,
 						active: true,
-						settings: {
-							'default': menuSettingId
+						panel: 'menus',
+						title: response.data.name,
+						priority: priority
+					};
+					// @todo this should happen by default when adding a panel or section dynamically
+					// @todo sections and panels should have content_template() like controls
+					// @link https://core.trac.wordpress.org/ticket/30737
+					if ( 0 !== $( '#tmpl-menu-section-for-core' ).length ) {
+						template = wp.template( 'menu-section-for-core' );
+						if ( template ) {
+							sectionContent = template( sectionParams );
+							sectionParams.content = sectionContent;
 						}
-					},
-					previewer: self.setting.previewer
-				} );
-				api.control.add( menuSettingId, menuControl );
+					}
 
-				// @todo: nemu name and auto-add new items controls
-				// requires @link https://core.trac.wordpress.org/ticket/30738 at a minimum to be reasonable
+					// Add the menu section.
+					SectionConstructor = api.Section;
+					menuSection = new SectionConstructor( sectionId, {
+						params: sectionParams
+					} );
+					api.section.add( sectionId, menuSection );
+					api.section( sectionId ).activate(); // @todo core this shouldn't be necessary.
 
-				// Add the new menu as an option to each theme location control.
-				option = '<option value="' + menuParams.id + '">' + menuParams.name + '</option>';
-				$( '#accordion-section-nav .customize-control select' ).append( option );
-
-				// Remove this level of the customizer processing state.
-				processing( processing() - 1 );
-
-				// Hide spinner.
-				spinner.hide();
-
-				// Clear name field.
-				name.val('');
+					// Register the menu control setting.
+					menuSettingId = 'nav_menu_' + response.data.id;
+					settingArgs = {
+						type: 'nav_menu',
+						transport: 'refresh',
+						previewer: self.setting.previewer
+					};
+					api.create( menuSettingId, menuSettingId, '', settingArgs );
+					api( menuSettingId ).set( [] ); // Change to mark as dirty.
 				
-				// Focus on the new menu section.
-				api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
+					// Add the menu control.
+					ControlConstructor = api.controlConstructor.nav_menu;
+					menuControl = new ControlConstructor( menuSettingId, {
+						params: {
+							type: 'nav_menu',
+							content: '<li id="customize-control-nav_menu_' + response.data.id + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
+							menu_id: response.data.id,
+							section: sectionId,
+							priority: 998,
+							active: true,
+							settings: {
+								'default': menuSettingId
+							}
+						},
+						previewer: self.setting.previewer
+					} );
+					api.control.add( menuSettingId, menuControl );
+
+					// @todo: nemu name and auto-add new items controls
+					// requires @link https://core.trac.wordpress.org/ticket/30738 at a minimum to be reasonable
+
+					// Add the new menu as an option to each theme location control.
+					option = '<option value="' + response.data.id + '">' + response.data.name + '</option>';
+					$( '#accordion-section-nav .customize-control select' ).append( option );
+
+					// Remove this level of the customizer processing state.
+					processing( processing() - 1 );
+
+					// Hide spinner.
+					spinner.css( 'visibility', 'hidden' );
+
+					// Clear name field.
+					name.val('');
+				
+					// Focus on the new menu section.
+					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
+				}
 			});
 
 			return false;
