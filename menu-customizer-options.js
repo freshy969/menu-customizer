@@ -2,10 +2,13 @@
 
 /*
  * Menu Customizer screen options JS.
+ *
+ * @todo potentially put this directly into the panel by doing a custom panel, once the standard panel html is finalized in #31336.
  */
 
 // Global ajaxurl, 
 (function($) {
+	var menusPanelContainer;
 	var customizeMenuOptions = {
 		init : function() {
 			// Add a screen options button to the Menus page header.
@@ -60,11 +63,11 @@
 		},
 
 		checked : function(column) {
-			$('.field-' + column).show();
+			menusPanelContainer.addClass( 'field-' + column + '-active' );
 		},
 
 		unchecked : function(column) {
-			$('.field-' + column).hide();
+			menusPanelContainer.removeClass( 'field-' + column + '-active' );
 		},
 
 		hidden : function() {
@@ -78,6 +81,7 @@
 	};
 
 	$( document ).ready( function() {
+		menusPanelContainer = $( '#accordion-panel-menus' );
 		columns.init();
 		customizeMenuOptions.init();
 	} );

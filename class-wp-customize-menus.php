@@ -315,11 +315,11 @@ class WP_Customize_Menus {
 
 			// Create a section for each menu.
 			$section_id = 'nav_menus[' . $menu_id . ']';
-			$this->manager->add_section( $section_id, array(
+			$this->manager->add_section( new WP_Customize_Menu_Section( $this->manager, $section_id, array(
 				'title'     => $menu->name,
 				'priority'  => 10,
 				'panel'     => 'menus',
-			) );
+			) ) );
 
 			// Add a setting & control for the menu name.
 			$menu_name_setting_id = $section_id . '[name]';

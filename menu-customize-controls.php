@@ -4,6 +4,15 @@
  */
 
 /**
+ * Customize Menu Section Class
+ *
+ * Custom section only needed in JS.
+ */
+class WP_Customize_Menu_Section extends WP_Customize_Section {
+	public $type = 'menu';
+}
+
+/**
  * Customize Nav Menu Control Class
  */
 class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {

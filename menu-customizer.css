@@ -363,6 +363,23 @@
 	line-height: 30px;
 }
 
+#accordion-panel-menus .field-link-target,
+#accordion-panel-menus .field-attr-title,
+#accordion-panel-menus .field-css-classes,
+#accordion-panel-menus .field-xfn,
+#accordion-panel-menus .field-description {
+	display: none;
+}
+
+#accordion-panel-menus.field-link-target-active .field-link-target,
+#accordion-panel-menus.field-attr-title-active .field-attr-title,
+#accordion-panel-menus.field-css-classes-active .field-css-classes,
+#accordion-panel-menus.field-xfn-active .field-xfn,
+#accordion-panel-menus.field-description-active .field-description {
+	display: block;
+}
+
+
 /* Not exactly sure what broke this, or why it works without these styles in core. */
 .wp-customizer .wp-full-overlay a.collapse-sidebar {
 	position: fixed;
