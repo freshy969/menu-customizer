@@ -157,7 +157,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 	 * @param int $parent_id The id of the parent menu item
 	 * @param int $depth Inverse current item depth
 	 *
-	 * @returns int Depth of the original menu item.
+	 * @return int Depth of the original menu item.
 	 */
 	public function depth( $parent_id, $depth = 0 ) {
 		if ( 0 == $parent_id ) {
