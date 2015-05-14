@@ -220,7 +220,8 @@
 		},
 
 		toggleLoading: function( tf ) {
-			$( '.add-menu-item-loading' ).toggle( tf );
+			var visibility = true === tf ? 'visible' : 'hidden';
+			$( '.add-menu-item-loading' ).css( 'visibility', visibility );
 		},
 
 		// Performs a search and handles selected menu item.
@@ -1625,8 +1626,13 @@
 			var params, dropdowns,
 				menuId = $( el ).attr( 'id' ).replace( 'delete-menu-', '' ),
 				section = $( el ).closest( '.accordion-section' ),
-				next = section.next().find( '.accordion-section-title' );
+				next = section.next().find( '.accordion-section-title' ),
+				spinner = section.find( '.add-menu-item-loading.spinner' );
+
 			if ( menuId ) {
+				// Show spinner.
+				spinner.css( 'visibility', 'visible' );
+
 				// Prompt user with an AYS.
 				if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
 					section.addClass( 'deleting' );
@@ -1658,7 +1664,12 @@
 							dropdowns = $( '#accordion-section-nav .customize-control select' );
 							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
 						}
+						// Hide spinner.
+						spinner.css( 'visibility', 'hidden' );
 					} );
+				} else {
+					// Hide spinner.
+					spinner.css( 'visibility', 'hidden' );
 				}
 			}
 		}

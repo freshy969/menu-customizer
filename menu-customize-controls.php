@@ -38,11 +38,11 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 		<span class="button-secondary add-new-menu-item" tabindex="0">
 			<?php _e( 'Add Links' ); ?>
 		</span>
-		<span class="add-menu-item-loading spinner"></span>
 		<span class="reorder-toggle" tabindex="0">
 			<span class="reorder"><?php _ex( 'Reorder', 'Reorder menu items in Customizer' ); ?></span>
 			<span class="reorder-done"><?php _ex( 'Done', 'Cancel reordering menu items in Customizer' ); ?></span>
 		</span>
+		<span class="add-menu-item-loading spinner"></span>
 		<span class="menu-delete-item">
 			<span class="menu-delete" id="delete-menu-{{ data.menu_id }}" tabindex="0">
 				<?php _e( 'Delete menu' ); ?> <span class="screen-reader-text">{{ data.menu_name }}</span>

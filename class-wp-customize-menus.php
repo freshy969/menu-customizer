@@ -862,7 +862,7 @@ class WP_Customize_Menus {
 				<div class="menu-item menu-item-depth-0 menu-item-edit-inactive">
 					<dl class="menu-item-bar">
 						<dt class="menu-item-handle">
-							<span class="spinner" style="display: block;"></span>
+							<span class="spinner" style="visibility: visible;"></span>
 							<span class="item-type">{{ data.type_label }}</span>
 							<span class="item-title menu-item-title">{{ data.name }}</span>
 						</dt>
