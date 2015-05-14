@@ -571,7 +571,7 @@ class WP_Customize_Menus {
 			$new_items = array();
 			$i = 0;
 
-			// For each time, get object and update menu order property.
+			// For each item, get object and update menu order property.
 			foreach ( $new_ids as $item_id ) {
 				$item = get_post( $item_id );
 				$item = wp_setup_nav_menu_item( $item );
