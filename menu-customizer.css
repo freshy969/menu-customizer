@@ -418,7 +418,7 @@
 #customize-theme-controls .add-new-menu-item {
 	cursor: pointer;
 	float: right;
-	margin-left: 10px;
+	margin-left: 5px;
 	-webkit-transition: all 0.2s;
 	transition: all 0.2s;
 	-webkit-user-select: none;
@@ -664,7 +664,7 @@ body.adding-menu-items #customize-preview {
 #accordion-section-add_menu .accordion-section-title:before {
 	font: normal 20px/1 dashicons;
 	position: absolute;
-	top: 11px;
+	top: 12px;
 	left: 14px;
 	content: "\f132";
 }
@@ -674,74 +674,23 @@ body.adding-menu-items #customize-preview {
 	margin: 0 0 12px 0;
 }
 
-#toggle-menu-delete {
-	float: right;
-	margin: .5em 0;
+.menu-delete-item {
+  display: block;
+  float: left;
+  text-align: right;
+  padding: 1em 0;
+	width: 100%;
 }
 
 .menu-delete {
-	display: none;
-}
-
-.menu-delete:before {
-	font: normal 20px/1 dashicons;
-	content: "\f158";
-	position: absolute;
-	top: 11px;
-	right: 9px;
 	color: #a00;
+	cursor: pointer;
+	text-decoration: underline;
 }
 
-.menu-delete:focus:before,
-.menu-delete:hover:before {
+.menu-delete:hover {
 	color: #f00;
-}
-
-.deleting-menus .menu-delete {
-	display: block;
-}
-
-.deleting-menus .accordion-section-title:after {
-	display: none;
-}
-
-/* Displayed while the menu-deletion ajax is processing. */
-#customize-theme-controls .accordion-section.deleting .accordion-section-title {
-	background: #a00;
-	color: #fff;
-}
-
-#customize-theme-controls .deleting-menus .accordion-section-title {
-	transition: .18s background ease-in-out;
-}
-
-#customize-theme-controls .accordion-section.deleting .menu-delete {
-	display: none;
-}
-
-#toggle-menu-delete.deleting-menus {
-	background: #eee;
-	border-color: #999;
-	color: #333;
-	-webkit-box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
-	box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
-}
-
-#toggle-menu-delete.deleting-menus:before {
-	content: "\f132";
-	display: inline-block;
-	position: relative;
-	left: -2px;
-	top: -1px;
-	font: normal 20px/1 'dashicons';
-	vertical-align: middle;
-	-webkit-transition: all 0.2s;
-	transition: all 0.2s;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	-webkit-transform: rotate(45deg);
-	-ms-transform: rotate(45deg);
-	transform: rotate(45deg);
+	text-decoration: none;
 }
 
 /* Media queries */

@@ -1328,9 +1328,17 @@
 		 * Move menu-delete button to section title. Actual deletion is managed with api.Menus.NewMenuControl.
 		 */
 		_setupDeletion: function() {
-			var title = this.$controlSection.find( '.accordion-section-title' ),
-				deleteBtn = this.container.find( '.menu-delete' );
-			title.append( deleteBtn );
+			var self = this;
+
+			this.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
+				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
+					return;
+				}
+
+				if ( self.$sectionContent.hasClass( 'deleting' ) ) {
+					return;
+				}
+			} );
 		},
 
 		/**
@@ -1509,8 +1517,7 @@
 		_bindHandlers: function() {
 			var self = this,
 				name = $( '#customize-control-new_menu_name input' ),
-				submit = $( '#create-new-menu-submit' ),
-				toggle = $( '#toggle-menu-delete' );
+				submit = $( '#create-new-menu-submit' );
 			name.on( 'keydown', function( event ) {
 				if ( event.which === 13 ) { // Enter.
 					self.submit();
@@ -1518,9 +1525,6 @@
 			} );
 			submit.on( 'click', function() {
 				self.submit();
-			} );
-			toggle.on( 'click', function() {
-				self.toggleDelete();
 			} );
 			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( e ) {
 				if ( 'keydown' === e.type && 13 !== event.which ) { // Enter.
@@ -1639,19 +1643,6 @@
 				// Focus on the new menu section.
 				api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
 			});
-
-			return false;
-		},
-
-		// Toggles menu-deletion mode for all menus.
-		toggleDelete: function() {
-			$( '#toggle-menu-delete' ).toggleClass( 'deleting-menus' );
-
-			$( '#accordion-panel-menus .accordion-section' ).each( function() {
-				if ( $( this ).find( '.menu-delete' ).length ) {
-					$( this ).toggleClass( 'deleting-menus' );
-				}
-			} );
 
 			return false;
 		},
