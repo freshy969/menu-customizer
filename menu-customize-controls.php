@@ -47,13 +47,15 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 		<span class="button-secondary add-new-menu-item" tabindex="0">
 			<?php _e( 'Add Links' ); ?>
 		</span>
-		<span class="add-menu-item-loading spinner"></span>
 		<span class="reorder-toggle" tabindex="0">
 			<span class="reorder"><?php _ex( 'Reorder', 'Reorder menu items in Customizer' ); ?></span>
 			<span class="reorder-done"><?php _ex( 'Done', 'Cancel reordering menu items in Customizer' ); ?></span>
 		</span>
-		<span class="menu-delete" id="delete-menu-{{ data.menu_id }}" tabindex="0">
-			<span class="screen-reader-text"><?php _e( 'Delete menu:' ); ?> {{ data.menu_name }}</span>
+		<span class="add-menu-item-loading spinner"></span>
+		<span class="menu-delete-item">
+			<span class="menu-delete" id="delete-menu-{{ data.menu_id }}" tabindex="0">
+				<?php _e( 'Delete menu' ); ?> <span class="screen-reader-text">{{ data.menu_name }}</span>
+			</span>
 		</span>
 	<?php
 	}
@@ -273,6 +275,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 						</p>
 					<# } #>
 					<a class="item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}" href="#"><?php _e( 'Remove' ); ?></a>
+					<span class="spinner"></span>
 				</div>
 				<input type="hidden" name="menu-item-parent-id" class="menu-item-parent-id" id="edit-menu-item-parent-id-{{ data.menu_item_id }}" value="{{ data.parent }}" />
 			</div><!-- .menu-item-settings-->
@@ -335,7 +338,6 @@ class WP_New_Menu_Customize_Control extends WP_Customize_Control {
 		?>
 		<span class="button button-primary" id="create-new-menu-submit" tabindex="0"><?php _e( 'Create Menu' ); ?></span>
 		<span class="spinner"></span>
-		<span class="button" id="toggle-menu-delete" tabindex="0"><?php _e( 'Delete an Existing Menu' ); ?></span>
 		<?php
 	}
 }

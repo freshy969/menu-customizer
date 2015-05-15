@@ -63,23 +63,24 @@ class WP_Customize_Menus {
 		check_ajax_referer( 'customize-menus', 'customize-nav-menu-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_die( -1 );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
 
 		$menu_name = sanitize_text_field( $_POST['menu-name'] );
+
+		if ( empty( $menu_name ) ) {
+			wp_send_json_error( array( 'message' => __( 'Menu name is required.' ) ) );
+		}
 
 		// Create the menu.
 		$menu_id = wp_create_nav_menu( $menu_name );
 
 		if ( is_wp_error( $menu_id ) ) {
-			// @todo error handling, ideally providing user feedback (most likely case here is a duplicate menu name).
-			wp_die();
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( $menu_id->get_error_message(), true ) ) );
 		}
 
 		// Output the data for this new menu.
-		echo wp_json_encode( array( 'name' => $menu_name, 'id' => $menu_id ) );
-
-		wp_die();
+		wp_send_json_success( array( 'name' => $menu_name, 'id' => $menu_id ) );
 	}
 
 	/**
@@ -92,7 +93,7 @@ class WP_Customize_Menus {
 		check_ajax_referer( 'customize-menus', 'customize-nav-menu-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_die( -1 );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
 
 		$menu_id = absint( $_POST['menu'] );
@@ -100,13 +101,13 @@ class WP_Customize_Menus {
 		if ( is_nav_menu( $menu_id ) ) {
 			$deletion = wp_delete_nav_menu( $menu_id );
 			if ( is_wp_error( $deletion ) ) {
-				echo $deletion->message();
+				wp_send_json_error( array( 'message' => wp_strip_all_tags( $deletion->get_error_message(), true ) ) );
+			} else {
+				wp_send_json_success();
 			}
 		} else {
-			_e( 'Error: invalid menu to delete.' );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid menu to delete.' ) ) );
 		}
-
-		wp_die();
 	}
 
 	/**
@@ -119,7 +120,7 @@ class WP_Customize_Menus {
 		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_die( -1 );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
 
 		$clone = $_POST['clone'];
@@ -128,13 +129,11 @@ class WP_Customize_Menus {
 
 		$id = $this->update_item( 0, $item_id, $menu_item_data, $clone );
 
-		if ( ! is_wp_error( $id ) ) {
-			echo $id;
+		if ( is_wp_error( $id ) ) {
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( $id->get_error_message(), true ) ) );
 		} else {
-			echo $id->message();
+			wp_send_json_success( $id );
 		}
-
-		wp_die();
 	}
 
 	/**
@@ -147,7 +146,7 @@ class WP_Customize_Menus {
 		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_die( -1 );
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
@@ -206,8 +205,10 @@ class WP_Customize_Menus {
 		}
 
 		$items_id = wp_save_nav_menu_items( 0, array( 0 => $item_data ) );
-		if ( is_wp_error( $items_id ) || empty( $items_id ) ) {
-			wp_die( 0 );
+		if ( is_wp_error( $items_id ) ) {
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( $items_id->get_error_message(), true ) ) );
+		} else if ( empty( $items_id ) ) {
+			wp_send_json_error( array( 'message' => __( 'Menu ID is required.' ) ) );
 		}
 
 		$item = get_post( $items_id[0] );
@@ -231,10 +232,10 @@ class WP_Customize_Menus {
 				'menu_id'     => $menu_id,
 				'item'        => $item,
 			) );
-			echo wp_json_encode( $control->json() );
+			wp_send_json_success( $control->json() );
 		}
 
-		wp_die();
+		wp_send_json_error( array( 'message' => __( 'The menu item could not be added.' ) ) );
 	}
 
 	/**
@@ -282,7 +283,7 @@ class WP_Customize_Menus {
 		// Create a panel for Menus.
 		$this->manager->add_panel( 'menus', array(
 			'title'        => __( 'Menus' ),
-			'description'  => __( '<p>This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.</p><p>Menus can be displayed in locations definedd by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.</p>' ),
+			'description'  => '<p>' . __( 'This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.' ) . '</p>',
 			'priority'     => 30,
 		) );
 
@@ -864,7 +865,7 @@ class WP_Customize_Menus {
 				<div class="menu-item menu-item-depth-0 menu-item-edit-inactive">
 					<dl class="menu-item-bar">
 						<dt class="menu-item-handle">
-							<span class="spinner" style="display: block;"></span>
+							<span class="spinner" style="visibility: visible;"></span>
 							<span class="item-type">{{ data.type_label }}</span>
 							<span class="item-title menu-item-title">{{ data.name }}</span>
 						</dt>

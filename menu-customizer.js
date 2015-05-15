@@ -1,4 +1,4 @@
-/* global _wpCustomizeMenusSettings, confirm, JSON */
+/* global _wpCustomizeMenusSettings, confirm, alert */
 (function( wp, $ ){
 	'use strict';
 
@@ -220,7 +220,8 @@
 		},
 
 		toggleLoading: function( tf ) {
-			$( '.add-menu-item-loading' ).toggle( tf );
+			var visibility = true === tf ? 'visible' : 'hidden';
+			$( '.add-menu-item-loading' ).css( 'visibility', visibility );
 		},
 
 		// Performs a search and handles selected menu item.
@@ -385,11 +386,6 @@
 				control.collapseForm();
 			} );
 
-			// Move delete buttons into the title bar.
-			_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
-				control.toggleDeletePosition( true );
-			} );
-
 			this.$el.find( '.selected' ).removeClass( 'selected' );
 
 			// Reset search
@@ -406,11 +402,6 @@
 			if ( options.returnFocus && this.currentMenuControl ) {
 				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
 			}
-
-			// Move delete buttons back to the title bar.
-			_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
-				control.toggleDeletePosition( false );
-			} );
 
 			this.currentMenuControl = null;
 			this.selected = null;
@@ -491,7 +482,7 @@
 			var container = this;
 			container.contentEmbedded = false;
 
-			api.Section.prototype.initialize.apply( this, arguments );
+			api.Section.prototype.initialize.call( this, id, options );
 		},
 
 		/**
@@ -512,7 +503,7 @@
 				} );
 				section.contentEmbedded = true;
 			}
-			api.Section.prototype.onChangeExpanded.apply( this, arguments );
+			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
 		}
 	});
 
@@ -659,12 +650,18 @@
 		 * Set up event handlers for menu item deletion.
 		 */
 		_setupRemoveUI: function() {
-			var self = this, $removeBtn;
+			var self = this, $removeBtn, spinner;
 
 			// Configure delete button.
 			$removeBtn = this.container.find( 'a.item-delete' );
+			spinner = this.container.find( '.item-title .spinner' );
+
 			$removeBtn.on( 'click', function( e ) {
 				e.preventDefault();
+
+				// Show spinner.
+				spinner.show();
+				spinner.css( 'visibility', 'visible' );
 
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
@@ -694,6 +691,10 @@
 					menuControl.setting( menuItemIds );
 
 					$adjacentFocusTarget.focus(); // keyboard accessibility
+					
+					// Hide spinner.
+					spinner.hide();
+					spinner.css( 'visibility', 'hidden' );
 				} );
 			} );
 		},
@@ -741,11 +742,16 @@
 		 * @param {object} [args]
 		 */
 		updateMenuItem: function( args ) {
-			var self = this, clone = 0, processing, inputs, item, params;
+			var self = this, clone = 0, processing, inputs, item, params, spinner;
 			// Check whether this menu item is cloned already; if not, let's clone it.
 			if ( this.params.original_id === this.params.menu_item_id ) {
 				clone = 1;
 			}
+
+			spinner = $( self.container ).find( '.menu-item-actions .spinner' );
+
+			// Show spinner.
+			spinner.css( 'visibility', 'visible' );
 
 			// Trigger processing states.
 			self.container.addClass( 'saving' );
@@ -773,9 +779,14 @@
 				'customize-menu-item-nonce': api.Menus.data.nonce
 			};
 
-			$.post( wp.ajax.settings.url, params, function( id ) {
-				var menuControl, menuItemIds, i;
-				if ( id && clone ) {
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				var id, menuControl, menuItemIds, i;
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
+				} else if ( response.success && response.data && clone ) {
+					id = response.data;
+
 					// Update item control accordingly with new id.
 					// Note that the id is only updated where necessary - the original id
 					// is still maintained for the setting and in the UI.
@@ -800,13 +811,14 @@
 							control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
 						}
 					} );
-				} else {
-					// @todo trigger a preview refresh.
 				}
 
 				// Remove processing states.
 				self.container.removeClass( 'saving' );
 				processing( processing() - 1 );
+				
+				// Hide spinner.
+				spinner.css( 'visibility', 'hidden' );
 			} );
 		},
 
@@ -883,26 +895,6 @@
 				self.container.trigger( 'collapse' );
 
 				$inside.slideUp( 'fast', complete );
-			}
-		},
-
-		/**
-		 * Move the control's delete button up to the title bar or down to the control body.
-		 *
-		 * @param {boolean|undefined} [top] If not supplied, will be inverse of current visibility.
-		 */
-		toggleDeletePosition: function( top ) {
-			var button, handle, actions;
-			// @TODO: default handling.
-
-			button = this.container.find( '.item-delete' );
-			handle = this.container.find( '.menu-item-handle' );
-			actions = this.container.find( '.menu-item-actions' );
-			if ( top ) {
-				handle.append( button );
-			}
-			else {
-				actions.append( button );
 			}
 		},
 
@@ -1390,9 +1382,17 @@
 		 * Move menu-delete button to section title. Actual deletion is managed with api.Menus.NewMenuControl.
 		 */
 		_setupDeletion: function() {
-			var title = this.$controlSection.find( '.accordion-section-title' ),
-				deleteBtn = this.container.find( '.menu-delete' );
-			title.append( deleteBtn );
+			var self = this;
+
+			this.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
+				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
+					return;
+				}
+
+				if ( self.$sectionContent.hasClass( 'deleting' ) ) {
+					return;
+				}
+			} );
 		},
 
 		/**
@@ -1493,60 +1493,62 @@
 				'priority': self.setting._value.length + 10
 			};
 
-			$.post( wp.ajax.settings.url, params, function( menuItemJson ) {
-				var dbid, settingId, settingArgs, ControlConstructor, menuItemControl, menuItems,
-					menuItemParams;
-				menuItemParams = JSON.parse( menuItemJson );
-				menuItemParams.priority = parseInt( menuItemParams.priority, 10 );
-				menuItemParams.original_id = 0; // Set to 0 to avoid cloning when updated before publish.
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
+				} else if ( response.success && response.data ) {
+					var dbid, settingId, settingArgs, ControlConstructor, menuItemControl, menuItems;
 
-				dbid = menuItemParams.menu_item_id;
+					response.data.priority = parseInt( response.data.priority, 10 );
+					response.data.original_id = 0; // Set to 0 to avoid cloning when updated before publish.
+
+					dbid = response.data.menu_item_id;
+
+					// Register the new setting.
+					settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
+					settingArgs = {
+						transport: 'refresh',
+						previewer: self.setting.previewer
+					};
+					api.create( settingId, settingId, '', settingArgs );
+					api( settingId ).set( {} ); // Change from '' to {} to mark as dirty
+					// @todo: Instead of {}, the initial setting should have an ID, title, and menu_item_parent
+
+					// Register the new control.
+					ControlConstructor = api.controlConstructor.menu_item;
+					menuItemControl = new ControlConstructor( settingId, {
+						params: response.data,
+						active: true,
+						type: 'menu_item',
+						depth: 0,
+						section: 'nav_menus[' + menuId + ']',
+						previewer: self.setting.previewer
+					} );
+					api.control.add( settingId, menuItemControl );
+					api.control( settingId ).actuallyEmbed();
+
+					// Make sure the panel hasn't been closed in the meantime.
+					if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						api.Menus.refreshVisibleMenuOptions();
+					}
+
+					// Add item to this menu.
+					menuItems = self.setting().slice();
+					if ( -1 === _.indexOf( menuItems, dbid ) ) {
+						menuItems.push( dbid );
+						self.setting( menuItems );
+					}
+
+					$( document ).trigger( 'menu-item-added', [ item ] );
+
+					callback();
+				}
 				// Remove the placeholder.
 				placeholderContainer.remove();
-
-				// Register the new setting.
-				settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
-				settingArgs = {
-					transport: 'refresh',
-					previewer: self.setting.previewer
-				};
-				api.create( settingId, settingId, '', settingArgs );
-				api( settingId ).set( {} ); // Change from '' to {} to mark as dirty
-				// @todo: Instead of {}, the initial setting should have an ID, title, and menu_item_parent
-
-				// Register the new control.
-				ControlConstructor = api.controlConstructor.menu_item;
-				menuItemControl = new ControlConstructor( settingId, {
-					params: menuItemParams,
-					active: true,
-					type: 'menu_item',
-					depth: 0,
-					section: 'nav_menus[' + menuId + ']',
-					previewer: self.setting.previewer
-				} );
-				api.control.add( settingId, menuItemControl );
-				api.control( settingId ).actuallyEmbed();
-
-				// Make sure the panel hasn't been closed in the meantime.
-				if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
-					// Move the delete button up to match the existing items.
-					api.Menus.getMenuItemControl( dbid ).toggleDeletePosition( true );
-					api.Menus.refreshVisibleMenuOptions();
-				}
-
-				// Add item to this menu.
-				menuItems = self.setting().slice();
-				if ( -1 === _.indexOf( menuItems, dbid ) ) {
-					menuItems.push( dbid );
-					self.setting( menuItems );
-				}
-
+					
 				// Remove this level of the customizer processing state.
 				processing( processing() - 1 );
-
-				$( document ).trigger( 'menu-item-added', [ item ] );
-
-				callback();
 			});
 
 		}
@@ -1572,8 +1574,7 @@
 		_bindHandlers: function() {
 			var self = this,
 				name = $( '#customize-control-new_menu_name input' ),
-				submit = $( '#create-new-menu-submit' ),
-				toggle = $( '#toggle-menu-delete' );
+				submit = $( '#create-new-menu-submit' );
 			name.on( 'keydown', function( event ) {
 				if ( event.which === 13 ) { // Enter.
 					self.submit();
@@ -1581,9 +1582,6 @@
 			} );
 			submit.on( 'click', function() {
 				self.submit();
-			} );
-			toggle.on( 'click', function() {
-				self.toggleDelete();
 			} );
 			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( e ) {
 				if ( 'keydown' === e.type && 13 !== event.which ) { // Enter.
@@ -1603,13 +1601,8 @@
 				name = container.find( '.menu-name-field' ).first(),
 				spinner = container.find( '.spinner' );
 
-			// Menu name is required.
-			if ( ! name.val() ) {
-				return false;
-			}
-
 			// Show spinner.
-			spinner.show();
+			spinner.css( 'visibility', 'visible' );
 
 			// Trigger customizer processing state.
 			processing = wp.customize.state( 'processing' );
@@ -1622,95 +1615,96 @@
 				'customize-nav-menu-nonce': api.Menus.data.nonce
 			};
 
-			$.post( wp.ajax.settings.url, params, function( menuJson ) {
-				var priority, menuParams, sectionId, SectionConstructor, menuSection,
-					menuSettingId, settingArgs, ControlConstructor, menuControl, sectionContent,
-					template, sectionParams, option;
-				menuParams = JSON.parse( menuJson );
-				menuParams.id = parseInt( menuParams.id, 10 );
-				sectionId = 'nav_menus[' + menuParams.id + ']';
-				sectionParams = {
-					id: sectionId,
-					active: true,
-					panel: 'menus',
-					title: menuParams.name,
-					priority: priority
-				};
-				// @todo this should happen by default when adding a panel or section dynamically
-				// @todo sections and panels should have content_template() like controls
-				// @link https://core.trac.wordpress.org/ticket/30737
-				if ( 0 !== $( '#tmpl-menu-section-for-core' ).length ) {
-					template = wp.template( 'menu-section-for-core' );
-					if ( template ) {
-						sectionContent = template( sectionParams );
-						sectionParams.content = sectionContent;
-					}
-				}
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
 
-				// Add the menu section.
-				SectionConstructor = api.Section;
-				menuSection = new SectionConstructor( sectionId, {
-					params: sectionParams
-				} );
-				api.section.add( sectionId, menuSection );
-				api.section( sectionId ).activate(); // @todo core this shouldn't be necessary.
+					// Remove this level of the customizer processing state.
+					processing( processing() - 1 );
 
-				// Register the menu control setting.
-				menuSettingId = 'nav_menu_' + menuParams.id;
-				settingArgs = {
-					type: 'nav_menu',
-					transport: 'refresh',
-					previewer: self.setting.previewer
-				};
-				api.create( menuSettingId, menuSettingId, '', settingArgs );
-				api( menuSettingId ).set( [] ); // Change to mark as dirty.
-				
-				// Add the menu control.
-				ControlConstructor = api.controlConstructor.nav_menu;
-				menuControl = new ControlConstructor( menuSettingId, {
-					params: {
-						type: 'nav_menu',
-						content: '<li id="customize-control-nav_menu_' + menuParams.id + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
-						menu_id: menuParams.id,
-						section: sectionId,
-						priority: 998,
+					// Hide spinner.
+					spinner.css( 'visibility', 'hidden' );
+				} else if ( response.success && response.data && response.data.id && response.data.name ) {
+					var priority, sectionId, SectionConstructor, menuSection,
+						menuSettingId, settingArgs, ControlConstructor, menuControl, sectionContent,
+						template, sectionParams, option;
+					response.data.id = parseInt( response.data.id, 10 );
+					sectionId = 'nav_menus[' + response.data.id + ']';
+					sectionParams = {
+						id: sectionId,
 						active: true,
-						settings: {
-							'default': menuSettingId
+						panel: 'menus',
+						title: response.data.name,
+						priority: priority
+					};
+					// @todo this should happen by default when adding a panel or section dynamically
+					// @todo sections and panels should have content_template() like controls
+					// @link https://core.trac.wordpress.org/ticket/30737
+					if ( 0 !== $( '#tmpl-menu-section-for-core' ).length ) {
+						template = wp.template( 'menu-section-for-core' );
+						if ( template ) {
+							sectionContent = template( sectionParams );
+							sectionParams.content = sectionContent;
 						}
-					},
-					previewer: self.setting.previewer
-				} );
-				api.control.add( menuSettingId, menuControl );
+					}
 
-				// @todo: nemu name and auto-add new items controls
-				// requires @link https://core.trac.wordpress.org/ticket/30738 at a minimum to be reasonable
+					// Add the menu section.
+					SectionConstructor = api.Section;
+					menuSection = new SectionConstructor( sectionId, {
+						params: sectionParams
+					} );
+					api.section.add( sectionId, menuSection );
+					api.section( sectionId ).activate(); // @todo core this shouldn't be necessary.
 
-				// Add the new menu as an option to each theme location control.
-				option = '<option value="' + menuParams.id + '">' + menuParams.name + '</option>';
-				$( '#accordion-section-nav .customize-control select' ).append( option );
-
-				// Remove this level of the customizer processing state.
-				processing( processing() - 1 );
-
-				// Hide spinner.
-				spinner.hide();
-
-				// Clear name field.
-				name.val('');
+					// Register the menu control setting.
+					menuSettingId = 'nav_menu_' + response.data.id;
+					settingArgs = {
+						type: 'nav_menu',
+						transport: 'refresh',
+						previewer: self.setting.previewer
+					};
+					api.create( menuSettingId, menuSettingId, '', settingArgs );
+					api( menuSettingId ).set( [] ); // Change to mark as dirty.
 				
-				// Focus on the new menu section.
-				api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
+					// Add the menu control.
+					ControlConstructor = api.controlConstructor.nav_menu;
+					menuControl = new ControlConstructor( menuSettingId, {
+						params: {
+							type: 'nav_menu',
+							content: '<li id="customize-control-nav_menu_' + response.data.id + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
+							menu_id: response.data.id,
+							section: sectionId,
+							priority: 998,
+							active: true,
+							settings: {
+								'default': menuSettingId
+							}
+						},
+						previewer: self.setting.previewer
+					} );
+					api.control.add( menuSettingId, menuControl );
+
+					// @todo: nemu name and auto-add new items controls
+					// requires @link https://core.trac.wordpress.org/ticket/30738 at a minimum to be reasonable
+
+					// Add the new menu as an option to each theme location control.
+					option = '<option value="' + response.data.id + '">' + response.data.name + '</option>';
+					$( '#accordion-section-nav .customize-control select' ).append( option );
+
+					// Remove this level of the customizer processing state.
+					processing( processing() - 1 );
+
+					// Hide spinner.
+					spinner.css( 'visibility', 'hidden' );
+
+					// Clear name field.
+					name.val('');
+				
+					// Focus on the new menu section.
+					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
+				}
 			});
-
-			return false;
-		},
-
-		// Toggles menu-deletion mode for all menus.
-		toggleDelete: function() {
-			var container = $( '#accordion-panel-menus' );
-
-			container.toggleClass( 'deleting-menus' );
 
 			return false;
 		},
@@ -1720,12 +1714,17 @@
 			var params, dropdowns,
 				menuId = $( el ).attr( 'id' ).replace( 'delete-menu-', '' ),
 				section = $( el ).closest( '.accordion-section' ),
-				next = section.next().find( '.accordion-section-title' );
+				next = section.next().find( '.accordion-section-title' ),
+				spinner = section.find( '.add-menu-item-loading.spinner' );
+
 			if ( menuId ) {
+				// Show spinner.
+				spinner.css( 'visibility', 'visible' );
+
 				// Prompt user with an AYS.
 				if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
 					section.addClass( 'deleting' );
-					next.focus();
+
 					// Delete the menu.
 					params = {
 						'action': 'delete-menu-customizer',
@@ -1733,16 +1732,32 @@
 						'menu': menuId,
 						'customize-nav-menu-nonce': api.Menus.data.nonce
 					};
-					$.post( wp.ajax.settings.url, params, function() {
-						// Remove the UI, once menu has been deleted.
-						section.slideUp( 'fast', function() {
-							section.remove(); // @todo core there should be API methods for deleting sections.
-						} );
+					$.post( wp.ajax.settings.url, params, function( response ) {
+						if ( response.data && response.data.message ) {
+							// Display error message
+							alert( response.data.message );
 
-						// Remove the option from the theme location dropdowns.
-						dropdowns = $( '#accordion-section-nav .customize-control select' );
-						dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+							// Remove the CSS class
+							section.removeClass( 'deleting' );
+						} else if ( response.success ) {
+							// Focus the next menu item
+							next.focus();
+
+							// Remove the UI, once menu has been deleted.
+							section.slideUp( 'fast', function() {
+								section.remove(); // @todo core there should be API methods for deleting sections.
+							} );
+
+							// Remove the option from the theme location dropdowns.
+							dropdowns = $( '#accordion-section-nav .customize-control select' );
+							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+						}
+						// Hide spinner.
+						spinner.css( 'visibility', 'hidden' );
 					} );
+				} else {
+					// Hide spinner.
+					spinner.css( 'visibility', 'hidden' );
 				}
 			}
 		}
