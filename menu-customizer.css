@@ -671,7 +671,6 @@ body.adding-menu-items #customize-preview {
 .menu-delete-item {
   display: block;
   float: left;
-  text-align: right;
   padding: 1em 0;
 	width: 100%;
 }
