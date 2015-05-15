@@ -323,8 +323,9 @@ class WP_Customize_Menus {
 			// Add a setting & control for the menu name.
 			$menu_name_setting_id = $section_id . '[name]';
 			$this->manager->add_setting( $menu_name_setting_id, array(
-				'default'  => $menu->name,
-				'type'     => 'menu_name',
+				'default'   => $menu->name,
+				'type'      => 'menu_name',
+				'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
 			) );
 
 			$this->manager->add_control( $menu_name_setting_id, array(
@@ -414,8 +415,9 @@ class WP_Customize_Menus {
 
 			$menu_autoadd_setting_id = $section_id . '[auto_add]';
 			$this->manager->add_setting( $menu_autoadd_setting_id, array(
-				'type'     => 'menu_autoadd',
-				'default'  => $auto_add,
+				'type'      => 'menu_autoadd',
+				'default'   => $auto_add,
+				'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
 			) );
 
 			$this->manager->add_control( $menu_autoadd_setting_id, array(
@@ -434,8 +436,9 @@ class WP_Customize_Menus {
 		) );
 
 		$this->manager->add_setting( 'new_menu_name', array(
-			'type'     => 'new_menu',
-			'default'  => '',
+			'type'      => 'new_menu',
+			'default'   => '',
+			'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
 		) );
 
 		$this->manager->add_control( 'new_menu_name', array(
