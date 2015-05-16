@@ -31,6 +31,7 @@
 
 .wp-customizer .menu-item-bar .menu-item-handle {
 	max-width: 100%;
+	background: #fff;
 }
 
 .wp-customizer .menu-item-handle .item-title {
@@ -57,7 +58,9 @@
 	max-width: 100%;
 	overflow: hidden;
 	padding: 10px;
-	background: #fff;
+	background: #eee;
+	border: 1px solid #999;
+	border-top: none;
 }
 
 .wp-customizer .menu-item-settings .description-thin {
@@ -73,6 +76,16 @@
 .wp-customizer .menu-item-settings .submitbox {
 	margin: 0;
 	padding: 0;
+}
+
+.wp-customizer .menu-item .item-delete:before {
+	content: "\f158";
+	font: normal 20px/1 dashicons;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	position: relative;
+	top: 5px;
+	right: 1px;
 }
 
 .wp-customizer .menu-item-settings .link-to-original {
@@ -241,9 +254,12 @@
 	text-decoration: none !important;
 }
 
-/* Duplicates `.nav-menus-php .item-edit:before {}` in common.css:2260. */
+.wp-customizer .menu-item.menu-item-edit-active .item-edit:before {
+	content: '\f142';
+}
+
 .wp-customizer .menu-item .item-edit:before {
-	line-height: 2.1;
+	line-height: 2;
 }
 
 /* Duplicates `.nav-menus-php .menu-item-edit-active .item-edit:before {}` in common.css:2271. */
@@ -466,6 +482,21 @@
 
 .adding-menu-items .menu-item .item-delete {
 	color: #a00;
+	position: absolute;
+	top: 0;
+	right: 0;
+	font-size: 0;
+}
+
+.adding-menu-items .menu-item .item-delete:before {
+	content: "\f335";
+	font-size: 20px;
+	top: 10px;
+	right: 8px;
+}
+
+.adding-menu-items .menu-item-handle .item-type { 
+	padding-right: 20px;
 }
 
 .adding-menu-items .menu-item .item-delete:hover,
@@ -592,8 +623,7 @@
 	color: #555;
 }
 
-#available-menu-items .menu-item-handle:focus a.item-add,
-#available-menu-items .menu-item-handle:hover a.item-add {
+#available-menu-items .menu-item-handle:focus a.item-add {
 	color: #222;
 }
 
@@ -682,9 +712,9 @@ body.adding-menu-items #customize-preview {
 }
 
 .menu-delete-item {
-  display: block;
-  float: left;
-  padding: 1em 0;
+	display: block;
+	float: left;
+	padding: 1em 0;
 	width: 100%;
 }
 
@@ -699,18 +729,31 @@ body.adding-menu-items #customize-preview {
 	text-decoration: none;
 }
 
-/* Media queries */
-@media screen and (max-height: 700px) and (min-width: 981px) {
-	.menu-item-handle {
-		-webkit-box-shadow: none;
-		box-shadow: none;
-		margin-top: -1px;
-	}
-	.menu-item-handle:hover {
-		position: relative;
-		z-index: 1;
-	}
-	.customize-control-nav_menu {
-		margin-top: 12px;
-	}
+.menu-item-handle {
+	margin-top: -1px;
+}
+
+.menu-item-handle:hover {
+	position: relative;
+	z-index: 10;
+	color: #0073aa;
+}
+
+.menu-item-handle:hover .item-type,
+.menu-item-handle:hover .item-edit,
+#available-menu-items .menu-item-handle:hover .item-add {
+	color: #0073aa;
+}
+
+.menu-item-edit-active .menu-item-handle {
+	border-color: #999;
+	border-bottom: none;
+}
+
+.customize-control-menu_item {
+	margin-bottom: 0;
+}
+
+.customize-control-nav_menu {
+	margin-top: 12px;
 }

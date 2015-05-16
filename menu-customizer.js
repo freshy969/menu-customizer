@@ -285,7 +285,7 @@
 			sections.css( 'max-height', totalHeight - accordionHeight );
 		},
 
-		// Highlights a meun item.
+		// Highlights a menu item.
 		select: function( menuitemTpl ) {
 			this.selected = $( menuitemTpl );
 			this.selected.siblings( '.menu-item-tpl' ).removeClass( 'selected' );
@@ -386,6 +386,11 @@
 				control.collapseForm();
 			} );
 
+			// Move delete buttons into the title bar.
+			_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
+				control.toggleDeletePosition( true );
+			} );
+
 			this.$el.find( '.selected' ).removeClass( 'selected' );
 
 			// Reset search
@@ -402,6 +407,11 @@
 			if ( options.returnFocus && this.currentMenuControl ) {
 				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
 			}
+
+			// Move delete buttons back out of the title bar. 
+			_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
+				control.toggleDeletePosition( false );
+			} );
 
 			this.currentMenuControl = null;
 			this.selected = null;
@@ -949,6 +959,25 @@
 				self.container.trigger( 'collapse' );
 
 				$inside.slideUp( 'fast', complete );
+			}
+		},
+
+		/**
+		* Move the control's delete button up to the title bar or down to the control body.
+		*
+		* @param {boolean|undefined} [top] If not supplied, will be inverse of current visibility.
+		*/
+		toggleDeletePosition: function( top ) {
+			var button, handle, actions;
+			button = this.container.find( '.item-delete' );
+			handle = this.container.find( '.menu-item-handle' );
+			actions = this.container.find( '.menu-item-actions' );
+
+			if ( top ) {
+				handle.append( button );
+			}
+			else {
+				actions.append( button );
 			}
 		},
 
