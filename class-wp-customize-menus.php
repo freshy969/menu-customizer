@@ -430,11 +430,11 @@ class WP_Customize_Menus {
 		}
 
 		// Add the add-new-menu section and controls.
-		$this->manager->add_section( 'add_menu', array(
-			'title'     => __( 'New Menu' ),
+		$this->manager->add_section( new WP_Customize_New_Menu_Section( $this->manager, 'add_menu', array(
+			'title'     => __( 'Add a Menu' ),
 			'panel'     => 'menus',
 			'priority'  => 999,
-		) );
+		) ) );
 
 		$this->manager->add_setting( 'new_menu_name', array(
 			'type'      => 'new_menu',

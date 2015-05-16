@@ -13,6 +13,33 @@ class WP_Customize_Menu_Section extends WP_Customize_Section {
 }
 
 /**
+ * Customize Menu Section Class
+ *
+ * Implements the new-menu-ui toggle button instead of a regular section.
+ */
+class WP_Customize_New_Menu_Section extends WP_Customize_Section {
+	public $type = 'new_menu';
+
+	/**
+	 * Render the section, and the controls that have been added to it.
+	 *
+	 * @since Menu Customize 0.3
+	 */
+	protected function render() {
+		?>
+		<li id="accordion-section-<?php echo esc_attr( $this->id ); ?>" class="accordion-section-new-menu">
+		
+			<button class="button-secondary add-new-menu-item add-menu-toggle" tabindex="0">
+				<?php echo esc_html( $this->title ); ?>
+				<span class="screen-reader-text"><?php _e( 'Press return or enter to open' ); ?></span>
+			</button>
+			<ul class="new-menu-section-content"></ul>
+		</li>
+		<?php
+	}
+}
+
+/**
  * Customize Nav Menu Control Class
  */
 class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {

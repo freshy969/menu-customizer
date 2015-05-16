@@ -468,7 +468,7 @@
 	 * Note that 'menu' must match the WP_Customize_Menu_Section::$type.
 	 *
 	 * @constructor
-	 * @augments wp.customize.Control
+	 * @augments wp.customize.Section
 	 */
 	api.Menus.MenuSection = api.Section.extend({
 
@@ -505,6 +505,60 @@
 			}
 			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
 		}
+	});
+
+	/**
+	 * wp.customize.Menus.NewMenuSection
+	 *
+	 * Customizer section for new menus.
+	 * Note that 'new_menu' must match the WP_Customize_New_Menu_Section::$type.
+	 *
+	 * @constructor
+	 * @augments wp.customize.Section
+	 */
+	api.Menus.NewMenuSection = api.Section.extend({
+
+		/**
+		 * Add behaviors for the accordion section.
+		 *
+		 * @since Menu Customizer 0.3
+		 */
+		attachEvents: function () {
+			var section = this;
+			this.container.on( 'click keydown', '.add-menu-toggle', function() {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+					return;
+				}
+				event.preventDefault(); // Keep this AFTER the key filter above
+
+				if ( section.expanded() ) {
+					section.collapse();
+				} else {
+					section.expand();
+				}
+			});
+		},
+
+		/**
+		 * Update UI to reflect expanded state.
+		 *
+		 * @since 4.1.0
+		 *
+		 * @param {Boolean} expanded
+		 * @param {Object}  args
+		 */
+		onChangeExpanded: function ( expanded, args ) {
+			var section = this,
+			    button = section.container.find( '.add-menu-toggle' ),
+				content = section.container.find( '.new-menu-section-content' );
+			if ( expanded ) {
+				button.addClass( 'open' );
+				content.slideDown( 'fast' );
+			} else {
+				button.removeClass( 'open' );
+				content.slideUp( 'fast' );
+			}
+		}		
 	});
 
 	/**
@@ -1597,7 +1651,7 @@
 			var self = this,
 				processing,
 				params,
-				container = this.container.closest( '.accordion-section' ),
+				container = this.container.closest( '.accordion-section-new-menu' ),
 				name = container.find( '.menu-name-field' ).first(),
 				spinner = container.find( '.spinner' );
 
@@ -1777,7 +1831,8 @@
 	 * Extends wp.customize.sectionConstructor with section constructor for menu.
 	 */
 	$.extend( api.sectionConstructor, {
-		menu: api.Menus.MenuSection
+		menu: api.Menus.MenuSection,
+		new_menu: api.Menus.NewMenuSection
 	});
 
 	/**
