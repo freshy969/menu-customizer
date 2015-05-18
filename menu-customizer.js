@@ -256,7 +256,6 @@
 
 			// Render the template for each item by type.
 			$.each( api.Menus.data.itemTypes, function( index, type ) {
-				var items, typeInner;
 				self.pages[type.type] = 0;
 				self.loadItems( type.type, type.obj_type );
 			} );
@@ -279,7 +278,7 @@
 				'type': type,
 				'obj_type': obj_type,
 				'page': self.pages[type]
-			}
+			};
 			$.post( wp.ajax.settings.url, params, function( response ) {
 				var items, typeInner;
 				if ( response.data && response.data.message ) {
@@ -585,9 +584,8 @@
 		 * @since 4.1.0
 		 *
 		 * @param {Boolean} expanded
-		 * @param {Object}  args
 		 */
-		onChangeExpanded: function ( expanded, args ) {
+		onChangeExpanded: function ( expanded ) {
 			var section = this,
 			    button = section.container.find( '.add-menu-toggle' ),
 				content = section.container.find( '.new-menu-section-content' );
