@@ -699,9 +699,9 @@
 			} );
 
 			// Regular menu item update triggering - on change.
-			$menuItemContent.on( 'change', ':input', function() {
+			$menuItemContent.on( 'change input propertychange', ':input', _.debounce( function() {
 				self.updateMenuItem();
-			} );
+			}, 500 ) );
 
 			// When saving, update original_id to menu_item_id, initiating new clones as needed.
 			api.bind( 'save', function() {
