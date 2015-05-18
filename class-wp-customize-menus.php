@@ -41,6 +41,7 @@ class WP_Customize_Menus {
 		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) );
 		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) );
 		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) );
+		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_action( 'customize_update_menu_name', array( $this, 'update_menu_name' ), 10, 2 );
@@ -49,7 +50,7 @@ class WP_Customize_Menus {
 		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_nav_menu_items_for_preview' ), 10, 2 );
 		add_action( 'customize_update_nav_menu', array( $this, 'update_nav_menu' ), 10, 2 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
-		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) ); // @todo ajaxify
+		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 
 	}
 
@@ -237,6 +238,89 @@ class WP_Customize_Menus {
 
 		wp_send_json_error( array( 'message' => __( 'The menu item could not be added.' ) ) );
 	}
+	
+	/**
+	 * Ajax handler for loading available menu items.
+	 *
+	 * @since Menu Customizer 0.3
+	 * @access public
+	 */
+	public function load_available_items_ajax() {
+		check_ajax_referer( 'customize-menus', 'customize-menus-nonce' );
+
+		if ( ! current_user_can( 'edit_theme_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
+		}
+
+		$page = absint( $_POST['page'] );
+		$type = esc_html( $_POST['type'] );
+		$obj_type = esc_html( $_POST['obj_type'] );
+		$items = array();
+		$posts = $terms = false;
+
+		if ( 'post_type' === $obj_type ) {
+			if ( 0 === $page && 'page' === $type ) {
+				// Add "Home" link. Treat as a page, but switch to custom on add.
+				$home = array(
+					'id'          => 0,
+					'name'        => _x( 'Home', 'nav menu home label' ),
+					'type'        => 'page',
+					'type_label'  => __( 'Page' ),
+					'obj_type'    => 'custom',
+				);
+				$items[] = $home;
+			}
+			$args = array(
+				'numberposts' => 10,
+				'offset'        => 10 * $page,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'post_type'      => $type,
+			);
+			$posts = get_posts( $args );
+			foreach ( $posts as $post ) {
+				$items[] = array(
+					'id'         => 'post-' . $post->ID,
+					'name'       => $post->post_title,
+					'type'       => $type,
+					'type_label' => get_post_type_object( $type )->labels->singular_name,
+					'obj_type'   => 'post_type',
+				);
+			}
+		} else {
+			$args = array(
+				'child_of'      => 0,	
+				'exclude'       => '',
+				'hide_empty'    => false,
+				'hierarchical'  => 1,
+				'include'       => '',
+				'number'        => 10,
+				'offset'        => 10 * $page,
+				'order'         => 'DESC',
+				'orderby'       => 'count',
+				'pad_counts'    => false,
+			);
+			$terms = get_terms( $type, $args );
+
+			foreach ( $terms as $term ) {
+				$items[] = array(
+					'id'         => 'term-' . $term->term_id,
+					'name'       => $term->name,
+					'type'       => $type,
+					'type_label' => get_taxonomy( $type )->labels->singular_name,
+					'obj_type'   => 'taxonomy',
+				);
+			}
+		}
+
+		if ( $terms && is_wp_error( $terms ) ) {
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( $terms->get_error_message(), true ) ) );
+		} elseif ( $posts && is_wp_error( $posts ) ) {
+			wp_send_json_error( array( 'message' => wp_strip_all_tags( $posts->get_error_message(), true ) ) );
+		} else {
+			wp_send_json_success( array( 'items' => $items ) );
+		}
+	}
 
 	/**
 	 * Enqueue scripts and styles.
@@ -254,7 +338,6 @@ class WP_Customize_Menus {
 		$settings = array(
 			'nonce'                => wp_create_nonce( 'customize-menus' ),
 			'allMenus'             => wp_get_nav_menus(),
-			'availableMenuItems'   => $this->available_items(),
 			'itemTypes'            => $this->available_item_types(),
 			'l10n'                 => array(
 				'untitled'        => _x( '(no label)', 'Missing menu item navigation label.' ),
@@ -733,102 +816,21 @@ class WP_Customize_Menus {
 	}
 
 	/**
-	 * Return all potential menu items.
-	 *
-	 * @todo: pagination and lazy-load, rather than loading everything at once.
-	 *
-	 * @since Menu Customizer 0.0
-	 *
-	 * @return array All potential menu items' names, object ids, and types.
-	 */
-	public function available_items() {
-		$items = array();
-
-		$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'object' );
-
-		if ( ! $post_types ) {
-			return array();
-		}
-
-		foreach ( $post_types as $post_type ) {
-			if ( $post_type ) {
-				$args = array(
-					'posts_per_page'  => -1,
-					'orderby'         => 'post_date',
-					'order'           => 'DESC',
-					'post_type'       => $post_type->name,
-				);
-				$allposts = get_posts( $args );
-				foreach ( $allposts as $post ) {
-					$items[] = array(
-						'id'          => 'post-' . $post->ID,
-						'name'        => $post->post_title,
-						'type'        => $post_type->name,
-						'type_label'  => $post_type->labels->singular_name,
-						'obj_type'    => 'post_type',
-						'order'       => strtotime( $post->post_modified ), // Posts are ordered by time updated.
-					);
-				}
-			}
-		}
-
-		$taxonomies = get_taxonomies( array( 'show_in_nav_menus' => true ), 'object' );
-
-		if ( $taxonomies ) {
-			foreach ( $taxonomies as $tax ) {
-				if ( $tax ) {
-					$name = $tax->name;
-					$args = array(
-						'child_of'      => 0,
-						'exclude'       => '',
-						'hide_empty'    => false,
-						'hierarchical'  => 1,
-						'include'       => '',
-						'number'        => 0,
-						'offset'        => 0,
-						'order'         => 'ASC',
-						'orderby'       => 'name',
-						'pad_counts'    => false,
-					);
-					$terms = get_terms( $name, $args );
-
-					foreach ( $terms as $term ) {
-						$items[] = array(
-							'id'          => 'term-' . $term->term_id,
-							'name'        => $term->name,
-							'type'        => $name,
-							'type_label'  => $tax->labels->singular_name,
-							'obj_type'    => 'taxonomy',
-							'order'       => $term->count, // Terms are ordered by count; will always be after all posts when combined.
-						);
-					}
-				}
-			}
-		}
-
-		// Add "Home" link. Treat as a page, but switch to custom on add.
-		$home = array(
-			'id'          => 0,
-			'name'        => _x( 'Home', 'nav menu home label' ),
-			'type'        => 'page',
-			'type_label'  => __( 'Page' ),
-			'obj_type'    => 'custom',
-			'order'       => time(), // Will be the first item.
-		);
-		$items[] = $home;
-
-		return $items;
-	}
-
-	/**
 	 * Return an array of all the available item types.
 	 *
 	 * @since Menu Customizer 0.0
 	 */
 	public function available_item_types() {
+		$items = array();
 		$types = get_post_types( array( 'show_in_nav_menus' => true ), 'names' );
+		foreach ( $types as $type ) {
+			$items[] = array( 'type' => $type, 'obj_type' => 'post_type' );
+		}
 		$taxes = get_taxonomies( array( 'show_in_nav_menus' => true ), 'names' );
-		return array_merge( $types, $taxes );
+		foreach ( $taxes as $tax ) {
+			$items[] = array( 'type' => $tax, 'obj_type' => 'taxonomy' );
+		}
+		return $items;
 	}
 
 	/**
@@ -940,18 +942,16 @@ class WP_Customize_Menus {
 			</div>
 			<?php
 
-			// @todo: consider user add_meta_box/do_accordion_section and making screen-optional?
+			// @todo: consider using add_meta_box/do_accordion_section and making screen-optional?
 
 			// Containers for per-post-type item browsing; items added with JS.
-			// @todo: render these (and the contents) with JS, rather than here.
 			$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'object' );
 			if ( $post_types ) {
 				foreach ( $post_types as $type ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $type->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?></h4>
-						<div class="accordion-section-content">
-						</div>
+						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span></h4>
+						<div class="accordion-section-content" data-type="<?php echo $type->name; ?>" data-obj_type="post_type"></div>
 					</div>
 					<?php
 				}
@@ -962,9 +962,8 @@ class WP_Customize_Menus {
 				foreach ( $taxonomies as $tax ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $tax->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?></h4>
-						<div class="accordion-section-content">
-						</div>
+						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span></h4>
+						<div class="accordion-section-content" data-type="<?php echo $tax->name; ?>" data-obj_type="taxonomy"></div>
 					</div>
 					<?php
 				}

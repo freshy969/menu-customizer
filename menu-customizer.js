@@ -183,24 +183,17 @@
 		currentMenuControl: null,
 		$search: null,
 		rendered: false,
+		pages: {},
+		sectionContent: '',
+		loading: false,
 
 		initialize: function() {
 			var self = this;
 
-			this.toggleLoading(true);
-
 			this.$search = $( '#menu-items-search' );
+			this.sectionContent = this.$el.find( '.accordion-section-content' );
 
 			_.bindAll( this, 'close' );
-
-			this.listenTo( this.collection, 'change', this.updateList );
-
-			this.collection.sortByField( 'order' );
-
-			if ( ! this.rendered ) {
-				this.initList();
-				this.rendered = true;
-			}
 
 			// If the available menu items panel is open and the customize controls are
 			// interacted with (other than an item being deleted), then close the
@@ -213,21 +206,27 @@
 				}
 			} );
 
+			// Load more items.
+			this.sectionContent.scroll( function() {
+				var totalHeight = self.$el.find( '.accordion-section.open .accordion-section-content' ).prop('scrollHeight'),
+				    visibleHeight = self.$el.find( '.accordion-section.open' ).height();
+				if ( ! self.loading && $( this ).scrollTop() > 3 / 4 * totalHeight - visibleHeight ) {
+					var type = $( this ).data( 'type' ),
+					    obj_type = $( this ).data( 'obj_type' );
+					self.loadItems( type, obj_type );
+				}
+			});
+
 			// Close the panel if the URL in the preview changes
 			api.Menus.Previewer.bind( 'url', this.close );
-
-			this.toggleLoading(false);
-		},
-
-		toggleLoading: function( tf ) {
-			var visibility = true === tf ? 'visible' : 'hidden';
-			$( '.add-menu-item-loading' ).css( 'visibility', visibility );
 		},
 
 		// Performs a search and handles selected menu item.
+		// @todo implement, via ajax
 		search: function( event ) {
 			var firstVisible;
-
+//searchInner = $( '#available-menu-items-search .accordion-section-content' ),
+				
 			this.collection.doSearch( event.target.value );
 
 			// Remove a menu item from being selected if it is no longer visible.
@@ -253,27 +252,56 @@
 
 		// Render the individual items.
 		initList: function() {
-			var searchInner = $( '#available-menu-items-search .accordion-section-content' ),
-				self = this,
-				itemTemplate;
-
-			itemTemplate = wp.template( 'available-menu-item' );
-
-			// Render the template for each menu item in the search section.
-			self.collection.each( function( menu_item ) {
-				searchInner.append( itemTemplate( menu_item.attributes ) );
-			});
+			var self = this;
 
 			// Render the template for each item by type.
 			$.each( api.Menus.data.itemTypes, function( index, type ) {
 				var items, typeInner;
-				items = self.collection.where({ type: type });
-				items = new api.Menus.AvailableItemCollection( items );
-				typeInner = $( '#available-menu-items-' + type + ' .accordion-section-content' );
-				items.each( function( menu_item ) {
-					typeInner.append( itemTemplate( menu_item.attributes ) );
-				} );
+				self.pages[type.type] = 0;
+				self.loadItems( type.type, type.obj_type );
 			} );
+		},
+
+		// Load available menu items.
+		loadItems: function( type, obj_type ) {
+			var self = this, params,
+			    itemTemplate = wp.template( 'available-menu-item' );
+
+			if ( 0 > self.pages[type] ) {
+				return;
+			}
+			$( '#available-menu-items-' + type + ' .accordion-section-title' ).addClass( 'loading' );
+			self.loading = true;
+			params = {
+				'action': 'load-available-menu-items-customizer',
+				'customize-menus-nonce': api.Menus.data.nonce,
+				'wp_customize': 'on',
+				'type': type,
+				'obj_type': obj_type,
+				'page': self.pages[type]
+			}
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				var items, typeInner;
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
+				} else if ( response.success && response.data ) {
+					items = response.data.items;
+					$( '#available-menu-items-' + type + ' .accordion-section-title' ).removeClass( 'loading' );
+					self.loading = false;
+					if ( 0 === items.length ) {
+						self.pages[type] = -1;
+						return;
+					}
+					items = new api.Menus.AvailableItemCollection( items );
+					self.collection.add( items.models );
+					typeInner = $( '#available-menu-items-' + type + ' .accordion-section-content' );
+					items.each( function( menu_item ) {
+						typeInner.append( itemTemplate( menu_item.attributes ) );
+					} );
+					self.pages[type] = self.pages[type] + 1;
+				}
+			});
 		},
 
 		// Adjust the height of each section of items to fit the screen.
@@ -374,9 +402,12 @@
 
 		// Opens the panel.
 		open: function( menuControl ) {
-			this.toggleLoading(true);
 			this.currentMenuControl = menuControl;
 
+			if ( ! this.rendered ) {
+				this.initList();
+				this.rendered = true;
+			}
 			this.itemSectionHeight();
 
 			$( 'body' ).addClass( 'adding-menu-items' );
@@ -397,7 +428,6 @@
 			this.collection.doSearch( '' );
 
 			this.$search.focus();
-			this.toggleLoading(false);
 		},
 
 		// Closes the panel
@@ -1613,7 +1643,7 @@
 
 					// Make sure the panel hasn't been closed in the meantime.
 					if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
-						api.Menus.refreshVisibleMenuOptions();
+						api.control( settingId ).toggleDeletePosition();
 					}
 
 					// Add item to this menu.
@@ -1949,21 +1979,6 @@
 		} );
 
 		return foundControl;
-	};
-
-	/**
-	 * Show/hide the visible fields based on the screen options.
-	 */
-	api.Menus.refreshVisibleMenuOptions = function() {
-		$( '.hide-column-tog' ).each( function() {
-			var $t = $(this), column = $t.val();
-			if ( $t.prop('checked') ) {
-				$('.field-' + column).show();
-			}
-			else {
-				$('.field-' + column).hide();
-			}
-		} );
 	};
 
 	/**

@@ -635,6 +635,11 @@
 	top: 12px;
 }
 
+#available-menu-items .accordion-section-title.loading .spinner {
+	visibility: visible;
+	margin: 0 20px;
+}
+
 #customize-preview {
 	-webkit-transition: all 0.2s;
 	transition: all 0.2s;
