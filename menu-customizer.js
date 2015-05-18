@@ -555,9 +555,8 @@
 		 * @since 4.1.0
 		 *
 		 * @param {Boolean} expanded
-		 * @param {Object}  args
 		 */
-		onChangeExpanded: function ( expanded, args ) {
+		onChangeExpanded: function ( expanded ) {
 			var section = this,
 			    button = section.container.find( '.add-menu-toggle' ),
 				content = section.container.find( '.new-menu-section-content' );
@@ -568,7 +567,7 @@
 				button.removeClass( 'open' );
 				content.slideUp( 'fast' );
 			}
-		}		
+		}
 	});
 
 	/**
