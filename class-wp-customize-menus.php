@@ -357,11 +357,11 @@ class WP_Customize_Menus {
 								// @TODO: This should be supplied already
 								$incoming_setting_value->ID = $matches['menu_item_id'];
 							}
-							if ( ! isset ( $incoming_setting_value->title ) ) {
+							if ( ! isset( $incoming_setting_value->title ) ) {
 								// @TODO: This should be supplied already
 								$incoming_setting_value->title = 'UNTITLED';
 							}
-							if ( ! isset ( $incoming_setting_value->menu_item_parent ) ) {
+							if ( ! isset( $incoming_setting_value->menu_item_parent ) ) {
 								// @TODO: This should be supplied already
 								$incoming_setting_value->menu_item_parent = 0;
 							}
