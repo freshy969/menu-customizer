@@ -26,7 +26,7 @@
 	 * @augments Backbone.Model
 	 */
 	api.Menus.MenuItemModel = Backbone.Model.extend({
-		transport: 'refresh',
+		transport: api.Menus.data.menuItemTransport,
 		params: [],
 		menu_item_id: null,
 		original_id: 0,
