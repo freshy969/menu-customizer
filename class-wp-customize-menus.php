@@ -238,7 +238,7 @@ class WP_Customize_Menus {
 
 		wp_send_json_error( array( 'message' => __( 'The menu item could not be added.' ) ) );
 	}
-	
+
 	/**
 	 * Ajax handler for loading available menu items.
 	 *
@@ -289,7 +289,7 @@ class WP_Customize_Menus {
 			}
 		} else {
 			$args = array(
-				'child_of'      => 0,	
+				'child_of'      => 0,
 				'exclude'       => '',
 				'hide_empty'    => false,
 				'hierarchical'  => 1,
@@ -439,11 +439,11 @@ class WP_Customize_Menus {
 								// @TODO: This should be supplied already
 								$incoming_setting_value->ID = $matches['menu_item_id'];
 							}
-							if ( ! isset ( $incoming_setting_value->title ) ) {
+							if ( ! isset( $incoming_setting_value->title ) ) {
 								// @TODO: This should be supplied already
 								$incoming_setting_value->title = 'UNTITLED';
 							}
-							if ( ! isset ( $incoming_setting_value->menu_item_parent ) ) {
+							if ( ! isset( $incoming_setting_value->menu_item_parent ) ) {
 								// @TODO: This should be supplied already
 								$incoming_setting_value->menu_item_parent = 0;
 							}
