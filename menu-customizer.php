@@ -3,7 +3,7 @@
  * Plugin Name: Menu Customizer
  * Plugin URI: http://wordpress.org/plugins/menu-customizer
  * Description: Manage your Menus in the Customizer. GSoC Project & WordPress core feature-plugin.
- * Version: 0.2
+ * Version: 0.3
  * Author: Nick Halsey
  * Author URI: http://nick.halsey.co/
  * Tags: menus, custom menus, customizer, theme customizer, gsoc
