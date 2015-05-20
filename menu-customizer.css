@@ -735,6 +735,14 @@ body.adding-menu-items #customize-preview {
 	width: 100%;
 }
 
+li.assigned-to-menu-location .menu-delete-item {
+  display: none;
+}
+
+li.assigned-to-menu-location .add-new-menu-item {
+  margin-bottom: 1em;
+}
+
 .menu-delete {
 	color: #a00;
 	cursor: pointer;

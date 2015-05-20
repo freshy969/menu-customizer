@@ -612,23 +612,31 @@
 		ready: function() {
 			var self = this;
 
-			// Update sections when value changes changes.
+			// Update sections when value changes.
 			this.setting.bind( function( to, from ) {
 				if ( ! _( from ).isEqual( to ) ) {
-					self.updateLocationInMenu( to );
+					self.updateLocationInMenu( to, from );
 				}
 			} ); 
-			this.updateLocationInMenu( this.setting.get() );
+			this.updateLocationInMenu( this.setting.get(), '' );
 		},
 
 		// Add the menu location name to the menu title.
-		updateLocationInMenu: function( to ) {
-			var text, title;
+		updateLocationInMenu: function( to, from ) {
+			var $section, title, text;
+			$section = api.section( 'nav_menus[' + to + ']' ).container;
+			title = $section.find( '.accordion-section-title' );
 			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + 
 				api.Menus.data.l10n.menuLocation.replace( '%s', this.params.label ) + '</span>' );
+
 			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
-			title = api.section( 'nav_menus[' + to + ']' ).container.find( '.accordion-section-title' );
 			text.appendTo( title );
+
+			// Toggle active section class
+			$section.addClass( 'assigned-to-menu-location' );
+			if ( from ) {
+				api.section( 'nav_menus[' + from + ']' ).container.removeClass( 'assigned-to-menu-location' );
+			}
 		}
 	});
 
