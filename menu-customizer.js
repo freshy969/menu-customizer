@@ -624,8 +624,8 @@
 		// Add the menu location name to the menu title.
 		updateLocationInMenu: function( to ) {
 			var text, title;
-			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-'
-					+ this.params.locationId + '">' + this.params.label + '</span>' );
+			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + 
+				this.params.locationId + '">' + this.params.label + '</span>' );
 			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
 			title = api.section( 'nav_menus[' + to + ']' ).container.find( '.accordion-section-title' );
 			text.appendTo( title );
