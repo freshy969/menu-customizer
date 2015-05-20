@@ -2029,10 +2029,14 @@
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
-				id = el.closest( '.accordion-section' ).attr( 'id' );
+				id = el.closest( '.accordion-section' ).attr( 'id' ),
+				location = el.closest( '.accordion-section' ).find( '.menu-in-location' );
 			// Empty names are not allowed (will not be saved), don't update to one.
 			if ( name ) {
 				title.html( name );
+				if ( location.length ) {
+					location.appendTo( title );
+				}
 				id = id.replace( 'accordion-section-nav_menus[', '' );
 				id = id.replace( ']', '' );
 				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
