@@ -386,7 +386,7 @@ class WP_Customize_Menus {
 			'description' => $description,
 		) );
 
-// @todo if ( ! $menus ) : make a "default" menu
+		// @todo if ( ! $menus ) : make a "default" menu
 
 		if ( $menus ) {
 			$choices = array( '' => __( '&mdash; Select &mdash;' ) );
