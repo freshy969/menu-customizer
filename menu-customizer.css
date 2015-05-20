@@ -5,16 +5,21 @@
  * a few adaptations so that things fit better in the Customizer.
  */
 
-#accordion-section-nav .accordion-section-title:before {
+#accordion-section-menu_locations {
+	position: relative;
+	margin-bottom: 15px;
+}
+
+#accordion-section-menu_locations .accordion-section-title {
+	padding-left: 43px;
+}
+
+#accordion-section-menu_locations .accordion-section-title:before {
 	font: normal 20px/1 dashicons;
 	content: "\f116";
 	position: absolute;
 	top: 11px;
 	left: 12px;
-}
-
-#accordion-section-nav .accordion-section-title {
-	padding-left: 43px;
 }
 
 .wp-customizer .menu-item-bar .menu-item-handle,
@@ -329,11 +334,6 @@
 
 #screen-options-wrap {
 	display: none;
-}
-
-#accordion-section-nav {
-	position: relative;
-	margin-bottom: 15px;
 }
 
 #screen-options-wrap.active {

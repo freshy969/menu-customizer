@@ -1801,7 +1801,7 @@
 
 					// Add the new menu as an option to each theme location control.
 					option = '<option value="' + response.data.id + '">' + response.data.name + '</option>';
-					$( '#accordion-section-nav .customize-control select' ).append( option );
+					$( '#accordion-section-menu_locations .customize-control select' ).append( option );
 
 					// Remove this level of the customizer processing state.
 					processing( processing() - 1 );
@@ -1860,7 +1860,7 @@
 							} );
 
 							// Remove the option from the theme location dropdowns.
-							dropdowns = $( '#accordion-section-nav .customize-control select' );
+							dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
 							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
 						}
 						// Hide spinner.
@@ -2001,7 +2001,7 @@
 				title.html( name );
 				id = id.replace( 'accordion-section-nav_menus[', '' );
 				id = id.replace( ']', '' );
-				$( '#accordion-section-nav .customize-control select option[value=' + id + ']' ).text( name );
+				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
 			}
 		} );
 		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function(e) {

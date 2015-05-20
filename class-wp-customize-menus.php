@@ -368,20 +368,50 @@ class WP_Customize_Menus {
 			'title'        => __( 'Menus' ),
 			'description'  => '<p>' . __( 'This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.' ) . '</p>',
 			'priority'     => 30,
+			//'theme_supports' => 'menus|widgets', @todo allow multiple theme supports
 		) );
 
-		// Rebrand the existing "Navigation" section title and add it to the global 'menus' panel.
-		$locations = get_registered_nav_menus();
+		// Menu loactions.
+		$this->manager->remove_section( 'nav' ); // Remove old core section. @todo core merge remove corresponding code from WP_Customize_Manager::register_controls().
+		$locations     = get_registered_nav_menus();
+		$menus         = wp_get_nav_menus();
 		$num_locations = count( array_keys( $locations ) );
-		$description = sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
-		$description .= '<br>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' );
+		$description   = '<p>' . sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
+		$description  .= '</p><p>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' ) . '</p>';
 
-		$this->manager->get_section( 'nav' )->title = __( 'Menu Locations' );
-		$this->manager->get_section( 'nav' )->description = $description;
-		$this->manager->get_section( 'nav' )->priority = 5;
-		$this->manager->get_section( 'nav' )->panel = 'menus';
+		$this->manager->add_section( 'menu_locations', array(
+			'title'       => __( 'Menu Locations' ),
+			'panel'       => 'menus',
+			'priority'    => 5,
+			'description' => $description,
+		) );
 
-		// Add the screen options control to the existing "Navigation" section (it gets moved around in the JS).
+// @todo if ( ! $menus ) : make a "default" menu
+
+		if ( $menus ) {
+			$choices = array( '' => __( '&mdash; Select &mdash;' ) );
+			foreach ( $menus as $menu ) {
+				    $choices[ $menu->term_id ] = wp_html_excerpt( $menu->name, 40, '&hellip;' );
+			}
+
+			foreach ( $locations as $location => $description ) {
+				$menu_setting_id = "nav_menu_locations[{$location}]";
+
+				$this->manager->add_setting( $menu_setting_id, array(
+					'sanitize_callback' => 'absint',
+					'theme_supports'    => 'menus',
+				) );
+
+				$this->manager->add_control( $menu_setting_id, array(
+					'label'   => $description,
+					'section' => 'menu_locations',
+					'type'    => 'select',
+					'choices' => $choices,
+				) );
+			}
+		}
+
+		// Add the screen options control to the menu locations section (it gets moved around in the JS).
 		$this->manager->add_setting( 'menu_customizer_options', array(
 			'type' => 'menu_options',
 		) );
@@ -391,8 +421,6 @@ class WP_Customize_Menus {
 		) ) );
 
 		// Register each menu as a Customizer section, and add each menu item to each menu.
-		$menus = wp_get_nav_menus();
-
 		foreach ( $menus as $menu ) {
 			$menu_id = $menu->term_id;
 
