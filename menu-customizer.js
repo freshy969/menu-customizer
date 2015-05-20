@@ -600,10 +600,43 @@
 	});
 
 	/**
+	 * wp.customize.Menus.MenuLocationControl
+	 *
+	 * Customizer control for menu locations (rendered as a <select>).
+	 * Note that 'menu_location' must match the WP_Customize_Menu_Location_Control::$type.
+	 *
+	 * @constructor
+	 * @augments wp.customize.Control
+	 */
+	api.Menus.MenuLocationControl = api.Control.extend({
+		ready: function() {
+			var self = this;
+
+			// Update sections when value changes changes.
+			this.setting.bind( function( to, from ) {
+				if ( ! _( from ).isEqual( to ) ) {
+					self.updateLocationInMenu( to );
+				}
+			} ); 
+			this.updateLocationInMenu( this.setting.get() );
+		},
+
+		// Add the menu location name to the menu title.
+		updateLocationInMenu: function( to ) {
+			var text, title;
+			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-'
+					+ this.params.locationId + '">' + this.params.label + '</span>' );
+			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
+			title = api.section( 'nav_menus[' + to + ']' ).container.find( '.accordion-section-title' );
+			text.appendTo( title );
+		}
+	});
+
+	/**
 	 * wp.customize.Menus.MenuItemControl
 	 *
 	 * Customizer control for menu items.
-	 * Note that 'menu_item' must match the WP_Menu_Item_Customize_Control::$type.
+	 * Note that 'menu_item' must match the WP_Customize_Menu_Item_Control::$type.
 	 *
 	 * @constructor
 	 * @augments wp.customize.Control
@@ -1876,9 +1909,10 @@
 
 	/**
 	 * Extends wp.customize.controlConstructor with control constructor for
-	 * menu_item, nav_menu, and new_menu.
+	 * menu_location, menu_item, nav_menu, and new_menu.
 	 */
 	$.extend( api.controlConstructor, {
+		menu_location: api.Menus.MenuLocationControl,
 		menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
 		new_menu: api.Menus.NewMenuControl

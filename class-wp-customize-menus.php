@@ -402,12 +402,12 @@ class WP_Customize_Menus {
 					'theme_supports'    => 'menus',
 				) );
 
-				$this->manager->add_control( $menu_setting_id, array(
-					'label'   => $description,
-					'section' => 'menu_locations',
-					'type'    => 'select',
-					'choices' => $choices,
-				) );
+				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $menu_setting_id, array(
+					'label'       => $description,
+					'location_id' => $location,
+					'section'     => 'menu_locations',
+					'choices'     => $choices,
+				) ) );
 			}
 		}
 
