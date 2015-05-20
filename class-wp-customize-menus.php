@@ -342,6 +342,7 @@ class WP_Customize_Menus {
 			'l10n'                 => array(
 				'untitled'        => _x( '(no label)', 'Missing menu item navigation label.' ),
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
+				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
 			),
 		);

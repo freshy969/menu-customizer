@@ -23,21 +23,15 @@
 }
 
 .menu-in-location {
+	display: block;
 	color: #999;
 	font-weight: 600;
 	font-size: 10px;
-	margin-left: 5px;
 }
 
 #customize-controls .control-section .accordion-section-title:focus .menu-in-location,
 #customize-controls .control-section .accordion-section-title:hover .menu-in-location {
-	color: #fff;
-}
-
-.menu-in-location:before {
-	content: "\f116";
-	font: 10px/1 dashicons;
-	margin-right: 4px;
+	color: #999;
 }
 
 .wp-customizer .menu-item-bar .menu-item-handle,
