@@ -564,7 +564,7 @@
 		 */
 		attachEvents: function () {
 			var section = this;
-			this.container.on( 'click keydown', '.add-menu-toggle', function() {
+			this.container.on( 'click keydown', '.add-menu-toggle', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
