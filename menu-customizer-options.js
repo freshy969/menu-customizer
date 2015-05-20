@@ -12,13 +12,15 @@
 	var customizeMenuOptions = {
 		init : function() {
 			// Add a screen options button to the Menus page header.
-			var button = '<a id="customizer-menu-screen-options-button" title="Menu Options" href="#"></a>',
+			// @todo when this file is merged into menu-customizer.js add the button text to l10n
+			var buttonText = '<span class="screen-reader-text">Menu Options</span>',
+				button = '<span id="customizer-menu-screen-options-button">' + buttonText + '</span>',
 				header = $( '#accordion-panel-menus .accordion-sub-container ' );
 			header.find( '.accordion-section:first .accordion-section-title' ).append( button );
 			$( '#screen-options-wrap' ).prependTo( header );
 			$( '#customize-control-menu_customizer_options' ).remove();
 			$( '#screen-options-wrap' ).removeClass( 'hidden' );
-			$( '#customizer-menu-screen-options-button' ).click( function() {
+			$( '#customizer-menu-screen-options-button' ).on( 'click', function() {
 				$( '#customizer-menu-screen-options-button' ).toggleClass( 'active' );
 				$( '#screen-options-wrap' ).toggleClass( 'active' );
 				return false;
