@@ -13,17 +13,63 @@
 		init : function() {
 			// Add a screen options button to the Menus page header.
 			// @todo when this file is merged into menu-customizer.js add the button text to l10n
-			var buttonText = '<span class="screen-reader-text">Menu Options</span>',
-				button = '<span id="customizer-menu-screen-options-button">' + buttonText + '</span>',
-				header = $( '#accordion-panel-menus .accordion-sub-container ' );
-			header.find( '.accordion-section:first .accordion-section-title' ).append( button );
-			$( '#screen-options-wrap' ).prependTo( header );
+			var $button,
+				$panel = $( '#accordion-panel-menus .panel-meta' ),
+				$header = $panel.find( '.accordion-section-title' ),
+				$content = $panel.find( '.accordion-section-content' ),
+				$options = $( '#screen-options-wrap' ),
+				buttonId = 'customizer-menu-screen-options-button',
+				button = '<span id="' + buttonId + '"><span class="screen-reader-text">Menu Options</span></span>';
+
+			// Add button
+			$header.append( button );
+			$button = $( '#' + buttonId );
+
+			// Add menu options
+			$options.insertAfter( $header.next( 'div' ) );
 			$( '#customize-control-menu_customizer_options' ).remove();
-			$( '#screen-options-wrap' ).removeClass( 'hidden' );
-			$( '#customizer-menu-screen-options-button' ).on( 'click', function() {
-				$( '#customizer-menu-screen-options-button' ).toggleClass( 'active' );
-				$( '#screen-options-wrap' ).toggleClass( 'active' );
+			$options.removeClass( 'hidden' ).hide();
+
+			// Panel is actually open
+			if ( $content.not( ':hidden' ) ) {
+				$panel.addClass( 'open' );
+				$panel.addClass( 'active-panel-description' );
+			}
+			
+			// Toogle menu options 
+			$button.on( 'click', function() {
+				// Toggle .open if the content is already hidden
+				if ( $content.is( ':hidden' ) ) {
+					if ( $options.is( ':hidden' ) ) {
+						$panel.addClass( 'open' );
+					} else {
+						$panel.removeClass( 'open' );
+					}
+				}
+
+				// Hide description
+				if ( $content.not( ':hidden' ) ) {
+					$content.slideUp( 'fast' );
+					$panel.removeClass( 'active-panel-description' );
+				}
+
+				// Toggle menu options
+				$panel.toggleClass( 'active-menu-screen-options' );
+				$options.slideToggle( 'fast' );
+
 				return false;
+			} );
+
+			// Close menu options
+			$header.on( 'click', function() {
+				if ( $panel.hasClass( 'active-menu-screen-options' ) ) {
+					$panel.removeClass( 'active-menu-screen-options' );
+					$panel.addClass( 'open' );
+					$options.slideUp( 'fast' );
+					$content.slideDown( 'fast' );
+				}
+
+				$panel.toggleClass( 'active-panel-description' );
 			} );
 		}
 	};

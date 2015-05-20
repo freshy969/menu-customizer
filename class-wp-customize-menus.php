@@ -417,7 +417,7 @@ class WP_Customize_Menus {
 			'type' => 'menu_options',
 		) );
 		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $this->manager, 'menu_customizer_options', array(
-			'section' => 'nav',
+			'section' => 'menu_locations',
 			'priority' => 20,
 		) ) );
 
