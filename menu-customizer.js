@@ -437,10 +437,12 @@
 				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
 			}
 
-			// Move delete buttons back out of the title bar. 
-			_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
-				control.toggleDeletePosition( false );
-			} );
+			// Move delete buttons back out of the title bar.
+			if ( this.currentMenuControl ) {
+				_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
+					control.toggleDeletePosition( false );
+				} );
+			}
 
 			this.currentMenuControl = null;
 			this.selected = null;
