@@ -651,6 +651,7 @@
 			this._setupReorderUI();
 			this._setupUpdateUI();
 			this._setupRemoveUI();
+			this._setupLinksUI();
 		},
 
 		/**
@@ -821,6 +822,21 @@
 					spinner.hide();
 					spinner.css( 'visibility', 'hidden' );
 				} );
+			} );
+		},
+
+		_setupLinksUI: function() {
+			var self = this, $origBtn;
+
+			// Configure original link.
+			$origBtn = this.container.find( 'a.original-link' );
+
+			$origBtn.on( 'click keydown', function( e ) {
+				if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
+					return;
+				}
+				e.preventDefault();
+				api.previewer.previewUrl( e.target.toString() );
 			} );
 		},
 
