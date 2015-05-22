@@ -345,6 +345,7 @@ class WP_Customize_Menus {
 				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
 			),
+			'menuItemTransport'    => apply_filters( 'temp_menu_customizer_previewable_setting_transport', 'refresh' ),
 		);
 
 		$data = sprintf( 'var _wpCustomizeMenusSettings = %s;', json_encode( $settings ) );
@@ -506,8 +507,9 @@ class WP_Customize_Menus {
 			// Add the menu control, which handles adding and ordering.
 			$nav_menu_setting_id = 'nav_menu_' . $menu_id;
 			$this->manager->add_setting( $nav_menu_setting_id, array(
-				'type'     => 'nav_menu',
+				'type'      => 'nav_menu',
 				'default'   => $item_ids,
+				'transport' => apply_filters( 'temp_menu_customizer_previewable_setting_transport', 'refresh' ),
 			) );
 
 			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $this->manager, $nav_menu_setting_id, array(

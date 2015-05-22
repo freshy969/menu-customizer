@@ -26,7 +26,7 @@
 	 * @augments Backbone.Model
 	 */
 	api.Menus.MenuItemModel = Backbone.Model.extend({
-		transport: 'refresh',
+		transport: api.Menus.data.menuItemTransport,
 		params: [],
 		menu_item_id: null,
 		original_id: 0,
@@ -598,7 +598,7 @@
 				button.removeClass( 'open' );
 				content.slideUp( 'fast' );
 			}
-		}		
+		}
 	});
 
 	/**
@@ -772,9 +772,9 @@
 			} );
 
 			// Regular menu item update triggering - on change.
-			$menuItemContent.on( 'change', ':input', function() {
+			$menuItemContent.on( 'change input propertychange', ':input', _.debounce( function() {
 				self.updateMenuItem();
-			} );
+			}, 500 ) );
 
 			// When saving, update original_id to menu_item_id, initiating new clones as needed.
 			api.bind( 'save', function() {
@@ -930,12 +930,13 @@
 				'customize-menu-item-nonce': api.Menus.data.nonce
 			};
 
+			// @todo replace this with wp.ajax.post()
 			$.post( wp.ajax.settings.url, params, function( response ) {
 				var id, menuControl, menuItemIds, i;
 				if ( response.data && response.data.message ) {
 					// Display error message
 					alert( response.data.message );
-				} else if ( response.success && response.data && clone ) {
+				} else if ( response.success && response.data ) {
 					id = response.data;
 
 					// Update item control accordingly with new id.
@@ -948,20 +949,27 @@
 					// Replace original id of this item with cloned id in the menu setting.
 					menuControl = api.Menus.getMenuControl( self.params.menu_id );
 
-					menuItemIds = menuControl.setting().slice();
-					i = _.indexOf( menuItemIds, self.params.original_id );
+					if ( clone ) {
 
-					menuItemIds[i] = id;
-					menuControl.setting( menuItemIds );
+						menuItemIds = menuControl.setting().slice();
+						i = _.indexOf( menuItemIds, self.params.original_id );
 
-					// Update parent id for direct children items.
-					api.control.each( function( control ) {
-						if ( control.params.type === 'menu_item' && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
-							control.params.menu_item_parent_id = id;
-							control.container.find( '.menu-item-parent-id' ).val( id );
-							control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
-						}
-					} );
+						menuItemIds[i] = id;
+						menuControl.setting( menuItemIds );
+
+						// Update parent id for direct children items.
+						api.control.each( function( control ) {
+							if ( control.params.type === 'menu_item' && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
+								control.params.menu_item_parent_id = id;
+								control.container.find( '.menu-item-parent-id' ).val( id );
+								control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
+							}
+						} );
+					} else {
+						// There would be no change to the value, so just re-trigger a preview
+						// @todo There should really be Customizer settings that contain all of the menu item fields
+						menuControl.setting.preview();
+					}
 				}
 
 				// Remove processing states.
