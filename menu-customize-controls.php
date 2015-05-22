@@ -349,7 +349,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 				<div class="menu-item-actions description-thin submitbox">
 					<# if ( 'custom' != data.item_type && data.original_title !== false ) { #>
 						<p class="link-to-original">
-							<?php _e( 'Original:' ); ?> <a href="{{ data.url }}" target="_blank">{{{ data.original_title }}}</a>
+							<?php _e( 'Original:' ); ?> <a class="original-link" href="{{ data.url }}">{{{ data.original_title }}}</a>
 						</p>
 					<# } #>
 					<a class="item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}" href="#"><?php _e( 'Remove' ); ?></a>

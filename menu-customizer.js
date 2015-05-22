@@ -624,8 +624,7 @@
 		// Add the menu location name to the menu title.
 		updateLocationInMenu: function( to ) {
 			var text, title;
-			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-'
-					+ this.params.locationId + '">' + this.params.label + '</span>' );
+			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + this.params.label + '</span>' );
 			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
 			title = api.section( 'nav_menus[' + to + ']' ).container.find( '.accordion-section-title' );
 			text.appendTo( title );
@@ -651,6 +650,7 @@
 			this._setupReorderUI();
 			this._setupUpdateUI();
 			this._setupRemoveUI();
+			this._setupLinksUI();
 		},
 
 		/**
@@ -821,6 +821,21 @@
 					spinner.hide();
 					spinner.css( 'visibility', 'hidden' );
 				} );
+			} );
+		},
+
+		_setupLinksUI: function() {
+			var $origBtn;
+
+			// Configure original link.
+			$origBtn = this.container.find( 'a.original-link' );
+
+			$origBtn.on( 'click keydown', function( e ) {
+				if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
+					return;
+				}
+				e.preventDefault();
+				api.previewer.previewUrl( e.target.toString() );
 			} );
 		},
 
