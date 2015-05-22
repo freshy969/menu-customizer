@@ -19,7 +19,7 @@
 
 #customize-controls .control-section .accordion-section-title:focus .menu-in-location,
 #customize-controls .control-section .accordion-section-title:hover .menu-in-location {
-	color: #999;
+	color: #fff;
 }
 
 .wp-customizer .menu-item-bar .menu-item-handle,
@@ -302,42 +302,53 @@
 	margin-top: 4px;
 }
 
+/* @todo match with final color in #31336 */
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle {
+	color: #000;
+}
+
 /* Screen Options */
 #customizer-menu-screen-options-button {
+	background: none;
+	border: none;
+	color: #000; /* @todo match with final color in #31336 */
+	cursor: pointer;
+	height: 20px;
+	padding: 20px 20px 10px 10px;
 	position: absolute;
-	top: 10px;
-	right: 35px;
-	color: #555;
+	right: 31px;
+	top: 4px;
+	width: 20px;
 }
 
 #customizer-menu-screen-options-button:hover,
 #customizer-menu-screen-options-button:active,
-#customizer-menu-screen-options-button:focus {
-	color: #0074a2;
+#customizer-menu-screen-options-button:focus,
+.active-menu-screen-options #customizer-menu-screen-options-button {
+	color: #0074a2; /* @todo support admin color schemes */
 	outline: none;
 }
 
-.active-menu-screen-options #customizer-menu-screen-options-button {
-	color: #0074a2 !important;
-}
-
-#customizer-menu-screen-options-button:after {
+#customizer-menu-screen-options-button:before {
 	-moz-osx-font-smoothing: grayscale;
 	border: none;
-	content: "\f111";
+	content: "\f180";
 	display: block;
 	font: 20px/1 "dashicons";
 	padding: 0;
-	position: relative;
-	right: 0;
 	text-align: center;
 	text-decoration: none !important;
 	text-indent: 0;
+	left: 5px;
+	position: absolute;
+	top: 5px;
 }
 
-#screen-options-wrap {
+.wp-customizer #screen-options-wrap {
 	display: none;
 	background: #fff;
+	border-top: 1px solid #ddd;
+	padding: 6px 12px 0;
 }
 
 .wp-customizer .metabox-prefs label {
@@ -429,7 +440,9 @@
 }
 
 .adding-menu-items .add-new-menu-item,
-.adding-menu-items .add-new-menu-item:hover {
+.adding-menu-items .add-new-menu-item:hover,
+.add-menu-toggle.open,
+.add-menu-toggle.open:hover {
 	background: #eee;
 	border-color: #999;
 	color: #333;

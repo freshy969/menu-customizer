@@ -16,60 +16,54 @@
 			var $button,
 				$panel = $( '#accordion-panel-menus .panel-meta' ),
 				$header = $panel.find( '.accordion-section-title' ),
-				$content = $panel.find( '.accordion-section-content' ),
+				$help = $panel.find( '.customize-help-toggle' ),
+				$content = $panel.find( '.customize-panel-description' ),
 				$options = $( '#screen-options-wrap' ),
 				buttonId = 'customizer-menu-screen-options-button',
-				button = '<span id="' + buttonId + '"><span class="screen-reader-text">Menu Options</span></span>';
+				button = '<button id="' + buttonId + '" aria-expanded="false" tabindex="0"><span class="screen-reader-text">Menu Options</span></button>';
 
 			// Add button
 			$header.append( button );
-			$button = $( '#' + buttonId );
+			$button = $panel.find( '#' + buttonId );
 
 			// Add menu options
 			$options.insertAfter( $header.next( 'div' ) );
 			$( '#customize-control-menu_customizer_options' ).remove();
 			$options.removeClass( 'hidden' ).hide();
 
-			// Panel is actually open
-			if ( $content.not( ':hidden' ) ) {
-				$panel.addClass( 'open' );
-				$panel.addClass( 'active-panel-description' );
-			}
-			
-			// Toogle menu options 
+			// Menu options toggle
 			$button.on( 'click', function() {
-				// Toggle .open if the content is already hidden
-				if ( $content.is( ':hidden' ) ) {
-					if ( $options.is( ':hidden' ) ) {
-						$panel.addClass( 'open' );
-					} else {
-						$panel.removeClass( 'open' );
-					}
-				}
-
 				// Hide description
 				if ( $content.not( ':hidden' ) ) {
 					$content.slideUp( 'fast' );
-					$panel.removeClass( 'active-panel-description' );
+					$help.attr( 'aria-expanded', 'false' );
 				}
 
-				// Toggle menu options
-				$panel.toggleClass( 'active-menu-screen-options' );
-				$options.slideToggle( 'fast' );
+				if ( $button.attr( 'aria-expanded' ) == 'true' ) {
+					$button.attr( 'aria-expanded', 'false' );
+					$panel.removeClass( 'open' );
+					$panel.removeClass( 'active-menu-screen-options' );
+					$options.slideUp( 'fast' );
+				} else {
+					$button.attr( 'aria-expanded', 'true' );
+					$panel.addClass( 'open' );
+					$panel.addClass( 'active-menu-screen-options' );
+					$options.slideDown( 'fast' );
+				}
 
 				return false;
 			} );
 
-			// Close menu options
-			$header.on( 'click', function() {
-				if ( $panel.hasClass( 'active-menu-screen-options' ) ) {
-					$panel.removeClass( 'active-menu-screen-options' );
+			// Help toggle
+			$help.on( 'click', function() {
+				if ( $button.attr( 'aria-expanded' ) == 'true' ) {
+					$button.attr( 'aria-expanded', 'false' );
+					$help.attr( 'aria-expanded', 'true' );
 					$panel.addClass( 'open' );
+					$panel.removeClass( 'active-menu-screen-options' );
 					$options.slideUp( 'fast' );
 					$content.slideDown( 'fast' );
 				}
-
-				$panel.toggleClass( 'active-panel-description' );
 			} );
 		}
 	};
