@@ -39,7 +39,7 @@
 					$help.attr( 'aria-expanded', 'false' );
 				}
 
-				if ( $button.attr( 'aria-expanded' ) == 'true' ) {
+				if ( $button.attr( 'aria-expanded' ) === 'true' ) {
 					$button.attr( 'aria-expanded', 'false' );
 					$panel.removeClass( 'open' );
 					$panel.removeClass( 'active-menu-screen-options' );
@@ -56,7 +56,7 @@
 
 			// Help toggle
 			$help.on( 'click', function() {
-				if ( $button.attr( 'aria-expanded' ) == 'true' ) {
+				if ( $button.attr( 'aria-expanded' ) === 'true' ) {
 					$button.attr( 'aria-expanded', 'false' );
 					$help.attr( 'aria-expanded', 'true' );
 					$panel.addClass( 'open' );
