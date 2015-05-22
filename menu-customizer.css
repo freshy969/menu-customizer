@@ -133,6 +133,12 @@
 	right: 0;
 }
 
+#customize-theme-controls .reordering .add-new-menu-item {
+	opacity: 0.2;
+	pointer-events: none;
+	cursor: not-allowed;
+}
+
 .menu-item-reorder-nav span {
 	position: relative;
 	overflow: hidden;
