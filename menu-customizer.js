@@ -2106,15 +2106,15 @@
 	var menusPanelContainer;
 
 	/**
-	 * Menu Customizer screen options JS.
+	 * Menu Customizer screen options.
+	 *
+	 * Adds a screen options button to the Menus panel header and handles button events.
 	 *
 	 * @todo potentially put this directly into the panel by doing a custom panel, 
 	 * once the standard panel html is finalized in #31336.
 	 */
 	var customizeMenuOptions = {
 		init : function() {
-			// Add a screen options button to the Menus page header.
-			// @todo when this file is merged into menu-customizer.js add the button text to l10n
 			var $button,
 				$panel = $( '#accordion-panel-menus .panel-meta' ),
 				$header = $panel.find( '.accordion-section-title' ),
@@ -2134,7 +2134,11 @@
 			$options.removeClass( 'hidden' ).hide();
 
 			// Menu options toggle
-			$button.on( 'click', function() {
+			$button.on( 'click keydown', function( event ) {
+				if ( event.type === 'keydown' && event.which !== 13 ) { // Enter
+					return;
+				}
+
 				// Hide description
 				if ( $content.not( ':hidden' ) ) {
 					$content.slideUp( 'fast' );
@@ -2157,7 +2161,11 @@
 			} );
 
 			// Help toggle
-			$help.on( 'click', function() {
+			$help.on( 'click keydown', function( event ) {
+				if ( event.type === 'keydown' && event.which !== 13 ) { // Enter
+					return;
+				}
+
 				if ( $button.attr( 'aria-expanded' ) === 'true' ) {
 					$button.attr( 'aria-expanded', 'false' );
 					$help.attr( 'aria-expanded', 'true' );
