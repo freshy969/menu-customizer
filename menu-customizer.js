@@ -2122,7 +2122,8 @@
 				$content = $panel.find( '.customize-panel-description' ),
 				$options = $( '#screen-options-wrap' ),
 				buttonId = 'customizer-menu-screen-options-button',
-				button = '<button id="' + buttonId + '" aria-expanded="false" tabindex="0"><span class="screen-reader-text">Menu Options</span></button>';
+				buttonText = _wpCustomizeMenusSettings.l10n.menuOptions || '',
+				button = '<button id="' + buttonId + '" aria-expanded="false" tabindex="0"><span class="screen-reader-text">' + buttonText + '</span></button>';
 
 			// Add button
 			$header.append( button );

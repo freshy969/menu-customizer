@@ -343,6 +343,7 @@ class WP_Customize_Menus {
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
 				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
+				'menuOptions'     => __( 'Menu Options' ),
 			),
 			'menuItemTransport'    => apply_filters( 'temp_menu_customizer_previewable_setting_transport', 'refresh' ),
 		);
