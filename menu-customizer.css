@@ -337,7 +337,6 @@
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:active,
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:focus {
 	color: #0073aa;
-	outline: none;
 }
 
 #customizer-menu-screen-options-button:before {
