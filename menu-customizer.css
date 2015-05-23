@@ -10,34 +10,19 @@
 	margin-bottom: 15px;
 }
 
-#accordion-section-menu_locations .accordion-section-title {
-	padding-left: 43px;
-}
-
-#accordion-section-menu_locations .accordion-section-title:before {
-	font: normal 20px/1 dashicons;
-	content: "\f116";
-	position: absolute;
-	top: 11px;
-	left: 12px;
-}
-
-.menu-in-location {
+.menu-in-location,
+.menu-in-locations {
+	display: block;
 	color: #999;
 	font-weight: 600;
 	font-size: 10px;
-	margin-left: 5px;
 }
 
 #customize-controls .control-section .accordion-section-title:focus .menu-in-location,
-#customize-controls .control-section .accordion-section-title:hover .menu-in-location {
+#customize-controls .control-section .accordion-section-title:hover .menu-in-location,
+#customize-controls .control-section .accordion-section-title:focus .menu-in-locations,
+#customize-controls .control-section .accordion-section-title:hover .menu-in-locations {
 	color: #fff;
-}
-
-.menu-in-location:before {
-	content: "\f116";
-	font: 10px/1 dashicons;
-	margin-right: 4px;
 }
 
 .wp-customizer .menu-item-bar .menu-item-handle,
@@ -149,6 +134,12 @@
 	position: absolute;
 	top: 0;
 	right: 0;
+}
+
+#customize-theme-controls .reordering .add-new-menu-item {
+	opacity: 0.2;
+	pointer-events: none;
+	cursor: not-allowed;
 }
 
 .menu-item-reorder-nav span {
@@ -320,64 +311,54 @@
 	margin-top: 4px;
 }
 
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle {
+	color: #555;
+}
+
 /* Screen Options */
 #customizer-menu-screen-options-button {
-	position: absolute;
-	top: 36px;
-	right: 56px;
+	background: none;
+	border: none;
 	color: #555;
+	cursor: pointer;
+	height: 20px;
+	padding: 20px 20px 10px 10px;
+	position: absolute;
+	right: 31px;
+	top: 4px;
+	width: 20px;
 }
 
 #customizer-menu-screen-options-button:hover,
 #customizer-menu-screen-options-button:active,
-#customizer-menu-screen-options-button:focus {
-	color: #0074a2;
-	outline: none;
+#customizer-menu-screen-options-button:focus,
+.active-menu-screen-options #customizer-menu-screen-options-button,
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:hover,
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:active,
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:focus {
+	color: #0073aa;
 }
 
-#customizer-menu-screen-options-button.active {
-	color: #0074a2;
-}
-
-#customizer-menu-screen-options-button:after {
-	position: absolute;
-	top: 0;
-	left: 0;
-	font: normal 20px/1 'dashicons';
+#customizer-menu-screen-options-button:before {
+	-moz-osx-font-smoothing: grayscale;
+	border: none;
 	content: "\f180";
 	display: block;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+	font: 20px/1 "dashicons";
+	padding: 0;
+	text-align: center;
+	text-decoration: none !important;
+	text-indent: 0;
+	left: 5px;
+	position: absolute;
+	top: 5px;
 }
 
-#screen-options-wrap {
+.wp-customizer #screen-options-wrap {
 	display: none;
-}
-
-#screen-options-wrap.active {
-	display: block;
-	position: absolute;
-	top: 69px;
-	right: 8px;
-	z-index: 12;
-	width: 168px;
-	background: #333;
-	color: #eee;
-	border: none;
-	-webkit-box-shadow: 0 1px 0 rgba(0,0,0,.025);
-	box-shadow: 0 1px 0 rgba(0,0,0,.025);
-}
-
-#customizer-menu-screen-options-button.active:before {
-	font: normal 30px/1 'dashicons';
-	content: "\f142";
-	display: block;
-	position: absolute;
-	top: 14px;
-	left: -6px;
-	color: #333;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+	background: #fff;
+	border-top: 1px solid #ddd;
+	padding: 4px 15px 0px;
 }
 
 .wp-customizer .metabox-prefs label {
@@ -458,7 +439,7 @@
 #customize-theme-controls .add-new-menu-item {
 	cursor: pointer;
 	float: right;
-	margin-left: 5px;
+	margin-left: 10px;
 	-webkit-transition: all 0.2s;
 	transition: all 0.2s;
 	-webkit-user-select: none;
@@ -483,7 +464,9 @@
 }
 
 .adding-menu-items .add-new-menu-item,
-.adding-menu-items .add-new-menu-item:hover {
+.adding-menu-items .add-new-menu-item:hover,
+.add-menu-toggle.open,
+.add-menu-toggle.open:hover {
 	background: #eee;
 	border-color: #999;
 	color: #333;
@@ -739,6 +722,14 @@ body.adding-menu-items #customize-preview {
 	float: left;
 	padding: 1em 0;
 	width: 100%;
+}
+
+li.assigned-to-menu-location .menu-delete-item {
+  display: none;
+}
+
+li.assigned-to-menu-location .add-new-menu-item {
+  margin-bottom: 1em;
 }
 
 .menu-delete {

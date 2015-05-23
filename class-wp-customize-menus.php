@@ -329,7 +329,6 @@ class WP_Customize_Menus {
 	 */
 	public function enqueue() {
 		wp_enqueue_style( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.css' );
-		wp_enqueue_script( 'menu-customizer-options', plugin_dir_url( __FILE__ ) . 'menu-customizer-options.js', array( 'jquery' ) );
 		wp_enqueue_script( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.js', array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion' ) );
 
 		global $wp_scripts;
@@ -342,7 +341,9 @@ class WP_Customize_Menus {
 			'l10n'                 => array(
 				'untitled'        => _x( '(no label)', 'Missing menu item navigation label.' ),
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
+				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
+				'menuOptions'     => __( 'Menu Options' ),
 			),
 			'menuItemTransport'    => apply_filters( 'temp_menu_customizer_previewable_setting_transport', 'refresh' ),
 		);
@@ -387,7 +388,7 @@ class WP_Customize_Menus {
 			'description' => $description,
 		) );
 
-// @todo if ( ! $menus ) : make a "default" menu
+		// @todo if ( ! $menus ) : make a "default" menu
 
 		if ( $menus ) {
 			$choices = array( '' => __( '&mdash; Select &mdash;' ) );
@@ -417,7 +418,7 @@ class WP_Customize_Menus {
 			'type' => 'menu_options',
 		) );
 		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $this->manager, 'menu_customizer_options', array(
-			'section' => 'nav',
+			'section' => 'menu_locations',
 			'priority' => 20,
 		) ) );
 

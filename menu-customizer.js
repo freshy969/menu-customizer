@@ -437,10 +437,12 @@
 				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
 			}
 
-			// Move delete buttons back out of the title bar. 
-			_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
-				control.toggleDeletePosition( false );
-			} );
+			// Move delete buttons back out of the title bar.
+			if ( this.currentMenuControl ) {
+				_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
+					control.toggleDeletePosition( false );
+				} );
+			}
 
 			this.currentMenuControl = null;
 			this.selected = null;
@@ -564,7 +566,7 @@
 		 */
 		attachEvents: function () {
 			var section = this;
-			this.container.on( 'click keydown', '.add-menu-toggle', function() {
+			this.container.on( 'click keydown', '.add-menu-toggle', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -612,22 +614,74 @@
 		ready: function() {
 			var self = this;
 
-			// Update sections when value changes changes.
+			// Update sections when value changes.
 			this.setting.bind( function( to, from ) {
 				if ( ! _( from ).isEqual( to ) ) {
-					self.updateLocationInMenu( to );
+					self.updateLocationInMenu( to, from );
 				}
 			} ); 
-			this.updateLocationInMenu( this.setting.get() );
+			this.updateLocationInMenu( this.setting.get(), '' );
 		},
 
 		// Add the menu location name to the menu title.
-		updateLocationInMenu: function( to ) {
-			var text, title;
-			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + this.params.label + '</span>' );
+		updateLocationInMenu: function( to, from ) {
+			if ( ! to ) {
+				return;
+			}
+
+			var $section = api.section( 'nav_menus[' + to + ']' ).container,
+				$title = $section.find( '.accordion-section-title' ),
+				$location = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + api.Menus.data.l10n.menuLocation.replace( '%s', this.params.label ) + '</span>' );
+
 			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
-			title = api.section( 'nav_menus[' + to + ']' ).container.find( '.accordion-section-title' );
-			text.appendTo( title );
+			$location.appendTo( $title );
+
+			// Toggle active section class
+			$section.addClass( 'assigned-to-menu-location' );
+
+			// Multiple menu location
+			this.updateLocationsInMenu( $section );
+			if ( from ) {
+				this.updateLocationsInMenu( api.section( 'nav_menus[' + from + ']' ).container );
+			}
+		},
+
+		// Handles menus that are set to multiple menu locations
+		updateLocationsInMenu: function( $section ) {
+			var $title = $section.find( '.accordion-section-title' ),
+				$location = $section.find( '.menu-in-location' );
+
+			if ( $location.length < 1 ) {
+				$section.removeClass( 'assigned-to-menu-location' );
+			}
+
+			if ( $location.length <= 1 ) {
+				$section.find( '.menu-in-locations' ).remove();
+				$section.find( '.menu-in-location' ).show();
+			} else {
+				var $locations = $section.find( '.menu-in-locations' ),
+					locations = [], tmpString, tmpPos, string;
+
+				$location.each( function() {
+					tmpString = api.Menus.data.l10n.menuLocation.replace( /\(|\)|%(s)/g, '' );
+					string = $( this ).text().replace( /\(|\)/g, '' ).replace( tmpString, '' );
+					locations.push( string );
+				} );
+
+				tmpString = locations.join( ', ' );
+				tmpPos = tmpString.lastIndexOf( ',' );
+				string = tmpString.substring( 0, tmpPos + 1 ) + ' &' + tmpString.substring( tmpPos + 1 );
+				string = api.Menus.data.l10n.menuLocation.replace( '%s', string );
+
+				if ( $locations.length ) {
+					$locations.text( string );
+				} else {
+					$( '<span class="menu-in-locations">' + string + '</span>' ).appendTo( $title );
+				}
+
+				$section.find( '.menu-in-location' ).hide();
+			}
+
 		}
 	});
 
@@ -2052,10 +2106,14 @@
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
-				id = el.closest( '.accordion-section' ).attr( 'id' );
+				id = el.closest( '.accordion-section' ).attr( 'id' ),
+				location = el.closest( '.accordion-section' ).find( '.menu-in-location' );
 			// Empty names are not allowed (will not be saved), don't update to one.
 			if ( name ) {
 				title.html( name );
+				if ( location.length ) {
+					location.appendTo( title );
+				}
 				id = id.replace( 'accordion-section-nav_menus[', '' );
 				id = id.replace( ']', '' );
 				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
@@ -2078,6 +2136,152 @@
 		} );
 	}
 
-	$(document).ready(function(){ setupUIPreviewing(); });
+	$( document ).ready( function() {
+		setupUIPreviewing();
+	} );
 
 })( window.wp, jQuery );
+
+/* global jQuery, ajaxurl */
+(function( $ ) {
+	'use strict';
+
+	var menusPanelContainer;
+
+	/**
+	 * Menu Customizer screen options.
+	 *
+	 * Adds a screen options button to the Menus panel header and handles button events.
+	 *
+	 * @todo potentially put this directly into the panel by doing a custom panel, 
+	 * once the standard panel html is finalized in #31336.
+	 */
+	var customizeMenuOptions = {
+		init : function() {
+			var $button,
+				$panel = $( '#accordion-panel-menus .panel-meta' ),
+				$header = $panel.find( '.accordion-section-title' ),
+				$help = $panel.find( '.customize-help-toggle' ),
+				$content = $panel.find( '.customize-panel-description' ),
+				$options = $( '#screen-options-wrap' ),
+				buttonId = 'customizer-menu-screen-options-button',
+				buttonText = _wpCustomizeMenusSettings.l10n.menuOptions || '',
+				button = '<button id="' + buttonId + '" aria-expanded="false" tabindex="0"><span class="screen-reader-text">' + buttonText + '</span></button>';
+
+			// Add button
+			$header.append( button );
+			$button = $panel.find( '#' + buttonId );
+
+			// Add menu options
+			$options.insertAfter( $header.next( 'div' ) );
+			$( '#customize-control-menu_customizer_options' ).remove();
+			$options.removeClass( 'hidden' ).hide();
+
+			// Menu options toggle
+			$button.on( 'click keydown', function( event ) {
+				if ( event.type === 'keydown' && event.which !== 13 ) { // Enter
+					return;
+				}
+
+				// Hide description
+				if ( $content.not( ':hidden' ) ) {
+					$content.slideUp( 'fast' );
+					$help.attr( 'aria-expanded', 'false' );
+				}
+
+				if ( $button.attr( 'aria-expanded' ) === 'true' ) {
+					$button.attr( 'aria-expanded', 'false' );
+					$panel.removeClass( 'open' );
+					$panel.removeClass( 'active-menu-screen-options' );
+					$options.slideUp( 'fast' );
+				} else {
+					$button.attr( 'aria-expanded', 'true' );
+					$panel.addClass( 'open' );
+					$panel.addClass( 'active-menu-screen-options' );
+					$options.slideDown( 'fast' );
+				}
+
+				return false;
+			} );
+
+			// Help toggle
+			$help.on( 'click keydown', function( event ) {
+				if ( event.type === 'keydown' && event.which !== 13 ) { // Enter
+					return;
+				}
+
+				if ( $button.attr( 'aria-expanded' ) === 'true' ) {
+					$button.attr( 'aria-expanded', 'false' );
+					$help.attr( 'aria-expanded', 'true' );
+					$panel.addClass( 'open' );
+					$panel.removeClass( 'active-menu-screen-options' );
+					$options.slideUp( 'fast' );
+					$content.slideDown( 'fast' );
+				}
+			} );
+		}
+	};
+
+	/**
+	 * Show/hide/save screen options (columns). From common.js.
+	 */
+	var columns = {
+		init : function() {
+			var that = this;
+			$('.hide-column-tog').click( function() {
+				var $t = $(this), column = $t.val();
+				if ( $t.prop('checked') ) {
+					that.checked(column);
+				}
+				else {
+					that.unchecked(column);
+				}
+
+				that.saveManageColumnsState();
+			});
+			$( '.hide-column-tog' ).each( function() {
+			var $t = $(this), column = $t.val();
+				if ( $t.prop('checked') ) {
+					that.checked(column);
+				}
+				else {
+					that.unchecked(column);
+				}
+			} );
+		},
+
+		saveManageColumnsState : function() {
+			var hidden = this.hidden();
+			$.post(ajaxurl, {
+				action: 'hidden-columns',
+				hidden: hidden,
+				screenoptionnonce: $('#screenoptionnonce').val(),
+				page: 'nav-menus'
+			});
+		},
+
+		checked : function(column) {
+			menusPanelContainer.addClass( 'field-' + column + '-active' );
+		},
+
+		unchecked : function(column) {
+			menusPanelContainer.removeClass( 'field-' + column + '-active' );
+		},
+
+		hidden : function() {
+			this.hidden = function(){
+				return $('.hide-column-tog').not(':checked').map(function() {
+					var id = this.id;
+					return id.substring( id, id.length - 5 );
+				}).get().join(',');
+			};
+		}
+	};
+
+	$( document ).ready( function() {
+		menusPanelContainer = $( '#accordion-panel-menus' );
+		columns.init();
+		customizeMenuOptions.init();
+	} );
+
+})( jQuery );
