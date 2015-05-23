@@ -667,7 +667,7 @@
 				tmpString = locations.join( ', ' );
 				tmpPos = tmpString.lastIndexOf( ',' );
 				string = tmpString.substring( 0, tmpPos + 1 ) + ' &' + tmpString.substring( tmpPos + 1 );
-				string = api.Menus.data.l10n.menuLocation.replace( '%s', string )
+				string = api.Menus.data.l10n.menuLocation.replace( '%s', string );
 
 				if ( $locations.length ) {
 					$locations.text( string );
