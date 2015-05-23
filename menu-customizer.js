@@ -625,6 +625,10 @@
 
 		// Add the menu location name to the menu title.
 		updateLocationInMenu: function( to, from ) {
+			if ( ! to ) {
+				return;
+			}
+
 			var $section = api.section( 'nav_menus[' + to + ']' ).container,
 				$title = $section.find( '.accordion-section-title' ),
 				$location = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + api.Menus.data.l10n.menuLocation.replace( '%s', this.params.label ) + '</span>' );
