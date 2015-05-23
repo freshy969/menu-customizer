@@ -311,16 +311,15 @@
 	margin-top: 4px;
 }
 
-/* @todo match with final color in #31336 */
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle {
-	color: #000;
+	color: #555;
 }
 
 /* Screen Options */
 #customizer-menu-screen-options-button {
 	background: none;
 	border: none;
-	color: #000; /* @todo match with final color in #31336 */
+	color: #555;
 	cursor: pointer;
 	height: 20px;
 	padding: 20px 20px 10px 10px;
@@ -333,8 +332,11 @@
 #customizer-menu-screen-options-button:hover,
 #customizer-menu-screen-options-button:active,
 #customizer-menu-screen-options-button:focus,
-.active-menu-screen-options #customizer-menu-screen-options-button {
-	color: #0074a2; /* @todo support admin color schemes */
+.active-menu-screen-options #customizer-menu-screen-options-button,
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:hover,
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:active,
+#customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:focus {
+	color: #0073aa;
 	outline: none;
 }
 
@@ -357,7 +359,7 @@
 	display: none;
 	background: #fff;
 	border-top: 1px solid #ddd;
-	padding: 6px 12px 0;
+	padding: 4px 15px 0px;
 }
 
 .wp-customizer .metabox-prefs label {
