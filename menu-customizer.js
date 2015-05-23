@@ -625,20 +625,59 @@
 
 		// Add the menu location name to the menu title.
 		updateLocationInMenu: function( to, from ) {
-			var $section, title, text;
-			$section = api.section( 'nav_menus[' + to + ']' ).container;
-			title = $section.find( '.accordion-section-title' );
-			text = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + 
-				api.Menus.data.l10n.menuLocation.replace( '%s', this.params.label ) + '</span>' );
+			var $section = api.section( 'nav_menus[' + to + ']' ).container,
+				$title = $section.find( '.accordion-section-title' ),
+				$location = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + api.Menus.data.l10n.menuLocation.replace( '%s', this.params.label ) + '</span>' );
 
 			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
-			text.appendTo( title );
+			$location.appendTo( $title );
 
 			// Toggle active section class
 			$section.addClass( 'assigned-to-menu-location' );
+
+			// Multiple menu location
+			this.updateLocationsInMenu( $section );
 			if ( from ) {
-				api.section( 'nav_menus[' + from + ']' ).container.removeClass( 'assigned-to-menu-location' );
+				this.updateLocationsInMenu( api.section( 'nav_menus[' + from + ']' ).container );
 			}
+		},
+
+		// Handles menus that are set to multiple menu locations
+		updateLocationsInMenu: function( $section ) {
+			var $title = $section.find( '.accordion-section-title' ),
+				$location = $section.find( '.menu-in-location' );
+
+			if ( $location.length < 1 ) {
+				$section.removeClass( 'assigned-to-menu-location' );
+			}
+
+			if ( $location.length <= 1 ) {
+				$section.find( '.menu-in-locations' ).remove();
+				$section.find( '.menu-in-location' ).show();
+			} else {
+				var $locations = $section.find( '.menu-in-locations' ),
+					locations = [], tmpString, tmpPos, string;
+
+				$location.each( function() {
+					tmpString = api.Menus.data.l10n.menuLocation.replace( /\(|\)|%(s)/g, '' );
+					string = $( this ).text().replace( /\(|\)/g, '' ).replace( tmpString, '' );
+					locations.push( string );
+				} );
+
+				tmpString = locations.join( ', ' );
+				tmpPos = tmpString.lastIndexOf( ',' );
+				string = tmpString.substring( 0, tmpPos + 1 ) + ' &' + tmpString.substring( tmpPos + 1 );
+				string = api.Menus.data.l10n.menuLocation.replace( '%s', string )
+
+				if ( $locations.length ) {
+					$locations.text( string );
+				} else {
+					$( '<span class="menu-in-locations">' + string + '</span>' ).appendTo( $title );
+				}
+
+				$section.find( '.menu-in-location' ).hide();
+			}
+
 		}
 	});
 
