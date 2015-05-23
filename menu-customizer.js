@@ -165,9 +165,7 @@
 
 		events: {
 			'input #menu-items-search': 'search',
-			'keyup #menu-items-search': 'search',
 			'change #menu-items-search': 'search',
-			'search #menu-items-search': 'search',
 			'focus .menu-item-tpl' : 'focus',
 			'click .menu-item-tpl' : '_submit',
 			'keypress .menu-item-tpl' : '_submit',
@@ -182,6 +180,7 @@
 		// Cache menu control that opened the panel.
 		currentMenuControl: null,
 		$search: null,
+		searchTerm: '',
 		rendered: false,
 		pages: {},
 		sectionContent: '',
@@ -213,7 +212,13 @@
 				if ( ! self.loading && $( this ).scrollTop() > 3 / 4 * totalHeight - visibleHeight ) {
 					var type = $( this ).data( 'type' ),
 					    obj_type = $( this ).data( 'obj_type' );
-					self.loadItems( type, obj_type );
+					if ( 'search' === type ) {
+						if ( self.searchTerm ) {
+							self.doSearch( self.pages.search );
+						}
+					} else {
+						self.loadItems( type, obj_type );
+					}
 				}
 			});
 
@@ -221,33 +226,67 @@
 			api.Menus.Previewer.bind( 'url', this.close );
 		},
 
-		// Performs a search and handles selected menu item.
-		// @todo implement, via ajax
+		// Search input change handler.
 		search: function( event ) {
-			var firstVisible;
-//searchInner = $( '#available-menu-items-search .accordion-section-content' ),
-				
-			this.collection.doSearch( event.target.value );
-
-			// Remove a menu item from being selected if it is no longer visible.
-			if ( this.selected && ! this.selected.is( ':visible' ) ) {
-				this.selected.removeClass( 'selected' );
-				this.selected = null;
+			if ( this.searchTerm === event.target.value ) {
+				return;
 			}
-
-			// If a menu item was selected but the filter value has been cleared out, clear selection.
-			if ( this.selected && ! event.target.value ) {
-				this.selected.removeClass( 'selected' );
-				this.selected = null;
+			this.searchTerm = event.target.value;
+			this.pages.search = 1;
+			this.doSearch( 1 );
+			// Manual accordion behavior.
+			if ( this.searchTerm && ! $( '#available-menu-items-search' ).hasClass( 'open' ) ) {
+				$( '#available-menu-items .accordion-section-content' ).slideUp( 'fast' );
+				$( '#available-menu-items-search .accordion-section-content' ).slideDown( 'fast' );
+				$( '#available-menu-items .accordion-section.open' ).removeClass( 'open' );
+				$( '#available-menu-items-search' ).addClass( 'open' );
 			}
+		},
 
-			// If a filter has been entered and a menu item hasn't been selected, select the first one shown.
-			if ( ! this.selected && event.target.value ) {
-				firstVisible = this.$el.find( '> .menu-item-tpl:visible:first' );
-				if ( firstVisible.length ) {
-					this.select( firstVisible );
+		// Get search results.
+		doSearch: function( page ) {
+			var self = this, params,
+			    typeInner = $( '#available-menu-items-search .accordion-section-content' ),
+			    itemTemplate = wp.template( 'available-menu-item' );
+
+			if ( 0 > page ) {
+				return;
+			} else if ( 1 === page ) {
+				// Clear results as it's a new search.
+				typeInner.html('');
+			}
+			$( '#available-menu-items-search .accordion-section-title' ).addClass( 'loading' );
+			self.loading = true;
+			params = {
+				'action': 'search-available-menu-items-customizer',
+				'customize-menus-nonce': api.Menus.data.nonce,
+				'wp_customize': 'on',
+				'search': self.searchTerm,
+				'page': page
+			};
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				var items;
+				if ( response.data && response.data.message ) {
+					if ( 0 === typeInner.length ) {
+						// No results were found.
+						typeInner.html( '<p class="nothing-found">' + response.data.message + '</p>' );
+					} else {
+						$( '#available-menu-items-search .accordion-section-title' ).removeClass( 'loading' );
+						self.loading = false;
+						self.pages.search = -1;
+					}
+				} else if ( response.success && response.data ) {
+					items = response.data.items;
+					$( '#available-menu-items-search .accordion-section-title' ).removeClass( 'loading' );
+					self.loading = false;
+					items = new api.Menus.AvailableItemCollection( items );
+					self.collection.add( items.models );
+					items.each( function( menuItem ) {
+						typeInner.append( itemTemplate( menuItem.attributes ) );
+					} );
+					self.pages.search = self.pages.search + 1;
 				}
-			}
+			});
 		},
 
 		// Render the individual items.

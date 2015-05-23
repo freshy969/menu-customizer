@@ -42,6 +42,7 @@ class WP_Customize_Menus {
 		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) );
 		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) );
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
+		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_action( 'customize_update_menu_name', array( $this, 'update_menu_name' ), 10, 2 );
@@ -320,6 +321,77 @@ class WP_Customize_Menus {
 		} else {
 			wp_send_json_success( array( 'items' => $items ) );
 		}
+	}
+
+	/**
+	 * Ajax handler for searching available menu items.
+	 *
+	 * @since Menu Customizer 0.4
+	 * @access public
+	 */
+	public function search_available_items_ajax() {
+		check_ajax_referer( 'customize-menus', 'customize-menus-nonce' );
+
+		if ( ! current_user_can( 'edit_theme_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
+		}
+
+		$p = absint( $_POST['page'] );
+		$s = esc_html( $_POST['search'] );
+		$results = $this->search_available_items_query( array( 'pagenum' => $p, 's' => $s ) );
+		if ( ! $results ) {
+			wp_send_json_error( array( 'message' => __( 'No results found.' ) ) );
+		} else {
+			wp_send_json_success( array( 'items' => $results ) );
+		}
+	}
+
+	/*
+	 * Performs post queries for available-item searching.
+	 *
+	 * Based on WP_Editor::wp_link_query().
+	 *
+	 * @since Menu Customizer 0.4
+	 *
+	 * @static
+	 * @param array $args Optional. Accepts 'pagenum' and 's' (search) arguments.
+	 * @return false|array Results.
+	 */
+	public static function search_available_items_query( $args = array() ) {
+		$pts = get_post_types( array( 'show_in_nav_menus' => true ), 'objects' );
+		$pt_names = array_keys( $pts );
+		$query = array(
+			'post_type' => $pt_names,
+			'suppress_filters' => true,
+			'update_post_term_cache' => false,
+			'update_post_meta_cache' => false,
+			'post_status' => 'publish',
+			'posts_per_page' => 20,
+		);
+		$args['pagenum'] = isset( $args['pagenum'] ) ? absint( $args['pagenum'] ) : 1;
+		if ( isset( $args['s'] ) ) {
+			$query['s'] = $args['s'];
+		}
+		$query['offset'] = $args['pagenum'] > 1 ? $query['posts_per_page'] * ( $args['pagenum'] - 1 ) : 0;
+		// Do main query.
+		$get_posts = new WP_Query;
+		$posts = $get_posts->query( $query );
+		// Check if any posts were found.
+		if ( ! $get_posts->post_count ) {
+			return false;
+		}
+		// Build results.
+		$results = array();
+		foreach ( $posts as $post ) {
+			$results[] = array(
+				'id'         => 'post-' . $post->ID,
+				'name'       => trim( esc_html( strip_tags( get_the_title( $post ) ) ) ),
+				'type'       => $post->post_type,
+				'type_label' => $pts[ $post->post_type ]->labels->singular_name,
+				'obj_type'   => 'post',
+			);
+		}
+		return $results;
 	}
 
 	/**
@@ -906,7 +978,6 @@ class WP_Customize_Menus {
 				</div>
 			</li>
 		</script>
-
 		<script type="text/html" id="tmpl-menu-item-reorder-nav">
 			<div class="menu-item-reorder-nav">
 				<?php
@@ -963,13 +1034,12 @@ class WP_Customize_Menus {
 					</p>
 				</div>
 			</div>
-			<div id="available-menu-items-search" class="accordion-section">
+			<div id="available-menu-items-search" class="accordion-section cannot-expand">
 				<div class="accordion-section-title">
 					<label class="screen-reader-text" for="menu-items-search"><?php _e( 'Search Menu Items' ); ?></label>
 					<input type="search" id="menu-items-search" placeholder="<?php esc_attr_e( 'Search menu items&hellip;' ) ?>" />
 				</div>
-				<div class="accordion-section-content">
-				</div>
+				<div class="accordion-section-content" data-type="search"></div>
 			</div>
 			<?php
 
