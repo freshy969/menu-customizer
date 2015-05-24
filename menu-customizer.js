@@ -2149,13 +2149,19 @@
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
+				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title' ),
 				id = el.closest( '.accordion-section' ).attr( 'id' ),
-				location = el.closest( '.accordion-section' ).find( '.menu-in-location' );
+				location = el.closest( '.accordion-section' ).find( '.menu-in-location' ),
+				action = title2.find( '.customize-action' );
 			// Empty names are not allowed (will not be saved), don't update to one.
 			if ( name ) {
 				title.html( name );
 				if ( location.length ) {
 					location.appendTo( title );
+				}
+				title2.text( name );
+				if ( action.length ) {
+					action.prependTo( title2 );
 				}
 				id = id.replace( 'accordion-section-nav_menus[', '' );
 				id = id.replace( ']', '' );
