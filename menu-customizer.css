@@ -523,7 +523,7 @@
 	width: 300px;
 	margin: 0;
 	z-index: 4;
-	background: #f7f7f7;
+	background: #eee;
 	-webkit-transition: all 0.2s;
 	transition: all 0.2s;
 	border-right: 1px solid #dddddd;
@@ -532,15 +532,21 @@
 #available-menu-items .accordion-section-title {
 	border-left: none;
 	border-right: none;
+	background: #fff;
 }
 
 #available-menu-items .open .accordion-section-title {
-	background: #fff;
+	background: #eee;
+}
+
+#available-menu-items .open .accordion-section-title:after {
+	content: '\f142';
 }
 
 #available-menu-items .accordion-section-content {
 	overflow-y: auto;
 	max-height: 200px; /* This gets set in JS to fit the screen size, and based on # of sections. */
+	background: transparent;
 }
 
 #available-menu-items-search .accordion-section-title {
@@ -555,17 +561,12 @@
 }
 
 #available-menu-items .accordion-section-content {
-	border-top: 1px solid #eee;
-	padding: 15px;
+	padding: 1px 15px 15px 15px;
 }
 
 #available-menu-items-search input {
 	padding: 6px 10px;
 	width: 100%;
-}
-
-#available-menu-items-search .accordion-section-content {
-	padding: 15px;
 }
 
 #available-menu-items .item-tpl {

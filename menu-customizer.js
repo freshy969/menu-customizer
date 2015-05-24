@@ -351,7 +351,7 @@
 			var sections, totalHeight, accordionHeight;
 			totalHeight = window.innerHeight;
 			sections = this.$el.find( '.accordion-section-content' );
-			accordionHeight =  46 * ( 1 + sections.length ) - 1;
+			accordionHeight =  46 * ( 1 + sections.length ) - 16; // Magic numbers.
 			sections.css( 'max-height', totalHeight - accordionHeight );
 		},
 
