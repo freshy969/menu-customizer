@@ -164,9 +164,9 @@
 		el: '#available-menu-items',
 
 		events: {
-			'input #menu-items-search': 'search',
-			'change #menu-items-search': 'search',
-			'click #menu-items-search': 'search',
+			'input #menu-items-search': 'debounceSearch',
+			'change #menu-items-search': 'debounceSearch',
+			'click #menu-items-search': 'debounceSearch',
 			'focus .menu-item-tpl' : 'focus',
 			'click .menu-item-tpl' : '_submit',
 			'keypress .menu-item-tpl' : '_submit',
@@ -180,6 +180,7 @@
 
 		// Cache menu control that opened the panel.
 		currentMenuControl: null,
+		debounceSearch: null,
 		$search: null,
 		searchTerm: '',
 		rendered: false,
@@ -192,6 +193,8 @@
 
 			this.$search = $( '#menu-items-search' );
 			this.sectionContent = this.$el.find( '.accordion-section-content' );
+
+			this.debounceSearch = _.debounce( self.search, 250 );
 
 			_.bindAll( this, 'close' );
 
@@ -229,6 +232,9 @@
 
 		// Search input change handler.
 		search: function( event ) {
+			if ( ! event ) {
+				return;
+			}
 			// Manual accordion-opening behavior.
 			if ( this.searchTerm && ! $( '#available-menu-items-search' ).hasClass( 'open' ) ) {
 				$( '#available-menu-items .accordion-section-content' ).slideUp( 'fast' );
@@ -247,6 +253,7 @@
 		// Get search results.
 		doSearch: function( page ) {
 			var self = this, params,
+				thisTerm = self.searchTerm,
 			    typeInner = $( '#available-menu-items-search .accordion-section-content' ),
 			    itemTemplate = wp.template( 'available-menu-item' );
 
@@ -264,11 +271,19 @@
 				'action': 'search-available-menu-items-customizer',
 				'customize-menus-nonce': api.Menus.data.nonce,
 				'wp_customize': 'on',
-				'search': self.searchTerm,
+				'search': thisTerm,
 				'page': page
 			};
 			$.post( wp.ajax.settings.url, params, function( response ) {
 				var items;
+				if ( self.searchTerm != thisTerm ) {
+					// Term changed since ajax call was fired, wait for the next one.
+					if ( ! self.searchTerm ) {
+						$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
+						self.loading = false;
+					}
+					return;
+				}
 				if ( 1 === page ) {
 					// Clear previous results as it's a new search.
 					typeInner.html('');
@@ -277,11 +292,10 @@
 					if ( 0 === typeInner.children().length ) {
 						// No results were found.
 						typeInner.html( '<p class="nothing-found">' + response.data.message + '</p>' );
-					} else {
-						$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
-						self.loading = false;
-						self.pages.search = -1;
 					}
+					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
+					self.loading = false;
+					self.pages.search = -1;
 				} else if ( response.success && response.data ) {
 					items = response.data.items;
 					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
@@ -291,7 +305,11 @@
 					items.each( function( menuItem ) {
 						typeInner.append( itemTemplate( menuItem.attributes ) );
 					} );
-					self.pages.search = self.pages.search + 1;
+					if ( 20 > items.length ) {
+						self.pages.search = -1; // Up to 20 posts and 20 terms in results, if <20, no more results for either.
+					} else {
+						self.pages.search = self.pages.search + 1;
+					}
 				}
 			});
 		},
