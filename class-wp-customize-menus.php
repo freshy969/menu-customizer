@@ -391,6 +391,22 @@ class WP_Customize_Menus {
 				'obj_type'   => 'post',
 			);
 		}
+		// Query taxonomy terms.
+		$taxonomies = get_taxonomies( array( 'show_in_nav_menus' => true ), 'names' );
+		$terms = get_terms( $taxonomies, array(
+			'name__like' => $args['s'],
+			'number' => 20,
+			'offset' => 20 * ($args['pagenum'] - 1),
+		));
+		foreach ( $terms as $term ) {
+			$results[] = array(
+				'id'         => 'term-' . $term->term_id,
+				'name'       => $term->name,
+				'type'       => $term->taxonomy,
+				'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
+				'obj_type'   => 'taxonomy',
+			);
+		}
 		return $results;
 	}
 
