@@ -254,6 +254,9 @@
 				return;
 			} else if ( 1 < page ) {
 				$( '#available-menu-items-search' ).addClass( 'loading-more' );
+			} else if ( '' === this.searchTerm ) {
+				typeInner.html('');
+				return;
 			}
 			$( '#available-menu-items-search' ).addClass( 'loading' );
 			self.loading = true;
