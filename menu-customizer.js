@@ -166,6 +166,7 @@
 		events: {
 			'input #menu-items-search': 'search',
 			'change #menu-items-search': 'search',
+			'click #menu-items-search': 'search',
 			'focus .menu-item-tpl' : 'focus',
 			'click .menu-item-tpl' : '_submit',
 			'keypress .menu-item-tpl' : '_submit',
@@ -228,19 +229,19 @@
 
 		// Search input change handler.
 		search: function( event ) {
-			if ( this.searchTerm === event.target.value ) {
-				return;
-			}
-			this.searchTerm = event.target.value;
-			this.pages.search = 1;
-			this.doSearch( 1 );
-			// Manual accordion behavior.
+			// Manual accordion-opening behavior.
 			if ( this.searchTerm && ! $( '#available-menu-items-search' ).hasClass( 'open' ) ) {
 				$( '#available-menu-items .accordion-section-content' ).slideUp( 'fast' );
 				$( '#available-menu-items-search .accordion-section-content' ).slideDown( 'fast' );
 				$( '#available-menu-items .accordion-section.open' ).removeClass( 'open' );
 				$( '#available-menu-items-search' ).addClass( 'open' );
 			}
+			if ( this.searchTerm === event.target.value ) {
+				return;
+			}
+			this.searchTerm = event.target.value;
+			this.pages.search = 1;
+			this.doSearch( 1 );
 		},
 
 		// Get search results.
@@ -251,11 +252,10 @@
 
 			if ( 0 > page ) {
 				return;
-			} else if ( 1 === page ) {
-				// Clear results as it's a new search.
-				typeInner.html('');
+			} else if ( 1 < page ) {
+				$( '#available-menu-items-search' ).addClass( 'loading-more' );
 			}
-			$( '#available-menu-items-search .accordion-section-title' ).addClass( 'loading' );
+			$( '#available-menu-items-search' ).addClass( 'loading' );
 			self.loading = true;
 			params = {
 				'action': 'search-available-menu-items-customizer',
@@ -266,18 +266,22 @@
 			};
 			$.post( wp.ajax.settings.url, params, function( response ) {
 				var items;
+				if ( 1 === page ) {
+					// Clear previous results as it's a new search.
+					typeInner.html('');
+				}
 				if ( response.data && response.data.message ) {
-					if ( 0 === typeInner.length ) {
+					if ( 0 === typeInner.children().length ) {
 						// No results were found.
 						typeInner.html( '<p class="nothing-found">' + response.data.message + '</p>' );
 					} else {
-						$( '#available-menu-items-search .accordion-section-title' ).removeClass( 'loading' );
+						$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
 						self.loading = false;
 						self.pages.search = -1;
 					}
 				} else if ( response.success && response.data ) {
 					items = response.data.items;
-					$( '#available-menu-items-search .accordion-section-title' ).removeClass( 'loading' );
+					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
 					self.loading = false;
 					items = new api.Menus.AvailableItemCollection( items );
 					self.collection.add( items.models );

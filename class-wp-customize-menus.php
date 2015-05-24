@@ -950,7 +950,7 @@ class WP_Customize_Menus {
 				<dl class="menu-item-bar">
 					<dt class="menu-item-handle">
 						<span class="item-type">{{ data.type_label }}</span>
-						<span class="item-title">{{ data.name }}</span>
+						<span class="item-title">{{{ data.name }}}</span>
 						<a class="item-add" href="#">Add Menu Item</a>
 					</dt>
 				</dl>
@@ -972,7 +972,7 @@ class WP_Customize_Menus {
 						<dt class="menu-item-handle">
 							<span class="spinner" style="visibility: visible;"></span>
 							<span class="item-type">{{ data.type_label }}</span>
-							<span class="item-title menu-item-title">{{ data.name }}</span>
+							<span class="item-title menu-item-title">{{{ data.name }}}</span>
 						</dt>
 					</dl>
 				</div>
@@ -1037,7 +1037,8 @@ class WP_Customize_Menus {
 			<div id="available-menu-items-search" class="accordion-section cannot-expand">
 				<div class="accordion-section-title">
 					<label class="screen-reader-text" for="menu-items-search"><?php _e( 'Search Menu Items' ); ?></label>
-					<input type="search" id="menu-items-search" placeholder="<?php esc_attr_e( 'Search menu items&hellip;' ) ?>" />
+					<input type="text" id="menu-items-search" placeholder="<?php esc_attr_e( 'Search menu items&hellip;' ) ?>" />
+					<span class="spinner"></span>
 				</div>
 				<div class="accordion-section-content" data-type="search"></div>
 			</div>

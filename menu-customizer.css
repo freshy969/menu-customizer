@@ -636,9 +636,25 @@
 	top: 12px;
 }
 
-#available-menu-items .accordion-section-title.loading .spinner {
+#available-menu-items .accordion-section-title.loading .spinner,
+#available-menu-items-search.loading .accordion-section-title .spinner {
 	visibility: visible;
 	margin: 0 20px;
+}
+
+#available-menu-items-search .spinner {
+	position: absolute;
+	top: 18px;
+	margin: 0 !important;
+	right: 20px;
+}
+
+#available-menu-items-search.loading .accordion-section-content div {
+	opacity: .5;
+}
+
+#available-menu-items-search.loading.loading-more .accordion-section-content div {
+	opacity: 1;
 }
 
 #customize-preview {
