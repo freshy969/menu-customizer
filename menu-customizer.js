@@ -209,6 +209,14 @@
 				}
 			} );
 
+			// Load available items if it looks like we'll need them.
+			api.panel( 'menus' ).container.bind( 'expanded', function() {
+				if ( ! self.rendered ) {
+					self.initList();
+					self.rendered = true;
+				}
+			});
+
 			// Load more items.
 			this.sectionContent.scroll( function() {
 				var totalHeight = self.$el.find( '.accordion-section.open .accordion-section-content' ).prop('scrollHeight'),
@@ -467,10 +475,6 @@
 		open: function( menuControl ) {
 			this.currentMenuControl = menuControl;
 
-			if ( ! this.rendered ) {
-				this.initList();
-				this.rendered = true;
-			}
 			this.itemSectionHeight();
 
 			$( 'body' ).addClass( 'adding-menu-items' );
