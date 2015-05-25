@@ -3,7 +3,7 @@ Contributors: celloexpressions, wordpressdotorg
 Tags: menus, custom menus, customizer, theme customizer, gsoc
 Requires at least: 4.2
 Tested up to: 4.3-alpha
-Stable tag: 0.3
+Stable tag: 0.4
 Description: Manage your Menus in the Customizer. WordPress core feature-plugin.
 License: GPLv2
 
@@ -27,6 +27,16 @@ Several improvements to the Customizer are also in the works as a part of this p
 
 == Changelog ==
 See full details here: https://plugins.trac.wordpress.org/log/menu-customizer
+= 0.4 =
+* In-Customizer previewing of “original” menu item links.
+* A redesign of the screen options popup.
+* Add theme location checkboxes within menu sections (which fully cross-sync with the menu locations section).
+* Theme locations listed within menu section names.
+* Menus can only be deleted when they aren’t assigned to any locations.
+* Available menu item searching, and a first-pass redesign of the available menu items panel to match the new look for core in #31336 (more to come here).
+* Integration of the existing core theme location controls into the plugin.
+* Props to @celloexpressinos, @valendesigns, @voldemortensen, and @folletto.
+
 = 0.3 =
 * PHP 5.2 support.
 * Refactor PHP codebase to be object-oriented.
