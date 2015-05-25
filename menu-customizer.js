@@ -284,7 +284,7 @@
 			};
 			$.post( wp.ajax.settings.url, params, function( response ) {
 				var items;
-				if ( self.searchTerm != thisTerm ) {
+				if ( self.searchTerm !== thisTerm ) {
 					// Term changed since ajax call was fired, wait for the next one.
 					if ( ! self.searchTerm ) {
 						$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
@@ -680,7 +680,7 @@
 	 */
 	api.Menus.MenuLocationControl = api.Control.extend({
 		ready: function() {
-			var self = this, loaded = false;
+			var self = this;
 
 			// Update sections when value changes.
 			this.setting.bind( function( to, from ) {
