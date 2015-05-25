@@ -28,7 +28,7 @@ class WP_Customize_New_Menu_Section extends WP_Customize_Section {
 	protected function render() {
 		?>
 		<li id="accordion-section-<?php echo esc_attr( $this->id ); ?>" class="accordion-section-new-menu">
-		
+
 			<button class="button-secondary add-new-menu-item add-menu-toggle" tabindex="0">
 				<?php echo esc_html( $this->title ); ?>
 				<span class="screen-reader-text"><?php _e( 'Press return or enter to open' ); ?></span>
@@ -137,6 +137,24 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 				<?php _e( 'Delete menu' ); ?> <span class="screen-reader-text">{{ data.menu_name }}</span>
 			</span>
 		</span>
+		<?php if ( current_theme_supports( 'menus' ) ) : ?>
+			<ul class="menu-settings">
+				<li class="customize-control">
+					<span class="customize-control-title"><?php _e( 'Menu locations' ); ?></span>
+				</li>
+				<?php $locations = get_registered_nav_menus();
+				$menu_locations = get_nav_menu_locations(); ?>
+				<?php foreach ( $locations as $location => $description ) : ?>
+
+					<li class="customize-control customize-control-checkbox">
+						<input type="checkbox" data-menu-id="{{ data.menu_id }}" data-location-id="<?php echo esc_attr( $location ); ?>" id="menu-locations-{{ data.menu_id }}-<?php echo esc_attr( $location ); ?>" /> <label for="menu-locations-{{ data.menu_id }}-<?php echo esc_attr( $location ); ?>"><?php echo $description; ?></label>
+						<span class="theme-location-set"> <?php printf( __( "(Currently set to: %s)" ), '<span class="current-menu-location-name-' . $location . '"></span>' ); ?> </span>
+					</li>
+
+				<?php endforeach; ?>
+
+			</ul>
+		<?php endif; ?>
 	<?php
 	}
 }

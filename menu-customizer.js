@@ -676,20 +676,30 @@
 	 */
 	api.Menus.MenuLocationControl = api.Control.extend({
 		ready: function() {
-			var self = this;
+			var self = this, loaded = false;
 
 			// Update sections when value changes.
 			this.setting.bind( function( to, from ) {
 				if ( ! _( from ).isEqual( to ) ) {
 					self.updateLocationInMenu( to, from );
+					self.updateMenuLocationCheckboxes( to, from );
 				}
-			} ); 
-			this.updateLocationInMenu( this.setting.get(), '' );
+			} );
+			api.panel( 'menus' ).container.bind( 'expanded', function() {
+				if ( ! self.loaded ) {
+					self.updateLocationInMenu( self.setting.get(), '' );
+					self.updateMenuLocationCheckboxes( self.setting.get(), '' );
+					self.loaded = true;
+				}
+			});
 		},
 
 		// Add the menu location name to the menu title.
 		updateLocationInMenu: function( to, from ) {
 			if ( ! to ) {
+				if ( from ) {
+					this.updateLocationsInMenu( api.section( 'nav_menus[' + from + ']' ).container );
+				}
 				return;
 			}
 
@@ -710,7 +720,7 @@
 			}
 		},
 
-		// Handles menus that are set to multiple menu locations
+		// Handles menus that are set to multiple menu locations. @todo handle removal when theme location is set to blank.
 		updateLocationsInMenu: function( $section ) {
 			var $title = $section.find( '.accordion-section-title' ),
 				$location = $section.find( '.menu-in-location' );
@@ -745,7 +755,28 @@
 
 				$section.find( '.menu-in-location' ).hide();
 			}
+		},
 
+		// Update theme location checkboxes.
+		updateMenuLocationCheckboxes: function( to, from ) {
+			var locationNames = $( '.current-menu-location-name-' + this.params.locationId ),
+			    setTo = locationNames.parent(),
+				oldBox = $( '#menu-locations-' + from + '-' + this.params.locationId ),
+				newBox = $( '#menu-locations-' + to + '-' + this.params.locationId ),
+			    menuName;
+			if ( 0 === to ) {
+				setTo.hide();
+				oldBox.prop( 'checked', false );
+			} else if ( ! to ) {
+				setTo.hide();
+			} else {
+ 				menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
+				setTo.show();
+				locationNames.text( menuName );
+				oldBox.prop( 'checked', false );
+				newBox.prop( 'checked', true );
+				newBox.parent().find( '.theme-location-set' ).hide();
+			}
 		}
 	});
 
@@ -1424,6 +1455,7 @@
 			this._setupAddition();
 			this._setupDeletion();
 			this._applyCardinalOrderClassNames();
+			this._setupLocations();
 		},
 
 		/**
@@ -1698,6 +1730,22 @@
 				.find( '.menus-move-down' ).prop( 'tabIndex', -1 );
 		},
 
+		// Setup theme location checkboxes.
+		_setupLocations: function() {
+			var boxes = this.container.find( '.customize-control-checkbox input' );
+			boxes.on( 'change', function() {
+				var $this = $( this ), locationId, menuId, locationControl;
+				locationId = $this.data( 'location-id' );
+				menuId = $this.data( 'menu-id' );
+				locationControl = api.control( 'nav_menu_locations[' + locationId + ']' );
+				if ( $this.prop( 'checked' ) ) {
+					locationControl.setting( menuId );
+				} else {
+					locationControl.setting( 0 );
+				}
+				// Note: the setting change binding on the location control handle UI updates.
+			});
+		},
 
 		/***********************************************************************
 		 * Begin public API methods
