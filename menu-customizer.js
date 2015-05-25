@@ -658,10 +658,13 @@
 		onChangeExpanded: function ( expanded ) {
 			var section = this,
 			    button = section.container.find( '.add-menu-toggle' ),
-				content = section.container.find( '.new-menu-section-content' );
+				content = section.container.find( '.new-menu-section-content' ),
+			    customizer = section.container.closest( '.wp-full-overlay-sidebar-content' );
 			if ( expanded ) {
 				button.addClass( 'open' );
-				content.slideDown( 'fast' );
+				content.slideDown( 'fast', function() {
+					customizer.scrollTop( customizer.height() );
+				});
 			} else {
 				button.removeClass( 'open' );
 				content.slideUp( 'fast' );
