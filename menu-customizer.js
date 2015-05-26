@@ -88,13 +88,13 @@
 			this.terms = value;
 
 			// If we have terms, run a search.
-			if ( this.terms.length > 0 ) {
+			if ( 0 < this.terms.length ) {
 				this.search( this.terms );
 			}
 
 			// If search is blank, show all items.
 			// Useful for resetting the views when you clean the input.
-			if ( this.terms === '' ) {
+			if ( '' === this.terms ) {
 				this.each( function ( menu_item ) {
 					menu_item.set( 'search_matched', true );
 				} );
@@ -399,7 +399,7 @@
 		// Submit handler for keypress and click on menu item.
 		_submit: function( event ) {
 			// Only proceed with keypress if it is Enter or Spacebar
-			if ( event.type === 'keypress' && ( event.which !== 13 && event.which !== 32 ) ) {
+			if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
 				return;
 			}
 
@@ -433,7 +433,7 @@
 		// Submit handler for keypress and click on custom menu item.
 		_submitLink: function( event ) {
 			// Only proceed with keypress if it is Enter.
-			if ( event.type === 'keypress' && ( event.which !== 13 ) ) {
+			if ( 'keypress' === event.type && 13 !== event.which ) {
 				return;
 			}
 
