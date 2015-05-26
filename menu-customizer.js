@@ -1870,7 +1870,7 @@
 
 					// Make sure the panel hasn't been closed in the meantime.
 					if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
-						api.control( settingId ).toggleDeletePosition();
+						api.control( settingId ).toggleDeletePosition( true );
 					}
 
 					// Add item to this menu.
