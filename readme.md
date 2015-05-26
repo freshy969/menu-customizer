@@ -5,9 +5,9 @@
 
 **Contributors:** [celloexpressions](https://profiles.wordpress.org/celloexpressions), [wordpressdotorg](https://profiles.wordpress.org/wordpressdotorg)  
 **Tags:** [menus](https://wordpress.org/plugins/tags/menus), [custom menus](https://wordpress.org/plugins/tags/custom menus), [customizer](https://wordpress.org/plugins/tags/customizer), [theme customizer](https://wordpress.org/plugins/tags/theme customizer), [gsoc](https://wordpress.org/plugins/tags/gsoc)  
-**Requires at least:** 4.1  
-**Tested up to:** 4.1  
-**Stable tag:** 0.2  
+**Requires at least:** 4.2  
+**Tested up to:** 4.3-alpha  
+**Stable tag:** 0.4  
 **License:** GPLv2  
 **Description:** Manage your Menus in the Customizer. WordPress core feature-plugin.  
 
@@ -23,6 +23,29 @@
 ## Changelog ##
 
 See full details here: https://plugins.trac.wordpress.org/log/menu-customizer
+### 0.4 ###
+* In-Customizer previewing of “original” menu item links.
+* A redesign of the screen options popup.
+* Add theme location checkboxes within menu sections (which fully cross-sync with the menu locations section).
+* Theme locations listed within menu section names.
+* Menus can only be deleted when they aren’t assigned to any locations.
+* Available menu item searching, and a first-pass redesign of the available menu items panel to match the new look for core in #31336 (more to come here).
+* Integration of the existing core theme location controls into the plugin.
+* Props to @celloexpressinos, @valendesigns, @voldemortensen, and @folletto.
+
+### 0.3 ###
+* PHP 5.2 support.
+* Refactor PHP codebase to be object-oriented.
+* General code & inline documentation cleanup.
+* Lazy-load menu item controls when their containing menu is opened.
+* Lazy-load all items in the available menu item panel.
+* Redesign menu deletion.
+* Redesign menu item list views with less spacing for a clearer visual experience.
+* Redesign the add-new-menu section to be displayed like a button.
+* Handle errors in ajax actions with user notices.
+* UI updates for http://core.trac.wordpress.org/ticket/31336, which will become required soon.
+* Props @celloexpressions, @valendesigns, @voldemortensen, @westonruter, and @kucrut
+
 ### 0.2 ###
 * Leverage all of the new core Customizer API features that were developed in WordPress 4.1. 4.1 is required, and while we'll try to keep the plugin compatible with 4.1 for as long as possible, we may bump the requirement to 4.2-alpha eventually. Menu Customizer development was on hold while the 4.1 Customizer work happened; we'll pick things back up here now that the needed core APIs are mostly in place. If all goes well, depending on contributor interest and release timing, we may be able to propose Menu Customizer for core merge in WordPress 4.2.
 * Adding new menus should work without a page refresh now.
