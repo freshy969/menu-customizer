@@ -4,8 +4,9 @@ Tags: menus, custom menus, customizer, theme customizer, gsoc
 Requires at least: 4.2
 Tested up to: 4.3-alpha
 Stable tag: 0.4
-Description: Manage your Menus in the Customizer. WordPress core feature-plugin.
 License: GPLv2
+
+Manage your Menus in the Customizer. WordPress core feature-plugin.
 
 == Description ==
 This plugin is a WordPress core feature-plugin and a former Google Summer of Code 2014 project. See the <a href="http://make.wordpress.org/core/tag/menu-customizer/">updates on Make WordPress Core</a> for more information.
