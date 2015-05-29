@@ -1976,6 +1976,7 @@
 						active: true,
 						panel: 'menus',
 						title: response.data.name,
+						type: 'menu',
 						priority: priority
 					};
 
