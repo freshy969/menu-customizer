@@ -1007,15 +1007,7 @@ class WP_Customize_Menus {
 				?>
 			</div>
 		</script>
-
-		<script type="text/html" id="tmpl-menu-section-for-core">
-			<li id="accordion-section-{{ data.id }}" class="accordion-section control-section control-section-default">
-				<h3 class="accordion-section-title" tabindex="0">{{ data.title }}<span class="screen-reader-text">Press return or enter to expand</span>
-				</h3>
-				<ul class="accordion-section-content"></ul>
-			</li>
-		</script>
-		<?php // @todo the section template should be removed in favor of being in core, whenever a section is dynamically added
+		<?php
 	}
 
 	/**
