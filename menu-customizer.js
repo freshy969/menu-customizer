@@ -1482,6 +1482,7 @@
 					var result = $();
 					this.each(function() {
 						var t = $(this), depth = t.menuItemDepth(), next = t.next();
+						console.log(t.menuItemDepth());
 						while( next.length && next.menuItemDepth() > depth ) {
 							result = result.add(next);
 							next = next.next();
@@ -1490,8 +1491,9 @@
 					return result;
 				},
 				menuItemDepth: function () {
-					var margin = api.isRTL ? this.eq(0).css('margin-right') : this.eq(0).css('margin-left');
-					return this.pxToDepth( margin && -1 != margin.indexOf('px') ? margin.slice(0, -2) : 0 );
+//					var margin = api.isRTL ? this.eq(0).css('margin-right') : this.eq(0).css('margin-left');
+//					return this.pxToDepth( margin && -1 !== margin.indexOf('px') ? margin.slice(0, -2) : 0 );
+					return $(this).dataset;
 				},
 				pxToDepth: function (px) {
 					return Math.floor(px / api.options.menuItemDepthPerLevel);
@@ -1499,66 +1501,67 @@
 				depthToPx: function (depth) {
 					return depth * api.options.menuItemDepthPerLevel;
 				},
-                                updateParentMenuItemDBId : function() {
-                                        return this.each(function(){
-                                                var item = $(this),
-                                                        input = item.find( '.menu-item-data-parent-id' ),
-                                                        depth = parseInt( item.menuItemDepth(), 10 ),
-                                                        parentDepth = depth - 1,
-                                                        parent = item.prevAll( '.menu-item-depth-' + parentDepth ).first();
+				updateParentMenuItemDBId : function() {
+					return this.each(function(){
+						var item = $(this),
+						input = item.find( '.menu-item-data-parent-id' ),
+						depth = parseInt( item.menuItemDepth(), 10 ),
+						parentDepth = depth - 1,
+						parent = item.prevAll( '.menu-item-depth-' + parentDepth ).first();
 
-                                                if ( 0 === depth ) { // Item is on the top level, has no parent
-                                                        input.val(0);
-                                                } else { // Find the parent item, and retrieve its object id.
-                                                        input.val( parent.find( '.menu-item-data-db-id' ).val() );
-                                                }
-                                        });
-                                },
-refreshKeyboardAccessibility : function() {
-                        $( '.item-edit' ).off( 'focus' ).on( 'focus', function(){
-                                $(this).off( 'keydown' ).on( 'keydown', function(e){
+						if ( 0 === depth ) { // Item is on the top level, has no parent
+							input.val(0);
+						} else { // Find the parent item, and retrieve its object id.
+							input.val( parent.find( '.menu-item-data-db-id' ).val() );
+						}
+					});
+				},
+				refreshKeyboardAccessibility : function() {
+					$( '.item-edit' ).off( 'focus' ).on( 'focus', function(){
+						$(this).off( 'keydown' ).on( 'keydown', function(e){
 
-                                        var arrows,
-                                                $this = $( this ),
-                                                thisItem = $this.parents( 'li.menu-item' ),
-                                                thisItemData = thisItem.getItemData();
+							var arrows,
+							$this = $( this ),
+							thisItem = $this.parents( 'li.menu-item' ),
+							thisItemData = thisItem.getItemData();
 
-                                        // Bail if it's not an arrow key
-                                        if ( 37 != e.which && 38 != e.which && 39 != e.which && 40 != e.which )
-                                                return;
+							// Bail if it's not an arrow key
+							if ( 37 !== e.which && 38 !== e.which && 39 !== e.which && 40 !== e.which ) {
+								return;
+							}
 
-                                        // Avoid multiple keydown events
-                                        $this.off('keydown');
+							// Avoid multiple keydown events
+							$this.off('keydown');
 
-                                        // Bail if there is only one menu item
-                                        if ( 1 === $('#menu-to-edit li').length )
-                                                return;
+							// Bail if there is only one menu item
+							if ( 1 === $('#menu-to-edit li').length )
+								return;
 
-                                        // If RTL, swap left/right arrows
-                                        arrows = { '38': 'up', '40': 'down', '37': 'left', '39': 'right' };
-                                        if ( $('body').hasClass('rtl') )
-                                                arrows = { '38' : 'up', '40' : 'down', '39' : 'left', '37' : 'right' };
+							// If RTL, swap left/right arrows
+							arrows = { '38': 'up', '40': 'down', '37': 'left', '39': 'right' };
+							if ( $('body').hasClass('rtl') )
+								arrows = { '38' : 'up', '40' : 'down', '39' : 'left', '37' : 'right' };
 
-                                        switch ( arrows[e.which] ) {
-                                        case 'up':
-                                                api.moveMenuItem( $this, 'up' );
-                                                break;
-                                        case 'down':
-                                                api.moveMenuItem( $this, 'down' );
-                                                break;
-                                        case 'left':
-                                                api.moveMenuItem( $this, 'left' );
-                                                break;
-                                        case 'right':
-                                                api.moveMenuItem( $this, 'right' );
-                                                break;
-                                        }
-                                        // Put focus back on same menu item
-                                        $( '#edit-' + thisItemData['menu-item-db-id'] ).focus();
-                                        return false;
-                                });
-                        });
-                },
+							switch ( arrows[e.which] ) {
+								case 'up':
+									api.moveMenuItem( $this, 'up' );
+									break;
+								case 'down':
+									api.moveMenuItem( $this, 'down' );
+									break;
+								case 'left':
+									api.moveMenuItem( $this, 'left' );
+									break;
+								case 'right':
+									api.moveMenuItem( $this, 'right' );
+									break;
+							}
+							// Put focus back on same menu item
+							$( '#edit-' + thisItemData['menu-item-db-id'] ).focus();
+							return false;
+						});
+					});
+				},
 			});
 		},
 
@@ -1624,7 +1627,7 @@ refreshKeyboardAccessibility : function() {
 		_setupSortable: function() {
 			var self = this, transport,
 				originalDepth, currentDepth = 0, helperHeight, maxChildDepth, depth,
-				prev, next, prevBottom, nextThreshold, minDepth, maxDepth;
+				prev, next, prevBottom, nextThreshold, minDepth, maxDepth, menuItemIds;
 				//menuEdge = $('.menu-item-handle').offset().left;
 
 			this.isReordering = false;
@@ -1663,7 +1666,6 @@ refreshKeyboardAccessibility : function() {
 					menuItemIds = $.map( menuItemContainerIds, function( menuItemContainerId ) {
 						return parseInt( menuItemContainerId.replace( 'customize-control-nav_menus-' + self.params.menu_id + '-', '' ), 10 );
 					} );
-					console.log(menuItemIds);
 
 					self.setting( menuItemIds );
 				},
@@ -1685,16 +1687,18 @@ refreshKeyboardAccessibility : function() {
 
 					// Attach child elements to parent
 					// Skip the placeholder
+					
 					parent = ( ui.item.next()[0] == ui.placeholder[0] ) ? ui.item.next() : ui.item;
+					console.log(parent);
 					children = parent.childMenuItems(api.options.menuItemDepthPerLevel);
+					console.log(children);
 					transport.append( children );
 
 					// Update the height of the placeholder to match the moving item.
 					height = transport.outerHeight();
 					// If there are children, account for distance between top of children and parent
 					height += ( height > 0 ) ? (ui.placeholder.css('margin-top').slice(0, -2) * 1) : 0;
-					height += ui.helper.outerHeight();
-					helperHeight = height;
+
 					height -= 2; // Subtract 2 for borders
 					ui.placeholder.height(height);
 
@@ -1754,8 +1758,8 @@ refreshKeyboardAccessibility : function() {
 						ui.item[0].style.right = 0;
 					}
 
-//					self.refreshKeyboardAccessibility();
-//					self.refreshAdvancedAccessibility();
+					$.fn.refreshKeyboardAccessibility();
+//					$.fn.refreshAdvancedAccessibility();
 				},
 				change: function(e, ui) {
 					// Make sure the placeholder is inside the menu.
