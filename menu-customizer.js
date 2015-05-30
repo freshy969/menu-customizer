@@ -200,8 +200,8 @@
 
 			// If the available menu items panel is open and the customize controls are
 			// interacted with (other than an item being deleted), then close the
-			// available menu items panel.
-			$( '#customize-controls' ).on( 'click keydown', function( e ) {
+			// available menu items panel. Also close on back button click.
+			$( '#customize-controls, .customize-section-back' ).on( 'click keydown', function( e ) {
 				var isDeleteBtn = $( e.target ).is( '.item-delete, .item-delete *' ),
 					isAddNewBtn = $( e.target ).is( '.add-new-menu-item, .add-new-menu-item *' );
 				if ( $( 'body' ).hasClass( 'adding-menu-items' ) && ! isDeleteBtn && ! isAddNewBtn ) {

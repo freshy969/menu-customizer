@@ -1019,6 +1019,18 @@ class WP_Customize_Menus {
 	public function available_items_template() {
 		?>
 		<div id="available-menu-items" class="accordion-container">
+			<div class="customize-section-title">
+				<button class="customize-section-back" tabindex="-1">
+					<span class="screen-reader-text"><?php _e( 'Back' ); ?></span>
+				</button>
+				<h3>
+					<span class="customize-action"><?php
+						/* translators: &#9656; is the unicode right-pointing triangle, and %s is the section title in the Customizer */
+						echo sprintf( __( 'Customizing &#9656; %s' ), esc_html( $this->manager->get_panel( 'menus' )->title ) );
+					?></span>
+					<?php _e( 'Add Menu Items' ); ?>
+				</h3>
+			</div>
 			<div id="new-custom-menu-item" class="accordion-section">
 				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?></h4>
 				<div class="accordion-section-content">

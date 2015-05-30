@@ -788,3 +788,43 @@ li.assigned-to-menu-location .add-new-menu-item {
 .customize-control-nav_menu {
 	margin-top: 12px;
 }
+
+@media screen and ( max-width: 640px ) {
+	body.adding-menu-items div#available-menu-items {
+		top: 46px;
+		left: 0;
+		z-index: 10;
+		width: 100%;
+	}
+
+	#available-menu-items .customize-section-title {
+		display: block;
+		margin: 0;
+	}
+
+	#available-menu-items .customize-section-back {
+		height: 69px;
+	}
+
+	#available-menu-items .customize-section-title h3 {
+		font-size: 20px;
+		font-weight: 200;
+		padding: 9px 10px 12px 14px;
+		margin: 0;
+		line-height: 24px;
+		color: #555;
+		display: block;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	#available-menu-items .customize-section-title .customize-action {
+		font-size: 13px;
+		display: block;
+		font-weight: 400;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+}
