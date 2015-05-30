@@ -321,18 +321,24 @@
 	border: none;
 	color: #555;
 	cursor: pointer;
-	height: 20px;
-	padding: 20px 20px 10px 10px;
+	padding: 20px;
 	position: absolute;
 	right: 31px;
 	top: 4px;
-	width: 20px;
+}
+
+#customize-controls .customize-info .customize-help-toggle {
+	padding: 20px;
+}
+
+#customize-controls .customize-info .customize-help-toggle:before {
+	padding: 5px;
 }
 
 .customize-screen-options-toggle:hover,
 .customize-screen-options-toggle:active,
 .customize-screen-options-toggle:focus,
-.active-menu-screen-options #customizer-menu-screen-options-button,
+.active-menu-screen-options .customize-screen-options-toggle,
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:hover,
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:active,
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:focus {
@@ -345,7 +351,7 @@
 	content: "\f111";
 	display: block;
 	font: 20px/1 "dashicons";
-	padding: 0;
+	padding: 5px;
 	text-align: center;
 	text-decoration: none !important;
 	text-indent: 0;
