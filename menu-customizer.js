@@ -521,10 +521,10 @@
 
 		// Add keyboard accessiblity to the panel
 		keyboardAccessible: function( event ) {
-			var isEnter = ( event.which === 13 ),
-				isEsc = ( event.which === 27 ),
-				isDown = ( event.which === 40 ),
-				isUp = ( event.which === 38 ),
+			var isEnter = ( 13 === event.which ),
+				isEsc = ( 27 === event.which ),
+				isDown = ( 40 === event.which ),
+				isUp = ( 38 === event.which ),
 				selected = null,
 				firstVisible = this.$el.find( '> .menu-item-tpl:visible:first' ),
 				lastVisible = this.$el.find( '> .menu-item-tpl:visible:last' ),
@@ -534,13 +534,13 @@
 				if ( isDown ) {
 					if ( isSearchFocused ) {
 						selected = firstVisible;
-					} else if ( this.selected && this.selected.nextAll( '.menu-item-tpl:visible' ).length !== 0 ) {
+					} else if ( this.selected && 0 !== this.selected.nextAll( '.menu-item-tpl:visible' ).length ) {
 						selected = this.selected.nextAll( '.menu-item-tpl:visible:first' );
 					}
 				} else if ( isUp ) {
 					if ( isSearchFocused ) {
 						selected = lastVisible;
-					} else if ( this.selected && this.selected.prevAll( '.menu-item-tpl:visible' ).length !== 0 ) {
+					} else if ( this.selected && 0 !== this.selected.prevAll( '.menu-item-tpl:visible' ).length ) {
 						selected = this.selected.prevAll( '.menu-item-tpl:visible:first' );
 					}
 				}
@@ -731,11 +731,11 @@
 			var $title = $section.find( '.accordion-section-title' ),
 				$location = $section.find( '.menu-in-location' );
 
-			if ( $location.length < 1 ) {
+			if ( 1 > $location.length ) {
 				$section.removeClass( 'assigned-to-menu-location' );
 			}
 
-			if ( $location.length <= 1 ) {
+			if ( 1 >= $location.length ) {
 				$section.find( '.menu-in-locations' ).remove();
 				$section.find( '.menu-in-location' ).show();
 			} else {
@@ -869,7 +869,7 @@
 			 */
 			$reorderNav = this.container.find( '.menu-item-reorder-nav' );
 			$reorderNav.find( '.menus-move-up, .menus-move-down, .menus-move-left, .menus-move-right' ).on( 'click keypress', function( event ) {
-				if ( event.type === 'keypress' && ( event.which !== 13 && event.which !== 32 ) ) {
+				if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
 					return;
 				}
 				$( this ).focus();
@@ -880,7 +880,7 @@
 					isMoveRight = $( this ).is( '.menus-move-right' ),
 					i = self.getMenuItemPosition();
 
-				if ( ( isMoveUp && i === 0 ) || ( isMoveDown && i === self.getMenuControl().setting().length - 1 ) ) {
+				if ( ( isMoveUp && 0 === i ) || ( isMoveDown && i === self.getMenuControl().setting().length - 1 ) ) {
 					return;
 				}
 
@@ -1103,7 +1103,7 @@
 
 						// Update parent id for direct children items.
 						api.control.each( function( control ) {
-							if ( control.params.type === 'menu_item' && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
+							if ( 'menu_item' === control.params.type && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
 								control.params.menu_item_parent_id = id;
 								control.container.find( '.menu-item-parent-id' ).val( id );
 								control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
@@ -1160,7 +1160,7 @@
 
 			$menuitem = this.container.find( 'div.menu-item:first' );
 			$inside = $menuitem.find( '.menu-item-settings:first' );
-			if ( typeof showOrHide === 'undefined' ) {
+			if ( 'undefined' === typeof showOrHide ) {
 				showOrHide = ! $inside.is( ':visible' );
 			}
 
@@ -1408,7 +1408,7 @@
 				.addClass( 'menu-item-depth-' + ( depth + offset ) );
 
 			// Does this item have any children?
-			if ( i + 1 === menuItemIds.length ){
+			if ( i + 1 === menuItemIds.length ) {
 				// Last item.
 				return;
 			}
@@ -1669,7 +1669,7 @@
 			 * Keyboard-accessible reordering.
 			 */
 			this.container.find( '.reorder-toggle' ).on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
+				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
 					return;
 				}
 
@@ -1684,7 +1684,7 @@
 			var self = this;
 
 			this.container.find( '.add-new-menu-item' ).on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
+				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
 					return;
 				}
 
@@ -1707,7 +1707,7 @@
 			var self = this;
 
 			this.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
+				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
 					return;
 				}
 
@@ -1914,7 +1914,7 @@
 				name = $( '#customize-control-new_menu_name input' ),
 				submit = $( '#create-new-menu-submit' );
 			name.on( 'keydown', function( event ) {
-				if ( event.which === 13 ) { // Enter.
+				if ( 13 === event.which ) { // Enter.
 					self.submit();
 				}
 			} );
@@ -2190,7 +2190,7 @@
 		var foundControl = null;
 
 		api.control.each( function( control ) {
-			if ( control.params.type === 'menu_item' && control.params.menu_item_id === menuItemId ) {
+			if ( 'menu_item' === control.params.type && control.params.menu_item_id === menuItemId ) {
 				foundControl = control;
 			}
 		} );
@@ -2210,7 +2210,7 @@
 	 * Update Section Title as menu name is changed and item handle title when label is changed.
 	 */
 	function setupUIPreviewing() {
-		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function(e) {
+		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function( e ) {
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
@@ -2233,7 +2233,7 @@
 				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
 			}
 		} );
-		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e)  {
+		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e ) {
 			var input = $( e.currentTarget ), title, titleEl;
 			title = input.val();
 			titleEl = input.closest( '.menu-item' ).find( '.menu-item-title' );
@@ -2293,7 +2293,7 @@
 
 			// Menu options toggle
 			$button.on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && event.which !== 13 ) { // Enter
+				if ( 'keydown' === event.type && 13 !== event.which ) { // Enter
 					return;
 				}
 
@@ -2303,7 +2303,7 @@
 					$help.attr( 'aria-expanded', 'false' );
 				}
 
-				if ( $button.attr( 'aria-expanded' ) === 'true' ) {
+				if ( 'true' === $button.attr( 'aria-expanded' ) ) {
 					$button.attr( 'aria-expanded', 'false' );
 					$panel.removeClass( 'open' );
 					$panel.removeClass( 'active-menu-screen-options' );
@@ -2320,11 +2320,11 @@
 
 			// Help toggle
 			$help.on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && event.which !== 13 ) { // Enter
+				if ( 'keydown' === event.type && 13 !== event.which ) { // Enter
 					return;
 				}
 
-				if ( $button.attr( 'aria-expanded' ) === 'true' ) {
+				if ( 'true' === $button.attr( 'aria-expanded' ) ) {
 					$button.attr( 'aria-expanded', 'false' );
 					$help.attr( 'aria-expanded', 'true' );
 					$panel.addClass( 'open' );
