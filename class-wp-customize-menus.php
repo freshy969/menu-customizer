@@ -1022,6 +1022,14 @@ class WP_Customize_Menus {
 					<?php _e( 'Add Menu Items' ); ?>
 				</h3>
 			</div>
+			<div id="available-menu-items-search" class="accordion-section cannot-expand">
+				<div class="accordion-section-title">
+					<label class="screen-reader-text" for="menu-items-search"><?php _e( 'Search Menu Items' ); ?></label>
+					<input type="text" id="menu-items-search" placeholder="<?php esc_attr_e( 'Search menu items&hellip;' ) ?>" />
+					<span class="spinner"></span>
+				</div>
+				<div class="accordion-section-content" data-type="search"></div>
+			</div>
 			<div id="new-custom-menu-item" class="accordion-section">
 				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?></h4>
 				<div class="accordion-section-content">
@@ -1045,14 +1053,6 @@ class WP_Customize_Menus {
 						</span>
 					</p>
 				</div>
-			</div>
-			<div id="available-menu-items-search" class="accordion-section cannot-expand">
-				<div class="accordion-section-title">
-					<label class="screen-reader-text" for="menu-items-search"><?php _e( 'Search Menu Items' ); ?></label>
-					<input type="text" id="menu-items-search" placeholder="<?php esc_attr_e( 'Search menu items&hellip;' ) ?>" />
-					<span class="spinner"></span>
-				</div>
-				<div class="accordion-section-content" data-type="search"></div>
 			</div>
 			<?php
 
