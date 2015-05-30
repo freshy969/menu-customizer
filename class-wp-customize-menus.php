@@ -431,7 +431,6 @@ class WP_Customize_Menus {
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
 				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
-				'menuOptions'     => __( 'Menu Options' ),
 			),
 			'menuItemTransport'    => apply_filters( 'temp_menu_customizer_previewable_setting_transport', 'refresh' ),
 		);
@@ -450,17 +449,18 @@ class WP_Customize_Menus {
 		require_once( plugin_dir_path( __FILE__ ) . '/menu-customize-controls.php' );
 
 		// Require JS-rendered control types.
+		$this->manager->register_panel_type( 'WP_Customize_Menus_Panel' );
 		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Control' );
 		$this->manager->register_control_type( 'WP_Customize_Menu_Item_Control' );
 		$this->manager->register_section_type( 'WP_Customize_Menu_Section' );
 
 		// Create a panel for Menus.
-		$this->manager->add_panel( 'menus', array(
+		$this->manager->add_panel( new WP_Customize_Menus_Panel( $this->manager, 'menus', array(
 			'title'        => __( 'Menus' ),
 			'description'  => '<p>' . __( 'This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.' ) . '</p>',
 			'priority'     => 30,
 			//'theme_supports' => 'menus|widgets', @todo allow multiple theme supports
-		) );
+		) ) );
 
 		// Menu loactions.
 		$this->manager->remove_section( 'nav' ); // Remove old core section. @todo core merge remove corresponding code from WP_Customize_Manager::register_controls().
@@ -501,15 +501,6 @@ class WP_Customize_Menus {
 				) ) );
 			}
 		}
-
-		// Add the screen options control to the menu locations section (it gets moved around in the JS).
-		$this->manager->add_setting( 'menu_customizer_options', array(
-			'type' => 'menu_options',
-		) );
-		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $this->manager, 'menu_customizer_options', array(
-			'section' => 'menu_locations',
-			'priority' => 20,
-		) ) );
 
 		// Register each menu as a Customizer section, and add each menu item to each menu.
 		foreach ( $menus as $menu ) {

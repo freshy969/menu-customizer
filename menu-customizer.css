@@ -316,7 +316,7 @@
 }
 
 /* Screen Options */
-#customizer-menu-screen-options-button {
+.customize-screen-options-toggle {
 	background: none;
 	border: none;
 	color: #555;
@@ -329,9 +329,9 @@
 	width: 20px;
 }
 
-#customizer-menu-screen-options-button:hover,
-#customizer-menu-screen-options-button:active,
-#customizer-menu-screen-options-button:focus,
+.customize-screen-options-toggle:hover,
+.customize-screen-options-toggle:active,
+.customize-screen-options-toggle:focus,
 .active-menu-screen-options #customizer-menu-screen-options-button,
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:hover,
 #customize-controls .customize-info.open.active-menu-screen-options .customize-help-toggle:active,
@@ -339,10 +339,10 @@
 	color: #0073aa;
 }
 
-#customizer-menu-screen-options-button:before {
+.customize-screen-options-toggle:before {
 	-moz-osx-font-smoothing: grayscale;
 	border: none;
-	content: "\f180";
+	content: "\f111";
 	display: block;
 	font: 20px/1 "dashicons";
 	padding: 0;
