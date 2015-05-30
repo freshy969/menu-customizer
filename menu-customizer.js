@@ -2161,7 +2161,6 @@
 			var params, dropdowns,
 				menuId = $( el ).attr( 'id' ).replace( 'delete-menu-', '' ),
 				section = $( el ).closest( '.accordion-section' ),
-				next = section.next().find( '.accordion-section-title' ),
 				spinner = section.find( '.add-menu-item-loading.spinner' );
 
 			if ( menuId ) {
@@ -2187,13 +2186,11 @@
 							// Remove the CSS class
 							section.removeClass( 'deleting' );
 						} else if ( response.success ) {
-							// Focus the next menu item
-							next.focus();
+							api.section( 'nav_menus[' + menuId + ']' ).collapse();
+							section.remove(); // @todo core there should be API methods for deleting sections.
 
-							// Remove the UI, once menu has been deleted.
-							section.slideUp( 'fast', function() {
-								section.remove(); // @todo core there should be API methods for deleting sections.
-							} );
+							// Focus the menu panel.
+							api.panel( 'menus' ).focus();
 
 							// Remove the option from the theme location dropdowns.
 							dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
