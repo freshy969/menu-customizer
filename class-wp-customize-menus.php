@@ -43,6 +43,8 @@ class WP_Customize_Menus {
 		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) );
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
+		add_action( 'wp_default_scripts', array( $this, 'register_scripts' ) );
+		add_action( 'wp_default_styles', array( $this, 'register_styles' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_action( 'customize_update_menu_name', array( $this, 'update_menu_name' ), 10, 2 );
@@ -52,7 +54,6 @@ class WP_Customize_Menus {
 		add_action( 'customize_update_nav_menu', array( $this, 'update_nav_menu' ), 10, 2 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
-
 	}
 
 	/**
@@ -411,15 +412,36 @@ class WP_Customize_Menus {
 	}
 
 	/**
+	 * Register all scripts used by plugin.
+	 *
+	 * @param WP_Scripts $wp_scripts
+	 */
+	public function register_scripts( $wp_scripts ) {
+		$handle = 'menu-customizer';
+		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.js';
+		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion' );
+		$wp_scripts->add( $handle, $src, $deps );
+	}
+
+	/**
+	 * Register all styles used by plugin.
+	 *
+	 * @param WP_Styles $wp_styles
+	 */
+	public function register_styles( $wp_styles ) {
+		$handle = 'menu-customizer';
+		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.css';
+		$wp_styles->add( $handle, $src );
+	}
+
+	/**
 	 * Enqueue scripts and styles.
 	 *
 	 * @since Menu Customizer 0.0
 	 */
 	public function enqueue() {
-		wp_enqueue_style( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.css' );
-		wp_enqueue_script( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.js', array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion' ) );
-
-		global $wp_scripts;
+		wp_enqueue_style( 'menu-customizer' );
+		wp_enqueue_script( 'menu-customizer' );
 
 		// Pass data to JS.
 		$settings = array(
@@ -437,7 +459,7 @@ class WP_Customize_Menus {
 		);
 
 		$data = sprintf( 'var _wpCustomizeMenusSettings = %s;', json_encode( $settings ) );
-		$wp_scripts->add_data( 'menu-customizer', 'data', $data );
+		wp_scripts()->add_data( 'menu-customizer', 'data', $data );
 	}
 
 	/**
