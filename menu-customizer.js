@@ -1967,8 +1967,8 @@
 					spinner.css( 'visibility', 'hidden' );
 				} else if ( response.success && response.data && response.data.id && response.data.name ) {
 					var priority, sectionId, SectionConstructor, menuSection,
-						menuSettingId, settingArgs, ControlConstructor, menuControl, sectionContent,
-						template, sectionParams, option;
+						menuSettingId, settingArgs, ControlConstructor, menuControl,
+						sectionParams, option;
 					response.data.id = parseInt( response.data.id, 10 );
 					sectionId = 'nav_menus[' + response.data.id + ']';
 					sectionParams = {
@@ -1976,18 +1976,9 @@
 						active: true,
 						panel: 'menus',
 						title: response.data.name,
+						type: 'menu',
 						priority: priority
 					};
-					// @todo this should happen by default when adding a panel or section dynamically
-					// @todo sections and panels should have content_template() like controls
-					// @link https://core.trac.wordpress.org/ticket/30737
-					if ( 0 !== $( '#tmpl-menu-section-for-core' ).length ) {
-						template = wp.template( 'menu-section-for-core' );
-						if ( template ) {
-							sectionContent = template( sectionParams );
-							sectionParams.content = sectionContent;
-						}
-					}
 
 					// Add the menu section.
 					SectionConstructor = api.Section;
