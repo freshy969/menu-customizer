@@ -452,6 +452,7 @@ class WP_Customize_Menus {
 		// Require JS-rendered control types.
 		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Control' );
 		$this->manager->register_control_type( 'WP_Customize_Menu_Item_Control' );
+		$this->manager->register_section_type( 'WP_Customize_Menu_Section' );
 
 		// Create a panel for Menus.
 		$this->manager->add_panel( 'menus', array(
@@ -1007,15 +1008,7 @@ class WP_Customize_Menus {
 				?>
 			</div>
 		</script>
-
-		<script type="text/html" id="tmpl-menu-section-for-core">
-			<li id="accordion-section-{{ data.id }}" class="accordion-section control-section control-section-default">
-				<h3 class="accordion-section-title" tabindex="0">{{ data.title }}<span class="screen-reader-text">Press return or enter to expand</span>
-				</h3>
-				<ul class="accordion-section-content"></ul>
-			</li>
-		</script>
-		<?php // @todo the section template should be removed in favor of being in core, whenever a section is dynamically added
+		<?php
 	}
 
 	/**
