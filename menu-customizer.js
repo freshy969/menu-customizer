@@ -1,5 +1,5 @@
 /* global _wpCustomizeMenusSettings, confirm, alert */
-(function( wp, $ ){
+( function( wp, $ ) {
 	'use strict';
 
 	if ( ! wp || ! wp.customize ) { return; }
@@ -95,7 +95,7 @@
 			// If search is blank, show all items.
 			// Useful for resetting the views when you clean the input.
 			if ( '' === this.terms ) {
-				this.each( function ( menu_item ) {
+				this.each( function( menu_item ) {
 					menu_item.set( 'search_matched', true );
 				} );
 			}
@@ -117,7 +117,7 @@
 			term = term.replace( / /g, ')(?=.*' );
 			match = new RegExp( '^(?=.*' + term + ').+', 'i' );
 
-			this.each( function ( data ) {
+			this.each( function( data ) {
 				haystack = data.get( 'title' );
 				data.set( 'search_matched', match.test( haystack ) );
 			} );
@@ -167,12 +167,12 @@
 			'input #menu-items-search': 'debounceSearch',
 			'change #menu-items-search': 'debounceSearch',
 			'click #menu-items-search': 'debounceSearch',
-			'focus .menu-item-tpl' : 'focus',
-			'click .menu-item-tpl' : '_submit',
-			'keypress .menu-item-tpl' : '_submit',
-			'click #custom-menu-item-submit' : '_submitLink',
-			'keypress #custom-menu-item-name' : '_submitLink',
-			'keydown' : 'keyboardAccessible'
+			'focus .menu-item-tpl': 'focus',
+			'click .menu-item-tpl': '_submit',
+			'keypress .menu-item-tpl': '_submit',
+			'click #custom-menu-item-submit': '_submitLink',
+			'keypress #custom-menu-item-name': '_submitLink',
+			'keydown': 'keyboardAccessible'
 		},
 
 		// Cache current selected menu item.
@@ -219,7 +219,7 @@
 
 			// Load more items.
 			this.sectionContent.scroll( function() {
-				var totalHeight = self.$el.find( '.accordion-section.open .accordion-section-content' ).prop('scrollHeight'),
+				var totalHeight = self.$el.find( '.accordion-section.open .accordion-section-content' ).prop( 'scrollHeight' ),
 				    visibleHeight = self.$el.find( '.accordion-section.open' ).height();
 				if ( ! self.loading && $( this ).scrollTop() > 3 / 4 * totalHeight - visibleHeight ) {
 					var type = $( this ).data( 'type' ),
@@ -270,7 +270,7 @@
 			} else if ( 1 < page ) {
 				$( '#available-menu-items-search' ).addClass( 'loading-more' );
 			} else if ( '' === this.searchTerm ) {
-				typeInner.html('');
+				typeInner.html( '' );
 				return;
 			}
 			$( '#available-menu-items-search' ).addClass( 'loading' );
@@ -294,7 +294,7 @@
 				}
 				if ( 1 === page ) {
 					// Clear previous results as it's a new search.
-					typeInner.html('');
+					typeInner.html( '' );
 				}
 				if ( response.data && response.data.message ) {
 					if ( 0 === typeInner.children().length ) {
@@ -428,7 +428,6 @@
 
 			this.currentMenuControl.addItemToMenu( menu_item.attributes );
 		},
-
 
 		// Submit handler for keypress and click on custom menu item.
 		_submitLink: function( event ) {
@@ -587,7 +586,7 @@
 		 * @param {String} id
 		 * @param {Object} options
 		 */
-		initialize: function ( id, options ) {
+		initialize: function( id, options ) {
 			var container = this;
 			container.contentEmbedded = false;
 
@@ -601,8 +600,8 @@
 		 *
 		 * @param {Boolean} expanded
 		 * @param {Object}  args
-		 */		
-		onChangeExpanded :  function( expanded, args ) {
+		 */
+		onChangeExpanded:  function( expanded, args ) {
 			var section = this;
 			if ( expanded && ! section.contentEmbedded ) {
 				_.each( wp.customize.section( section.id ).controls(), function( control ) {
@@ -632,7 +631,7 @@
 		 *
 		 * @since Menu Customizer 0.3
 		 */
-		attachEvents: function () {
+		attachEvents: function() {
 			var section = this;
 			this.container.on( 'click keydown', '.add-menu-toggle', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
@@ -655,7 +654,7 @@
 		 *
 		 * @param {Boolean} expanded
 		 */
-		onChangeExpanded: function ( expanded ) {
+		onChangeExpanded: function( expanded ) {
 			var section = this,
 			    button = section.container.find( '.add-menu-toggle' ),
 				content = section.container.find( '.new-menu-section-content' ),
@@ -777,7 +776,7 @@
 			} else if ( ! to ) {
 				setTo.hide();
 			} else {
- 				menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
+				menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
 				setTo.show();
 				locationNames.text( menuName );
 				oldBox.prop( 'checked', false );
@@ -972,7 +971,7 @@
 					menuControl.setting( menuItemIds );
 
 					$adjacentFocusTarget.focus(); // keyboard accessibility
-					
+
 					// Hide spinner.
 					spinner.hide();
 					spinner.css( 'visibility', 'hidden' );
@@ -1001,12 +1000,12 @@
 		 * Override the embed() method to do nothing,
 		 * so that the control isn't embedded on load.
 		 */
-		embed: function () {},
+		embed: function() {},
 
 		/**
 		 * @since Menu Customizer 0.3
 		 */
-		actuallyEmbed: function () {
+		actuallyEmbed: function() {
 			this.renderContent();
 			this.actuallyReady();
 		},
@@ -1069,7 +1068,7 @@
 			params = {
 				'action': 'update-menu-item-customizer',
 				'wp_customize': 'on',
-				'clone' : clone,
+				'clone': clone,
 				'item_id': self.params.menu_item_id,
 				'menu-item': item,
 				'customize-menu-item-nonce': api.Menus.data.nonce
@@ -1120,7 +1119,7 @@
 				// Remove processing states.
 				self.container.removeClass( 'saving' );
 				processing( processing() - 1 );
-				
+
 				// Hide spinner.
 				spinner.css( 'visibility', 'hidden' );
 			} );
@@ -1215,8 +1214,7 @@
 
 			if ( top ) {
 				handle.append( button );
-			}
-			else {
+			} else {
 				actions.append( button );
 			}
 		},
@@ -1818,7 +1816,7 @@
 
 			placeholderContainer = menuControl.prev( '.nav-menu-inserted-item-loading' );
 
-			callback = callback || function(){};
+			callback = callback || function() {};
 
 			// Trigger customizer processing state.
 			processing = wp.customize.state( 'processing' );
@@ -1886,7 +1884,7 @@
 				}
 				// Remove the placeholder.
 				placeholderContainer.remove();
-					
+
 				// Remove this level of the customizer processing state.
 				processing( processing() - 1 );
 			});
@@ -1997,7 +1995,7 @@
 					};
 					api.create( menuSettingId, menuSettingId, '', settingArgs );
 					api( menuSettingId ).set( [] ); // Change to mark as dirty.
-				
+
 					// Add the menu control.
 					ControlConstructor = api.controlConstructor.nav_menu;
 					menuControl = new ControlConstructor( menuSettingId, {
@@ -2030,8 +2028,8 @@
 					spinner.css( 'visibility', 'hidden' );
 
 					// Clear name field.
-					name.val('');
-				
+					name.val( '' );
+
 					// Focus on the new menu section.
 					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
 				}
@@ -2235,7 +2233,7 @@
 				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
 			}
 		} );
-		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function(e) {
+		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e)  {
 			var input = $( e.currentTarget ), title, titleEl;
 			title = input.val();
 			titleEl = input.closest( '.menu-item' ).find( '.menu-item-title' );
@@ -2269,11 +2267,11 @@
 	 *
 	 * Adds a screen options button to the Menus panel header and handles button events.
 	 *
-	 * @todo potentially put this directly into the panel by doing a custom panel, 
+	 * @todo potentially put this directly into the panel by doing a custom panel,
 	 * once the standard panel html is finalized in #31336.
 	 */
 	var customizeMenuOptions = {
-		init : function() {
+		init: function() {
 			var $button,
 				$panel = $( '#accordion-panel-menus .panel-meta' ),
 				$header = $panel.find( '.accordion-section-title' ),
@@ -2342,54 +2340,52 @@
 	 * Show/hide/save screen options (columns). From common.js.
 	 */
 	var columns = {
-		init : function() {
+		init: function() {
 			var that = this;
-			$('.hide-column-tog').click( function() {
-				var $t = $(this), column = $t.val();
-				if ( $t.prop('checked') ) {
-					that.checked(column);
-				}
-				else {
-					that.unchecked(column);
+			$( '.hide-column-tog' ).click( function() {
+				var $t = $( this ), column = $t.val();
+				if ( $t.prop( 'checked' ) ) {
+					that.checked( column );
+				} else {
+					that.unchecked( column );
 				}
 
 				that.saveManageColumnsState();
 			});
 			$( '.hide-column-tog' ).each( function() {
-			var $t = $(this), column = $t.val();
-				if ( $t.prop('checked') ) {
-					that.checked(column);
-				}
-				else {
-					that.unchecked(column);
+			var $t = $( this ), column = $t.val();
+				if ( $t.prop( 'checked' ) ) {
+					that.checked( column );
+				} else {
+					that.unchecked( column );
 				}
 			} );
 		},
 
-		saveManageColumnsState : function() {
+		saveManageColumnsState: function() {
 			var hidden = this.hidden();
-			$.post(ajaxurl, {
+			$.post( ajaxurl, {
 				action: 'hidden-columns',
 				hidden: hidden,
-				screenoptionnonce: $('#screenoptionnonce').val(),
+				screenoptionnonce: $( '#screenoptionnonce' ).val(),
 				page: 'nav-menus'
 			});
 		},
 
-		checked : function(column) {
+		checked: function( column ) {
 			menusPanelContainer.addClass( 'field-' + column + '-active' );
 		},
 
-		unchecked : function(column) {
+		unchecked: function( column ) {
 			menusPanelContainer.removeClass( 'field-' + column + '-active' );
 		},
 
-		hidden : function() {
-			this.hidden = function(){
-				return $('.hide-column-tog').not(':checked').map(function() {
+		hidden: function() {
+			this.hidden = function() {
+				return $( '.hide-column-tog' ).not( ':checked' ).map(function() {
 					var id = this.id;
 					return id.substring( id, id.length - 5 );
-				}).get().join(',');
+				}).get().join( ',' );
 			};
 		}
 	};
@@ -2400,4 +2396,4 @@
 		customizeMenuOptions.init();
 	} );
 
-})( jQuery );
+} )( jQuery );
