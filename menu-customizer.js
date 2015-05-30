@@ -2036,16 +2036,19 @@
 					self.submit();
 				}
 			} );
-			submit.on( 'click', function() {
+			submit.on( 'click keydown', function( event ) {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+					return;
+				}
 				self.submit();
 			} );
 			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( e ) {
-				if ( 'keydown' === e.type && 13 !== event.which ) { // Enter.
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
-				self.submitDelete( e.target );
-				e.stopPropagation();
-				e.preventDefault();
+				self.submitDelete( event.target );
+				event.stopPropagation();
+				event.preventDefault();
 			} );
 		},
 
