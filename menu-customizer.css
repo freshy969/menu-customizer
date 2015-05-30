@@ -789,6 +789,10 @@ li.assigned-to-menu-location .add-new-menu-item {
 	margin-top: 12px;
 }
 
+#available-menu-items .customize-section-title {
+	display: none;
+}
+
 @media screen and ( max-width: 640px ) {
 	body.adding-menu-items div#available-menu-items {
 		top: 46px;
