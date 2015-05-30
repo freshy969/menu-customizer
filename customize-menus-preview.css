@@ -1,0 +1,5 @@
+.customize-partial-refreshing {
+	opacity: 0.25;
+	transition: opacity 0.25s;
+	cursor: progress;
+}
