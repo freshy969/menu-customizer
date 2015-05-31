@@ -1578,7 +1578,6 @@
 			this._setupModel();
 			this._setupSortable();
 			this._setupAddition();
-			this._setupDeletion();
 			this._applyCardinalOrderClassNames();
 			this._setupLocations();
 		},
@@ -1816,23 +1815,6 @@
 					api.Menus.availableMenuItemsPanel.open( self );
 				} else {
 					api.Menus.availableMenuItemsPanel.close();
-				}
-			} );
-		},
-
-		/**
-		 * Move menu-delete button to section title. Actual deletion is managed with api.Menus.NewMenuControl.
-		 */
-		_setupDeletion: function() {
-			var self = this;
-
-			this.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
-					return;
-				}
-
-				if ( self.$sectionContent.hasClass( 'deleting' ) ) {
-					return;
 				}
 			} );
 		},
