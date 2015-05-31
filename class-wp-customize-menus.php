@@ -37,6 +37,9 @@ class WP_Customize_Menus {
 		$this->previewed_menus = array();
 		$this->manager = $manager;
 
+		$this->register_styles( wp_styles() );
+		$this->register_scripts( wp_scripts() );
+
 		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'new_menu_ajax' ) );
 		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) );
 		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) );
@@ -52,7 +55,7 @@ class WP_Customize_Menus {
 		add_action( 'customize_update_nav_menu', array( $this, 'update_nav_menu' ), 10, 2 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
-
+		add_action( 'customize_preview_init', array( $this, 'customize_preview_init' ) );
 	}
 
 	/**
@@ -266,7 +269,7 @@ class WP_Customize_Menus {
 					'id'          => 0,
 					'name'        => _x( 'Home', 'nav menu home label' ),
 					'type'        => 'page',
-					'type_label'  => __( 'Page' ),
+					'type_label'  => __( 'Custom Link' ),
 					'obj_type'    => 'custom',
 				);
 				$items[] = $home;
@@ -411,15 +414,48 @@ class WP_Customize_Menus {
 	}
 
 	/**
-	 * Enqueue scripts and styles.
+	 * Register all scripts used by plugin.
+	 *
+	 * @param WP_Scripts $wp_scripts
+	 */
+	public function register_scripts( $wp_scripts ) {
+		$handle = 'menu-customizer';
+		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.js';
+		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'wp-a11y' );
+		$wp_scripts->add( $handle, $src, $deps );
+
+		$handle = 'customize-menus-preview';
+		$src = plugin_dir_url( __FILE__ ) . 'customize-menus-preview.js';
+		$deps = array( 'customize-preview', 'wp-util' );
+		$args = array(
+			'in_footer' => true,
+		);
+		$wp_scripts->add( $handle, $src, $deps, false, $args );
+	}
+
+	/**
+	 * Register all styles used by plugin.
+	 *
+	 * @param WP_Styles $wp_styles
+	 */
+	public function register_styles( $wp_styles ) {
+		$handle = 'menu-customizer';
+		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.css';
+		$wp_styles->add( $handle, $src );
+
+		$handle = 'customize-menus-preview';
+		$src = plugin_dir_url( __FILE__ ) . 'customize-menus-preview.css';
+		$wp_styles->add( $handle, $src );
+	}
+
+	/**
+	 * Enqueue scripts and styles for Customizer pane.
 	 *
 	 * @since Menu Customizer 0.0
 	 */
 	public function enqueue() {
-		wp_enqueue_style( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.css' );
-		wp_enqueue_script( 'menu-customizer', plugin_dir_url( __FILE__ ) . 'menu-customizer.js', array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion' ) );
-
-		global $wp_scripts;
+		wp_enqueue_style( 'menu-customizer' );
+		wp_enqueue_script( 'menu-customizer' );
 
 		// Pass data to JS.
 		$settings = array(
@@ -431,13 +467,21 @@ class WP_Customize_Menus {
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
 				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
-				'menuOptions'     => __( 'Menu Options' ),
+				'itemAdded'       => __( 'Menu item added' ),
+				'itemDeleted'     => __( 'Menu item deleted' ),
+				'menuAdded'       => __( 'Menu created' ),
+				'menuDeleted'     => __( 'Menu deleted' ),
+				'movedUp'         => __( 'Menu item moved up' ),
+				'movedDown'       => __( 'Menu item moved down' ),
+				'movedLeft'       => __( 'Menu item moved out of submenu' ),
+				'movedRight'      => __( 'Menu item is now a sub-item' ),
 			),
-			'menuItemTransport'    => apply_filters( 'temp_menu_customizer_previewable_setting_transport', 'refresh' ),
+			'menuItemTransport'    => 'postMessage',
 		);
 
 		$data = sprintf( 'var _wpCustomizeMenusSettings = %s;', json_encode( $settings ) );
-		$wp_scripts->add_data( 'menu-customizer', 'data', $data );
+		wp_scripts()->add_data( 'menu-customizer', 'data', $data );
+
 	}
 
 	/**
@@ -450,17 +494,18 @@ class WP_Customize_Menus {
 		require_once( plugin_dir_path( __FILE__ ) . '/menu-customize-controls.php' );
 
 		// Require JS-rendered control types.
+		$this->manager->register_panel_type( 'WP_Customize_Menus_Panel' );
 		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Control' );
 		$this->manager->register_control_type( 'WP_Customize_Menu_Item_Control' );
 		$this->manager->register_section_type( 'WP_Customize_Menu_Section' );
 
 		// Create a panel for Menus.
-		$this->manager->add_panel( 'menus', array(
+		$this->manager->add_panel( new WP_Customize_Menus_Panel( $this->manager, 'menus', array(
 			'title'        => __( 'Menus' ),
-			'description'  => '<p>' . __( 'This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.' ) . '</p>',
+			'description'  => '<p>' . __( 'This panel is used for managing navigation menus for content you have already published on your site. You can create menus and add items for existing content such as pages, posts, categories, tags, formats, or custom links.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme or in widget areas by adding a "Custom Menu" widget.' ) . '</p>',
 			'priority'     => 30,
 			//'theme_supports' => 'menus|widgets', @todo allow multiple theme supports
-		) );
+		) ) );
 
 		// Menu loactions.
 		$this->manager->remove_section( 'nav' ); // Remove old core section. @todo core merge remove corresponding code from WP_Customize_Manager::register_controls().
@@ -501,15 +546,6 @@ class WP_Customize_Menus {
 				) ) );
 			}
 		}
-
-		// Add the screen options control to the menu locations section (it gets moved around in the JS).
-		$this->manager->add_setting( 'menu_customizer_options', array(
-			'type' => 'menu_options',
-		) );
-		$this->manager->add_control( new WP_Menu_Options_Customize_Control( $this->manager, 'menu_customizer_options', array(
-			'section' => 'menu_locations',
-			'priority' => 20,
-		) ) );
 
 		// Register each menu as a Customizer section, and add each menu item to each menu.
 		foreach ( $menus as $menu ) {
@@ -598,7 +634,7 @@ class WP_Customize_Menus {
 			$this->manager->add_setting( $nav_menu_setting_id, array(
 				'type'      => 'nav_menu',
 				'default'   => $item_ids,
-				'transport' => apply_filters( 'temp_menu_customizer_previewable_setting_transport', 'refresh' ),
+				'transport' => 'postMessage',
 			) );
 
 			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $this->manager, $nav_menu_setting_id, array(
@@ -1019,8 +1055,28 @@ class WP_Customize_Menus {
 	public function available_items_template() {
 		?>
 		<div id="available-menu-items" class="accordion-container">
+			<div class="customize-section-title">
+				<button class="customize-section-back" tabindex="-1">
+					<span class="screen-reader-text"><?php _e( 'Back' ); ?></span>
+				</button>
+				<h3>
+					<span class="customize-action"><?php
+						/* translators: &#9656; is the unicode right-pointing triangle, and %s is the section title in the Customizer */
+						echo sprintf( __( 'Customizing &#9656; %s' ), esc_html( $this->manager->get_panel( 'menus' )->title ) );
+					?></span>
+					<?php _e( 'Add Menu Items' ); ?>
+				</h3>
+			</div>
+			<div id="available-menu-items-search" class="accordion-section cannot-expand">
+				<div class="accordion-section-title">
+					<label class="screen-reader-text" for="menu-items-search"><?php _e( 'Search Menu Items' ); ?></label>
+					<input type="text" id="menu-items-search" placeholder="<?php esc_attr_e( 'Search menu items&hellip;' ) ?>" />
+					<span class="spinner"></span>
+				</div>
+				<div class="accordion-section-content" data-type="search"></div>
+			</div>
 			<div id="new-custom-menu-item" class="accordion-section">
-				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?></h4>
+				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 				<div class="accordion-section-content">
 					<input type="hidden" value="custom" id="custom-menu-item-type" name="menu-item[-1][menu-item-type]" />
 					<p id="menu-item-url-wrap">
@@ -1043,14 +1099,6 @@ class WP_Customize_Menus {
 					</p>
 				</div>
 			</div>
-			<div id="available-menu-items-search" class="accordion-section cannot-expand">
-				<div class="accordion-section-title">
-					<label class="screen-reader-text" for="menu-items-search"><?php _e( 'Search Menu Items' ); ?></label>
-					<input type="text" id="menu-items-search" placeholder="<?php esc_attr_e( 'Search menu items&hellip;' ) ?>" />
-					<span class="spinner"></span>
-				</div>
-				<div class="accordion-section-content" data-type="search"></div>
-			</div>
 			<?php
 
 			// @todo: consider using add_meta_box/do_accordion_section and making screen-optional?
@@ -1061,7 +1109,7 @@ class WP_Customize_Menus {
 				foreach ( $post_types as $type ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $type->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span></h4>
+						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 						<div class="accordion-section-content" data-type="<?php echo $type->name; ?>" data-obj_type="post_type"></div>
 					</div>
 					<?php
@@ -1073,7 +1121,7 @@ class WP_Customize_Menus {
 				foreach ( $taxonomies as $tax ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $tax->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span></h4>
+						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 						<div class="accordion-section-content" data-type="<?php echo $tax->name; ?>" data-obj_type="taxonomy"></div>
 					</div>
 					<?php
@@ -1083,4 +1131,187 @@ class WP_Customize_Menus {
 		</div><!-- #available-menu-items -->
 		<?php
 	}
+
+	// Start functionality specific to partial-refresh of menu changes in Customizer preview.
+
+	const RENDER_AJAX_ACTION = 'customize_render_menu_partial';
+	const RENDER_NONCE_POST_KEY = 'render-menu-nonce';
+	const RENDER_QUERY_VAR = 'wp_customize_menu_render';
+
+	/**
+	 * The number of wp_nav_menu() calls which have happened in the preview.
+	 *
+	 * @var int
+	 */
+	public $preview_nav_menu_instance_number = 0;
+
+	/**
+	 * Nav menu args used for each instance.
+	 *
+	 * @var array[]
+	 */
+	public $preview_nav_menu_instance_args = array();
+
+	/**
+	 * Add hooks for the Customizer preview.
+	 */
+	function customize_preview_init() {
+		add_action( 'template_redirect', array( $this, 'render_menu' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'customize_preview_enqueue_deps' ) );
+		if ( ! isset( $_REQUEST[ self::RENDER_QUERY_VAR ] ) ) {
+			add_filter( 'wp_nav_menu', array( $this, 'filter_wp_nav_menu' ), 10, 2 );
+		}
+	}
+
+	/**
+	 * Filter whether to short-circuit the wp_nav_menu() output.
+	 *
+	 * @see wp_nav_menu()
+	 *
+	 * @param string $nav_menu_content The HTML content for the navigation menu.
+	 * @param object $args             An object containing wp_nav_menu() arguments.
+	 * @return null
+	 */
+	function filter_wp_nav_menu( $nav_menu_content, $args ) {
+		$this->preview_nav_menu_instance_number += 1;
+
+		// Get the nav menu based on the requested menu.
+		$nav_menu = wp_get_nav_menu_object( $args->menu );
+
+		// Get the nav menu based on the theme_location.
+		if ( ! $nav_menu && $args->theme_location && ( $locations = get_nav_menu_locations() ) && isset( $locations[ $args->theme_location ] ) ) {
+			$nav_menu = wp_get_nav_menu_object( $locations[ $args->theme_location ] );
+		}
+
+		// Get the first menu that has items if we still can't find a menu.
+		if ( ! $nav_menu && ! $args->theme_location ) {
+			$menus = wp_get_nav_menus();
+			foreach ( $menus as $menu_maybe ) {
+				if ( $menu_items = wp_get_nav_menu_items( $menu_maybe->term_id, array( 'update_post_term_cache' => false ) ) ) {
+					$nav_menu = $menu_maybe;
+					break;
+				}
+			}
+		}
+
+		if ( $nav_menu ) {
+			$exported_args = get_object_vars( $args );
+			unset( $exported_args['fallback_cb'] ); // This could be a closure which would blow serialization, so remove.
+			unset( $exported_args['echo'] ); // We'll be forcing echo in the Ajax request handler anyway.
+			$exported_args['menu'] = $nav_menu->term_id; // Eliminate location-based and slug-based calls; always use menu ID.
+			ksort( $exported_args );
+			$exported_args['args_hash'] = $this->hash_nav_menu_args( $exported_args );
+			$this->preview_nav_menu_instance_args[ $this->preview_nav_menu_instance_number ] = $exported_args;
+			$nav_menu_content = sprintf( '<div id="partial-refresh-menu-container-%1$d" class="partial-refresh-menu-container" data-instance-number="%1$d">%2$s</div>', $this->preview_nav_menu_instance_number, $nav_menu_content );
+		}
+
+		return $nav_menu_content;
+	}
+
+	/**
+	 * Hash (hmac) the arguments with the nonce and secret auth key to ensure they
+	 * are not tampered with when submitted in the Ajax request.
+	 *
+	 * @param array $args
+	 * @return string
+	 */
+	function hash_nav_menu_args( $args ) {
+		return wp_hash( wp_create_nonce( self::RENDER_AJAX_ACTION ) . serialize( $args ) );
+	}
+
+	/**
+	 * Enqueue scripts for the Customizer preview.
+	 */
+	function customize_preview_enqueue_deps() {
+		wp_enqueue_script( 'customize-menus-preview' );
+		wp_enqueue_style( 'customize-menus-preview' );
+
+		add_action( 'wp_print_footer_scripts', array( $this, 'export_preview_data' ) );
+	}
+
+	/**
+	 * Export data from PHP to JS.
+	 */
+	function export_preview_data() {
+
+		// Why not wp_localize_script? Because we're not localizing, and it forces values into strings
+		$exports = array(
+			'renderQueryVar' => self::RENDER_QUERY_VAR,
+			'renderNonceValue' => wp_create_nonce( self::RENDER_AJAX_ACTION ),
+			'renderNoncePostKey' => self::RENDER_NONCE_POST_KEY,
+			'requestUri' => '/',
+			'theme' => array(
+				'stylesheet' => $this->manager->get_stylesheet(),
+				'active'     => $this->manager->is_theme_active(),
+			),
+			'previewCustomizeNonce' => wp_create_nonce( 'preview-customize_' . $this->manager->get_stylesheet() ),
+			'navMenuInstanceArgs' => $this->preview_nav_menu_instance_args,
+		);
+		if ( ! empty( $_SERVER['REQUEST_URI'] ) ) {
+			$exports['requestUri'] = esc_url_raw( home_url( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
+		}
+		printf( '<script>var _wpCustomizePreviewMenusExports = %s;</script>', wp_json_encode( $exports ) );
+	}
+
+	/**
+	 * Render a specific menu via wp_nav_menu() using the supplied arguments.
+	 *
+	 * @see wp_nav_menu()
+	 */
+	function render_menu() {
+		if ( empty( $_POST[ self::RENDER_QUERY_VAR ] ) ) {
+			return;
+		}
+
+		$generic_error = __( 'An error has occurred. Please reload the page and try again.', 'customize-partial-preview-refresh' );
+		try {
+			$this->manager->remove_preview_signature();
+
+			// @todo Instead of throwing Exceptions, we'll have to switch to passing around WP_Error objects.
+
+			if ( empty( $_POST[ self::RENDER_NONCE_POST_KEY ] ) ) {
+				throw new WP_Customize_Menus_Exception( __( 'Missing nonce param', 'customize-partial-preview-refresh' ) );
+			}
+			if ( ! is_customize_preview() ) {
+				throw new WP_Customize_Menus_Exception( __( 'Expected customizer preview', 'customize-partial-preview-refresh' ) );
+			}
+			if ( ! check_ajax_referer( self::RENDER_AJAX_ACTION, self::RENDER_NONCE_POST_KEY, false ) ) {
+				throw new WP_Customize_Menus_Exception( __( 'Nonce check failed. Reload and try again?', 'customize-partial-preview-refresh' ) );
+			}
+			if ( ! current_user_can( 'edit_theme_options' ) ) {
+				throw new WP_Customize_Menus_Exception( __( 'Current user cannot!', 'customize-partial-preview-refresh' ) );
+			}
+			if ( ! isset( $_POST['wp_nav_menu_args'] ) ) {
+				throw new WP_Customize_Menus_Exception( __( 'Missing wp_nav_menu_args param', 'customize-partial-preview-refresh' ) );
+			}
+			if ( ! isset( $_POST['wp_nav_menu_args_hash'] ) ) {
+				throw new WP_Customize_Menus_Exception( __( 'Missing wp_nav_menu_args_hash param', 'customize-partial-preview-refresh' ) );
+			}
+			$wp_nav_menu_args_hash = wp_unslash( sanitize_text_field( $_POST['wp_nav_menu_args_hash'] ) );
+			$wp_nav_menu_args = json_decode( wp_unslash( $_POST['wp_nav_menu_args'] ), true );
+			if ( json_last_error() ) {
+				throw new WP_Customize_Menus_Exception( sprintf( __( 'JSON Error: %s', 'customize-partial-preview-refresh' ), json_last_error() ) );
+			}
+			if ( ! is_array( $wp_nav_menu_args ) ) {
+				throw new WP_Customize_Menus_Exception( __( 'Expected wp_nav_menu_args to be an array', 'customize-partial-preview-refresh' ) );
+			}
+			if ( $this->hash_nav_menu_args( $wp_nav_menu_args ) !== $wp_nav_menu_args_hash ) {
+				throw new WP_Customize_Menus_Exception( __( 'Supplied wp_nav_menu_args does not hash to be wp_nav_menu_args_hash', 'customize-partial-preview-refresh' ) );
+			}
+
+			$wp_nav_menu_args['echo'] = false;
+			wp_send_json_success( wp_nav_menu( $wp_nav_menu_args ) );
+		} catch ( Exception $e ) {
+			if ( $e instanceof WP_Customize_Menus_Exception && ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ) {
+				$message = $e->getMessage();
+			} else {
+				trigger_error( esc_html( sprintf( '%s in %s: %s', get_class( $e ), __FUNCTION__, $e->getMessage() ) ), E_USER_WARNING );
+				$message = $generic_error;
+			}
+			wp_send_json_error( compact( 'message' ) );
+		}
+	}
 }
+
+
+class WP_Customize_Menus_Exception extends Exception {}

@@ -7,11 +7,6 @@
 	// Set up our namespace.
 	var OldPreviewer, api = wp.customize;
 
-	// Fix bug in 4.1RC1: https://core.trac.wordpress.org/ticket/30701
-	if ( ! api.Control.prototype._toggleActive ) {
-		api.Control.prototype._toggleActive = api.Section.prototype._toggleActive;
-	}
-
 	api.Menus = api.Menus || {};
 
 	// Link settings.
@@ -200,8 +195,8 @@
 
 			// If the available menu items panel is open and the customize controls are
 			// interacted with (other than an item being deleted), then close the
-			// available menu items panel.
-			$( '#customize-controls' ).on( 'click keydown', function( e ) {
+			// available menu items panel. Also close on back button click.
+			$( '#customize-controls, .customize-section-back' ).on( 'click keydown', function( e ) {
 				var isDeleteBtn = $( e.target ).is( '.item-delete, .item-delete *' ),
 					isAddNewBtn = $( e.target ).is( '.add-new-menu-item, .add-new-menu-item *' );
 				if ( $( 'body' ).hasClass( 'adding-menu-items' ) && ! isDeleteBtn && ! isAddNewBtn ) {
@@ -525,6 +520,7 @@
 				isEsc = ( 27 === event.which ),
 				isDown = ( 40 === event.which ),
 				isUp = ( 38 === event.which ),
+				isBackTab = ( 9 === event.which && event.shiftKey ),
 				selected = null,
 				firstVisible = this.$el.find( '> .menu-item-tpl:visible:first' ),
 				lastVisible = this.$el.find( '> .menu-item-tpl:visible:last' ),
@@ -561,11 +557,128 @@
 				return;
 			}
 
-			if ( isEnter ) {
-				this.submit();
+			if ( isSearchFocused && isBackTab ) {
+				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
+				event.preventDefault(); // Avoid additional back-tab.
 			} else if ( isEsc ) {
 				this.close( { returnFocus: true } );
 			}
+		}
+	});
+
+	/**
+	 * wp.customize.Menus.MenusPanel
+	 *
+	 * Customizer panel for menus. This is used only for screen options management.
+	 * Note that 'menus' must match the WP_Customize_Menu_Panel::$type.
+	 *
+	 * @constructor
+	 * @augments wp.customize.Panel
+	 */
+	api.Menus.MenusPanel = api.Panel.extend({
+
+		attachEvents: function() {
+			api.Panel.prototype.attachEvents.call( this );
+
+			var panel = this,
+				panelMeta = panel.container.find( '.panel-meta' ),
+				help = panelMeta.find( '.customize-help-toggle' ),
+				content = panelMeta.find( '.customize-panel-description' ),
+				options = $( '#screen-options-wrap' ),
+				button = panelMeta.find( '.customize-screen-options-toggle' );
+			button.on( 'click keydown', function( event ) {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+					return;
+				}
+
+				// Hide description
+				if ( content.not( ':hidden' ) ) {
+					content.slideUp( 'fast' );
+					help.attr( 'aria-expanded', 'false' );
+				}
+
+				if ( button.attr( 'aria-expanded' ) === 'true' ) {
+					button.attr( 'aria-expanded', 'false' );
+					panelMeta.removeClass( 'open' );
+					panelMeta.removeClass( 'active-menu-screen-options' );
+					options.slideUp( 'fast' );
+				} else {
+					button.attr( 'aria-expanded', 'true' );
+					panelMeta.addClass( 'open' );
+					panelMeta.addClass( 'active-menu-screen-options' );
+					options.slideDown( 'fast' );
+				}
+
+				return false;
+			} );
+
+			// Help toggle
+			help.on( 'click keydown', function( event ) {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+					return;
+				}
+
+				if ( button.attr( 'aria-expanded' ) === 'true' ) {
+					button.attr( 'aria-expanded', 'false' );
+					help.attr( 'aria-expanded', 'true' );
+					panelMeta.addClass( 'open' );
+					panelMeta.removeClass( 'active-menu-screen-options' );
+					options.slideUp( 'fast' );
+					content.slideDown( 'fast' );
+				}
+			} );
+		},
+
+		/**
+		 * Show/hide/save screen options (columns). From common.js.
+		 */
+		ready : function() {
+			var panel = this;
+			this.container.find( '.hide-column-tog' ).click( function() {
+				var $t = $( this ), column = $t.val();
+				if ( $t.prop( 'checked' ) ) {
+					panel.checked( column );
+				} else {
+					panel.unchecked( column );
+				}
+
+				panel.saveManageColumnsState();
+			});
+			this.container.find( '.hide-column-tog' ).each( function() {
+			var $t = $( this ), column = $t.val();
+				if ( $t.prop( 'checked' ) ) {
+					panel.checked( column );
+				} else {
+					panel.unchecked( column );
+				}
+			});
+		},
+
+		saveManageColumnsState : function() {
+			var hidden = this.hidden();
+			$.post( wp.ajax.settings.url, {
+				action: 'hidden-columns',
+				hidden: hidden,
+				screenoptionnonce: $('#screenoptionnonce').val(),
+				page: 'nav-menus'
+			});
+		},
+
+		checked : function(column) {
+			this.container.addClass( 'field-' + column + '-active' );
+		},
+
+		unchecked : function(column) {
+			this.container.removeClass( 'field-' + column + '-active' );
+		},
+
+		hidden : function() {
+			this.hidden = function(){
+				return $('.hide-column-tog').not(':checked').map(function() {
+					var id = this.id;
+					return id.substring( id, id.length - 5 );
+				}).get().join(',');
+			};
 		}
 	});
 
@@ -601,7 +714,7 @@
 		 * @param {Boolean} expanded
 		 * @param {Object}  args
 		 */
-		onChangeExpanded:  function( expanded, args ) {
+		onChangeExpanded: function( expanded, args ) {
 			var section = this;
 			if ( expanded && ! section.contentEmbedded ) {
 				_.each( wp.customize.section( section.id ).controls(), function( control ) {
@@ -946,11 +1059,19 @@
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
 				if ( self.container.next().is( '.customize-control-menu_item' ) ) {
-					$adjacentFocusTarget = self.container.next().find( '.item-edit:first' );
+					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						$adjacentFocusTarget = self.container.next().find( '.item-edit:first' );
+					} else {
+						$adjacentFocusTarget = self.container.next().find( '.item-delete:first' );
+					}
 				} else if ( self.container.prev().is( '.customize-control-menu_item' ) ) {
-					$adjacentFocusTarget = self.container.prev().find( '.item-edit:first' );
+					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						$adjacentFocusTarget = self.container.prev().find( '.item-edit:first' );
+					} else {
+						$adjacentFocusTarget = self.container.prev().find( '.item-delete:first' );
+					}
 				} else {
-					$adjacentFocusTarget = self.container.next( '.customize-control-menu' ).find( '.add-new-menu-items:first' );
+					$adjacentFocusTarget = self.container.next( '.customize-control-nav_menu' ).find( '.add-new-menu-item' );
 				}
 
 				self.container.slideUp( function() {
@@ -970,11 +1091,9 @@
 					menuItemIds.splice( i, 1 );
 					menuControl.setting( menuItemIds );
 
+					wp.a11y.speak( api.Menus.data.l10n.itemDeleted );
+					self.container.remove();
 					$adjacentFocusTarget.focus(); // keyboard accessibility
-
-					// Hide spinner.
-					spinner.hide();
-					spinner.css( 'visibility', 'hidden' );
 				} );
 			} );
 		},
@@ -1265,6 +1384,7 @@
 			// Update UI.
 			var prev = $( this.container ).prev();
 			prev.before( $( this.container ) );
+			wp.a11y.speak( api.Menus.data.l10n.movedUp );
 			// Maybe update parent & depth if it's a sub-item.
 			if ( 0 !== this.params.depth ) {
 				// @todo
@@ -1282,6 +1402,7 @@
 			// Update UI.
 			var next = $( this.container ).next();
 			next.after( $( this.container ) );
+			wp.a11y.speak( api.Menus.data.l10n.movedDown );
 			// Maybe update parent & depth if it's a sub-item.
 			if ( 0 !== this.params.depth ) {
 				// @todo
@@ -1294,6 +1415,7 @@
 		 */
 		moveLeft: function() {
 			this._moveMenuItemDepthByOne( -1 );
+			wp.a11y.speak( api.Menus.data.l10n.movedLeft );
 		},
 
 		/**
@@ -1301,6 +1423,7 @@
 		 */
 		moveRight: function() {
 			this._moveMenuItemDepthByOne( 1 );
+			wp.a11y.speak( api.Menus.data.l10n.movedRight );
 		},
 
 		/**
@@ -1458,7 +1581,6 @@
 			this._setupModel();
 			this._setupSortable();
 			this._setupAddition();
-			this._setupDeletion();
 			this._applyCardinalOrderClassNames();
 			this._setupLocations();
 		},
@@ -1696,23 +1818,7 @@
 					api.Menus.availableMenuItemsPanel.open( self );
 				} else {
 					api.Menus.availableMenuItemsPanel.close();
-				}
-			} );
-		},
-
-		/**
-		 * Move menu-delete button to section title. Actual deletion is managed with api.Menus.NewMenuControl.
-		 */
-		_setupDeletion: function() {
-			var self = this;
-
-			this.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
-				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
-					return;
-				}
-
-				if ( self.$sectionContent.hasClass( 'deleting' ) ) {
-					return;
+					event.stopPropagation();
 				}
 			} );
 		},
@@ -1801,8 +1907,9 @@
 		/**
 		 * Add a new item to this menu.
 		 *
-		 * @param {int} itemObjectId
-		 * @returns {object|false} menu_item control instance, or false on error
+		 * @param {number}   item - Object ID.
+		 * @param {function} [callback] - Callback to fire when item is added.
+		 * @returns {object|false} menu_item control instance, or false on error.
 		 */
 		addItemToMenu: function( item, callback ) {
 			var self = this, placeholderTemplate, params, placeholderContainer, processing,
@@ -1846,7 +1953,7 @@
 					// Register the new setting.
 					settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
 					settingArgs = {
-						transport: 'refresh',
+						transport: api.Menus.data.menuItemTransport,
 						previewer: self.setting.previewer
 					};
 					api.create( settingId, settingId, '', settingArgs );
@@ -1879,6 +1986,7 @@
 					}
 
 					$( document ).trigger( 'menu-item-added', [ item ] );
+					wp.a11y.speak( api.Menus.data.l10n.itemAdded );
 
 					callback();
 				}
@@ -1918,16 +2026,21 @@
 					self.submit();
 				}
 			} );
-			submit.on( 'click', function() {
-				self.submit();
-			} );
-			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( e ) {
-				if ( 'keydown' === e.type && 13 !== event.which ) { // Enter.
+			submit.on( 'click keydown', function( event ) {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
-				self.submitDelete( e.target );
-				e.stopPropagation();
-				e.preventDefault();
+				self.submit();
+				event.stopPropagation();
+				event.preventDefault();
+			} );
+			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function() {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+					return;
+				}
+				self.submitDelete( event.target );
+				event.stopPropagation();
+				event.preventDefault();
 			} );
 		},
 
@@ -2028,7 +2141,9 @@
 					spinner.css( 'visibility', 'hidden' );
 
 					// Clear name field.
-					name.val( '' );
+					name.val('');
+
+					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
 
 					// Focus on the new menu section.
 					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
@@ -2043,7 +2158,6 @@
 			var params, dropdowns,
 				menuId = $( el ).attr( 'id' ).replace( 'delete-menu-', '' ),
 				section = $( el ).closest( '.accordion-section' ),
-				next = section.next().find( '.accordion-section-title' ),
 				spinner = section.find( '.add-menu-item-loading.spinner' );
 
 			if ( menuId ) {
@@ -2069,17 +2183,17 @@
 							// Remove the CSS class
 							section.removeClass( 'deleting' );
 						} else if ( response.success ) {
-							// Focus the next menu item
-							next.focus();
+							api.section( 'nav_menus[' + menuId + ']' ).collapse();
+							section.remove(); // @todo core there should be API methods for deleting sections.
 
-							// Remove the UI, once menu has been deleted.
-							section.slideUp( 'fast', function() {
-								section.remove(); // @todo core there should be API methods for deleting sections.
-							} );
+							// Focus the menu panel.
+							api.panel( 'menus' ).focus();
 
 							// Remove the option from the theme location dropdowns.
 							dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
 							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+
+							wp.a11y.speak( api.Menus.data.l10n.menuDeleted );
 						}
 						// Hide spinner.
 						spinner.css( 'visibility', 'hidden' );
@@ -2101,6 +2215,13 @@
 		menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
 		new_menu: api.Menus.NewMenuControl
+	});
+
+	/**
+	 * Extends wp.customize.panelConstructor with section constructor for menus.
+	 */
+	$.extend( api.panelConstructor, {
+		menus: api.Menus.MenusPanel
 	});
 
 	/**
@@ -2255,145 +2376,3 @@
 	} );
 
 })( window.wp, jQuery );
-
-/* global jQuery, ajaxurl */
-(function( $ ) {
-	'use strict';
-
-	var menusPanelContainer;
-
-	/**
-	 * Menu Customizer screen options.
-	 *
-	 * Adds a screen options button to the Menus panel header and handles button events.
-	 *
-	 * @todo potentially put this directly into the panel by doing a custom panel,
-	 * once the standard panel html is finalized in #31336.
-	 */
-	var customizeMenuOptions = {
-		init: function() {
-			var $button,
-				$panel = $( '#accordion-panel-menus .panel-meta' ),
-				$header = $panel.find( '.accordion-section-title' ),
-				$help = $panel.find( '.customize-help-toggle' ),
-				$content = $panel.find( '.customize-panel-description' ),
-				$options = $( '#screen-options-wrap' ),
-				buttonId = 'customizer-menu-screen-options-button',
-				buttonText = _wpCustomizeMenusSettings.l10n.menuOptions || '',
-				button = '<button id="' + buttonId + '" aria-expanded="false" tabindex="0"><span class="screen-reader-text">' + buttonText + '</span></button>';
-
-			// Add button
-			$header.append( button );
-			$button = $panel.find( '#' + buttonId );
-
-			// Add menu options
-			$options.insertAfter( $header.next( 'div' ) );
-			$( '#customize-control-menu_customizer_options' ).remove();
-			$options.removeClass( 'hidden' ).hide();
-
-			// Menu options toggle
-			$button.on( 'click keydown', function( event ) {
-				if ( 'keydown' === event.type && 13 !== event.which ) { // Enter
-					return;
-				}
-
-				// Hide description
-				if ( $content.not( ':hidden' ) ) {
-					$content.slideUp( 'fast' );
-					$help.attr( 'aria-expanded', 'false' );
-				}
-
-				if ( 'true' === $button.attr( 'aria-expanded' ) ) {
-					$button.attr( 'aria-expanded', 'false' );
-					$panel.removeClass( 'open' );
-					$panel.removeClass( 'active-menu-screen-options' );
-					$options.slideUp( 'fast' );
-				} else {
-					$button.attr( 'aria-expanded', 'true' );
-					$panel.addClass( 'open' );
-					$panel.addClass( 'active-menu-screen-options' );
-					$options.slideDown( 'fast' );
-				}
-
-				return false;
-			} );
-
-			// Help toggle
-			$help.on( 'click keydown', function( event ) {
-				if ( 'keydown' === event.type && 13 !== event.which ) { // Enter
-					return;
-				}
-
-				if ( 'true' === $button.attr( 'aria-expanded' ) ) {
-					$button.attr( 'aria-expanded', 'false' );
-					$help.attr( 'aria-expanded', 'true' );
-					$panel.addClass( 'open' );
-					$panel.removeClass( 'active-menu-screen-options' );
-					$options.slideUp( 'fast' );
-					$content.slideDown( 'fast' );
-				}
-			} );
-		}
-	};
-
-	/**
-	 * Show/hide/save screen options (columns). From common.js.
-	 */
-	var columns = {
-		init: function() {
-			var that = this;
-			$( '.hide-column-tog' ).click( function() {
-				var $t = $( this ), column = $t.val();
-				if ( $t.prop( 'checked' ) ) {
-					that.checked( column );
-				} else {
-					that.unchecked( column );
-				}
-
-				that.saveManageColumnsState();
-			});
-			$( '.hide-column-tog' ).each( function() {
-			var $t = $( this ), column = $t.val();
-				if ( $t.prop( 'checked' ) ) {
-					that.checked( column );
-				} else {
-					that.unchecked( column );
-				}
-			} );
-		},
-
-		saveManageColumnsState: function() {
-			var hidden = this.hidden();
-			$.post( ajaxurl, {
-				action: 'hidden-columns',
-				hidden: hidden,
-				screenoptionnonce: $( '#screenoptionnonce' ).val(),
-				page: 'nav-menus'
-			});
-		},
-
-		checked: function( column ) {
-			menusPanelContainer.addClass( 'field-' + column + '-active' );
-		},
-
-		unchecked: function( column ) {
-			menusPanelContainer.removeClass( 'field-' + column + '-active' );
-		},
-
-		hidden: function() {
-			this.hidden = function() {
-				return $( '.hide-column-tog' ).not( ':checked' ).map(function() {
-					var id = this.id;
-					return id.substring( id, id.length - 5 );
-				}).get().join( ',' );
-			};
-		}
-	};
-
-	$( document ).ready( function() {
-		menusPanelContainer = $( '#accordion-panel-menus' );
-		columns.init();
-		customizeMenuOptions.init();
-	} );
-
-} )( jQuery );
