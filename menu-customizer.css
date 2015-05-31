@@ -570,6 +570,22 @@
 	display: none;
 }
 
+#available-menu-items .accordion-section-title:focus:before {
+	content: "";
+	width: 28px;
+	height: 32px;
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	box-shadow: 0 0 0 1px #5b9dd9,
+	            0 0 2px 1px rgba(30, 140, 190, .8);
+}
+
+#available-menu-items .accordion-section-title:hover:before,
+#available-menu-items:hover .accordion-section-title:before {
+	box-shadow: none;
+}
+
 #available-menu-items .accordion-section-content {
 	padding: 1px 15px 15px 15px;
 }
