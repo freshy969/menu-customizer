@@ -421,7 +421,7 @@ class WP_Customize_Menus {
 	public function register_scripts( $wp_scripts ) {
 		$handle = 'menu-customizer';
 		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.js';
-		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion' );
+		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'wp-a11y' );
 		$wp_scripts->add( $handle, $src, $deps );
 
 		$handle = 'customize-menus-preview';
@@ -467,6 +467,10 @@ class WP_Customize_Menus {
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
 				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
+				'itemAdded'       => __( 'Menu item added' ),
+				'itemDeleted'       => __( 'Menu item deleted' ),
+				'menuAdded'       => __( 'Menu created' ),
+				'menuDeleted'       => __( 'Menu deleted' ),
 			),
 			'menuItemTransport'    => 'postMessage',
 		);

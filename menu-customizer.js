@@ -714,7 +714,7 @@
 		 *
 		 * @param {Boolean} expanded
 		 * @param {Object}  args
-		 */		
+		 */
 		onChangeExpanded :  function( expanded, args ) {
 			var section = this;
 			if ( expanded && ! section.contentEmbedded ) {
@@ -1092,6 +1092,7 @@
 					menuItemIds.splice( i, 1 );
 					menuControl.setting( menuItemIds );
 
+					wp.a11y.speak( api.Menus.data.l10n.itemDeleted );
 					self.container.remove();
 					$adjacentFocusTarget.focus(); // keyboard accessibility
 				} );
@@ -1238,7 +1239,7 @@
 				// Remove processing states.
 				self.container.removeClass( 'saving' );
 				processing( processing() - 1 );
-				
+
 				// Hide spinner.
 				spinner.css( 'visibility', 'hidden' );
 			} );
@@ -1815,6 +1816,7 @@
 					api.Menus.availableMenuItemsPanel.open( self );
 				} else {
 					api.Menus.availableMenuItemsPanel.close();
+					event.stopPropagation();
 				}
 			} );
 		},
@@ -1982,12 +1984,13 @@
 					}
 
 					$( document ).trigger( 'menu-item-added', [ item ] );
+					wp.a11y.speak( api.Menus.data.l10n.itemAdded );
 
 					callback();
 				}
 				// Remove the placeholder.
 				placeholderContainer.remove();
-					
+
 				// Remove this level of the customizer processing state.
 				processing( processing() - 1 );
 			});
@@ -2103,7 +2106,7 @@
 					};
 					api.create( menuSettingId, menuSettingId, '', settingArgs );
 					api( menuSettingId ).set( [] ); // Change to mark as dirty.
-				
+
 					// Add the menu control.
 					ControlConstructor = api.controlConstructor.nav_menu;
 					menuControl = new ControlConstructor( menuSettingId, {
@@ -2137,7 +2140,9 @@
 
 					// Clear name field.
 					name.val('');
-				
+
+					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
+
 					// Focus on the new menu section.
 					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
 				}
@@ -2185,6 +2190,8 @@
 							// Remove the option from the theme location dropdowns.
 							dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
 							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+
+							wp.a11y.speak( api.Menus.data.l10n.menuDeleted );
 						}
 						// Hide spinner.
 						spinner.css( 'visibility', 'hidden' );
