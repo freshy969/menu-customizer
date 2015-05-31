@@ -597,7 +597,7 @@
 					help.attr( 'aria-expanded', 'false' );
 				}
 
-				if ( button.attr( 'aria-expanded' ) === 'true' ) {
+				if ( 'true' === button.attr( 'aria-expanded' ) ) {
 					button.attr( 'aria-expanded', 'false' );
 					panelMeta.removeClass( 'open' );
 					panelMeta.removeClass( 'active-menu-screen-options' );
