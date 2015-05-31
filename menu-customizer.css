@@ -235,14 +235,13 @@
 	margin-bottom: 8px; /* Override collapsing at smaller viewports. */
 }
 
-/* Duplicating styles on `.nav-menus-php .item-edit {}` in nav-menus.css:593. */
 .wp-customizer .menu-item .item-edit {
 	position: absolute;
-	right: -20px;
-	top: 0;
+	right: -19px;
+	top: 2px;
 	display: block;
 	width: 30px;
-	height: 40px;
+	height: 38px;
 	margin-right: 0 !important;
 	text-indent: 100%;
 	outline: none;
@@ -250,8 +249,13 @@
 	white-space: nowrap;
 }
 
+.customize-control-menu_item a.item-edit:focus {
+	color: #0073aa;
+}
+
 /* Duplicates `.nav-menus-php .item-edit:before {}` in common.css:2220. */
 .wp-customizer .menu-item .item-edit:before {
+	top: -1px;
 	right: 0;
 	content: '\f140';
 	border: none;

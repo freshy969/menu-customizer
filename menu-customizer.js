@@ -1075,6 +1075,7 @@
 						$adjacentFocusTarget = self.container.prev().find( '.item-delete:first' );
 					}
 				} else {
+					$adjacentFocusTarget = self.container.next( '.customize-control-nav_menu' ).find( '.add-new-menu-item' );
 				}
 
 				self.container.slideUp( function() {
