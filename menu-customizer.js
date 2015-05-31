@@ -1,12 +1,8 @@
 /* global _wpCustomizeMenusSettings, confirm, alert */
-(function( wp, $ ){
+(function( api, wp, $ ){
 	'use strict';
 
-	if ( ! wp || ! wp.customize ) { return; }
-
 	// Set up our namespace.
-	var OldPreviewer, api = wp.customize;
-
 	api.Menus = api.Menus || {};
 
 	// Link settings.
@@ -236,7 +232,7 @@
 			});
 
 			// Close the panel if the URL in the preview changes
-			api.Menus.Previewer.bind( 'url', this.close );
+			api.previewer.bind( 'url', this.close );
 		},
 
 		// Search input change handler.
@@ -2360,18 +2356,6 @@
 	});
 
 	/**
-	 * Capture the instance of the Previewer since it is private.
-	 */
-	OldPreviewer = api.Previewer;
-	api.Previewer = OldPreviewer.extend( {
-		initialize: function( params, options ) {
-			api.Menus.Previewer = this;
-			OldPreviewer.prototype.initialize.call( this, params, options );
-			this.bind( 'refresh', this.refresh );
-		}
-	} );
-
-	/**
 	 * Init Customizer for menus.
 	 */
 	api.bind( 'ready', function() {
@@ -2502,4 +2486,4 @@
 		setupUIPreviewing();
 	} );
 
-})( window.wp, jQuery );
+})( wp.customize, wp, jQuery );
