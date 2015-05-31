@@ -646,7 +646,7 @@
 					panel.unchecked( column );
 				}
 
-				that.saveManageColumnsState();
+				panel.saveManageColumnsState();
 			});
 			this.container.find( '.hide-column-tog' ).each( function() {
 			var $t = $( this ), column = $t.val();
@@ -660,7 +660,7 @@
 
 		saveManageColumnsState : function() {
 			var hidden = this.hidden();
-			$.post( ajaxurl, {
+			$.post( wp.ajax.settings.url, {
 				action: 'hidden-columns',
 				hidden: hidden,
 				screenoptionnonce: $('#screenoptionnonce').val(),
@@ -2042,7 +2042,7 @@
 				}
 				self.submit();
 			} );
-			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( e ) {
+			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function() {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
