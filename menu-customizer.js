@@ -1914,8 +1914,9 @@
 		/**
 		 * Add a new item to this menu.
 		 *
-		 * @param {int} itemObjectId
-		 * @returns {object|false} menu_item control instance, or false on error
+		 * @param {number}   item - Object ID.
+		 * @param {function} [callback] - Callback to fire when item is added.
+		 * @returns {object|false} menu_item control instance, or false on error.
 		 */
 		addItemToMenu: function( item, callback ) {
 			var self = this, placeholderTemplate, params, placeholderContainer, processing,
