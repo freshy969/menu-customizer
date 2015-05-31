@@ -207,9 +207,9 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 		</button>
 		<span class="add-menu-item-loading spinner"></span>
 		<span class="menu-delete-item">
-			<span class="menu-delete" id="delete-menu-{{ data.menu_id }}" tabindex="0">
+			<button type="button" class="not-a-button menu-delete" id="delete-menu-{{ data.menu_id }}">
 				<?php _e( 'Delete menu' ); ?> <span class="screen-reader-text">{{ data.menu_name }}</span>
-			</span>
+			</button>
 		</span>
 		<?php if ( current_theme_supports( 'menus' ) ) : ?>
 			<ul class="menu-settings">
