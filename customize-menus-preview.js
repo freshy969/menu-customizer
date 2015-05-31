@@ -116,7 +116,13 @@ wp.customize.menusPreview = ( function ( $ ) {
 			url: self.requestUri
 		} );
 		request.done( function( data ) {
+			var eventParam;
 			container.empty().append( $( data ) );
+			eventParam = {
+				instanceNumber: instanceNumber,
+				wpNavArgs: wpNavArgs
+			};
+			$( document ).trigger( 'customize-preview-menu-refreshed', [ eventParam ] );
 		} );
 		request.fail( function() {
 			// @todo provide some indication for why
