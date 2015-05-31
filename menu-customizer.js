@@ -1964,7 +1964,7 @@
 					// Register the new setting.
 					settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
 					settingArgs = {
-						transport: 'refresh',
+						transport: 'postMessage',
 						previewer: self.setting.previewer
 					};
 					api.create( settingId, settingId, '', settingArgs );
