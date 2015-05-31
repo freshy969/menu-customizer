@@ -489,15 +489,12 @@
 			// Reset search
 			this.collection.doSearch( '' );
 
-			this.$el.find( '.accordion-section-title' ).attr( 'tabindex', '0' );
 			this.$search.focus();
 		},
 
 		// Closes the panel
 		close: function( options ) {
 			options = options || {};
-
-			this.$el.find( '.accordion-section-title' ).attr( 'tabindex', '-1' );
 
 			if ( options.returnFocus && this.currentMenuControl ) {
 				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
