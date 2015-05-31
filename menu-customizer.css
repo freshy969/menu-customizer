@@ -646,9 +646,11 @@
 #available-menu-items a.item-add {
 	font-size: 0;
 	position: absolute;
-	top: 0;
-	left: 0;
-	color: #555;
+	top: 1px;
+	left: 1px;
+	color: #82878c;
+	width: 30px;
+	height: 38px;
 }
 
 #available-menu-items .menu-item-handle:focus a.item-add {
@@ -660,7 +662,7 @@
 	font: normal 20px/1 dashicons;
 	position: absolute;
 	left: 6px;
-	top: 12px;
+	top: 11px;
 }
 
 #available-menu-items .accordion-section-title.loading .spinner,
