@@ -1068,7 +1068,7 @@ class WP_Customize_Menus {
 				<div class="accordion-section-content" data-type="search"></div>
 			</div>
 			<div id="new-custom-menu-item" class="accordion-section">
-				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?><button class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
+				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 				<div class="accordion-section-content">
 					<input type="hidden" value="custom" id="custom-menu-item-type" name="menu-item[-1][menu-item-type]" />
 					<p id="menu-item-url-wrap">
@@ -1101,7 +1101,7 @@ class WP_Customize_Menus {
 				foreach ( $post_types as $type ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $type->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span><button class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
+						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 						<div class="accordion-section-content" data-type="<?php echo $type->name; ?>" data-obj_type="post_type"></div>
 					</div>
 					<?php
@@ -1113,7 +1113,7 @@ class WP_Customize_Menus {
 				foreach ( $taxonomies as $tax ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $tax->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span><button class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
+						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 						<div class="accordion-section-content" data-type="<?php echo $tax->name; ?>" data-obj_type="taxonomy"></div>
 					</div>
 					<?php

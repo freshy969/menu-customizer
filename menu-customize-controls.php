@@ -470,7 +470,7 @@ class WP_New_Menu_Customize_Control extends WP_Customize_Control {
 	 */
 	public function render_content() {
 		?>
-		<span class="button button-primary" id="create-new-menu-submit" tabindex="0"><?php _e( 'Create Menu' ); ?></span>
+		<button type="button" class="button button-primary" id="create-new-menu-submit"><?php _e( 'Create Menu' ); ?></button>
 		<span class="spinner"></span>
 		<?php
 	}

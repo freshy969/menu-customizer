@@ -2044,6 +2044,8 @@
 					return;
 				}
 				self.submit();
+				event.stopPropagation();
+				event.preventDefault();
 			} );
 			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function() {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
