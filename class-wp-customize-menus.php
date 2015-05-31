@@ -1169,21 +1169,21 @@ class WP_Customize_Menus {
 	 * @see wp_nav_menu()
 	 *
 	 * @param string $nav_menu_content The HTML content for the navigation menu.
-	 * @param object $args     An object containing wp_nav_menu() arguments.
+	 * @param object $args             An object containing wp_nav_menu() arguments.
 	 * @return null
 	 */
 	function filter_wp_nav_menu( $nav_menu_content, $args ) {
 		$this->preview_nav_menu_instance_number += 1;
 
-		// Get the nav menu based on the requested menu
+		// Get the nav menu based on the requested menu.
 		$nav_menu = wp_get_nav_menu_object( $args->menu );
 
-		// Get the nav menu based on the theme_location
+		// Get the nav menu based on the theme_location.
 		if ( ! $nav_menu && $args->theme_location && ( $locations = get_nav_menu_locations() ) && isset( $locations[ $args->theme_location ] ) ) {
 			$nav_menu = wp_get_nav_menu_object( $locations[ $args->theme_location ] );
 		}
 
-		// get the first menu that has items if we still can't find a menu
+		// Get the first menu that has items if we still can't find a menu.
 		if ( ! $nav_menu && ! $args->theme_location ) {
 			$menus = wp_get_nav_menus();
 			foreach ( $menus as $menu_maybe ) {
@@ -1196,9 +1196,9 @@ class WP_Customize_Menus {
 
 		if ( $nav_menu ) {
 			$exported_args = get_object_vars( $args );
-			unset( $exported_args['fallback_cb'] ); // this could be a closure which would blow things up, so remove
-			unset( $exported_args['echo'] );
-			$exported_args['menu'] = $nav_menu->term_id; // eliminate location-based and slug-based calls
+			unset( $exported_args['fallback_cb'] ); // This could be a closure which would blow serialization, so remove.
+			unset( $exported_args['echo'] ); // We'll be forcing echo in the Ajax request handler anyway.
+			$exported_args['menu'] = $nav_menu->term_id; // Eliminate location-based and slug-based calls; always use menu ID.
 			ksort( $exported_args );
 			$exported_args['args_hash'] = $this->hash_nav_menu_args( $exported_args );
 			$this->preview_nav_menu_instance_args[ $this->preview_nav_menu_instance_number ] = $exported_args;
