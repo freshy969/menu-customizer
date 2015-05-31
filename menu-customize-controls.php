@@ -198,13 +198,13 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 	 */
 	public function content_template() {
 		?>
-		<span class="button-secondary add-new-menu-item" tabindex="0">
+		<button type="button" class="button-secondary add-new-menu-item">
 			<?php _e( 'Add Links' ); ?>
-		</span>
-		<span class="reorder-toggle" tabindex="0">
+		</button>
+		<button type="button" class="not-a-button reorder-toggle">
 			<span class="reorder"><?php _ex( 'Reorder', 'Reorder menu items in Customizer' ); ?></span>
 			<span class="reorder-done"><?php _ex( 'Done', 'Cancel reordering menu items in Customizer' ); ?></span>
-		</span>
+		</button>
 		<span class="add-menu-item-loading spinner"></span>
 		<span class="menu-delete-item">
 			<span class="menu-delete" id="delete-menu-{{ data.menu_id }}" tabindex="0">
