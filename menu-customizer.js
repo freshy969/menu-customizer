@@ -1386,6 +1386,7 @@
 			// Update UI.
 			var prev = $( this.container ).prev();
 			prev.before( $( this.container ) );
+			wp.a11y.speak( api.Menus.data.l10n.movedUp );
 			// Maybe update parent & depth if it's a sub-item.
 			if ( 0 !== this.params.depth ) {
 				// @todo
@@ -1403,6 +1404,7 @@
 			// Update UI.
 			var next = $( this.container ).next();
 			next.after( $( this.container ) );
+			wp.a11y.speak( api.Menus.data.l10n.movedDown );
 			// Maybe update parent & depth if it's a sub-item.
 			if ( 0 !== this.params.depth ) {
 				// @todo
@@ -1415,6 +1417,7 @@
 		 */
 		moveLeft: function() {
 			this._moveMenuItemDepthByOne( -1 );
+			wp.a11y.speak( api.Menus.data.l10n.movedLeft );
 		},
 
 		/**
@@ -1422,6 +1425,7 @@
 		 */
 		moveRight: function() {
 			this._moveMenuItemDepthByOne( 1 );
+			wp.a11y.speak( api.Menus.data.l10n.movedRight );
 		},
 
 		/**
