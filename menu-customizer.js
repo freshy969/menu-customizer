@@ -1063,11 +1063,18 @@
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
 				if ( self.container.next().is( '.customize-control-menu_item' ) ) {
-					$adjacentFocusTarget = self.container.next().find( '.item-edit:first' );
+					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						$adjacentFocusTarget = self.container.next().find( '.item-edit:first' );
+					} else {
+						$adjacentFocusTarget = self.container.next().find( '.item-delete:first' );
+					}
 				} else if ( self.container.prev().is( '.customize-control-menu_item' ) ) {
-					$adjacentFocusTarget = self.container.prev().find( '.item-edit:first' );
+					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						$adjacentFocusTarget = self.container.prev().find( '.item-edit:first' );
+					} else {
+						$adjacentFocusTarget = self.container.prev().find( '.item-delete:first' );
+					}
 				} else {
-					$adjacentFocusTarget = self.container.next( '.customize-control-menu' ).find( '.add-new-menu-items:first' );
 				}
 
 				self.container.slideUp( function() {
@@ -1087,11 +1094,8 @@
 					menuItemIds.splice( i, 1 );
 					menuControl.setting( menuItemIds );
 
+					self.container.remove();
 					$adjacentFocusTarget.focus(); // keyboard accessibility
-					
-					// Hide spinner.
-					spinner.hide();
-					spinner.css( 'visibility', 'hidden' );
 				} );
 			} );
 		},
