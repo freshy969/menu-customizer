@@ -130,7 +130,7 @@
 /* Menu-item reordering nav. */
 .menu-item-reorder-nav {
 	display: none;
-	background-color: #fafafa;
+	background-color: #fff;
 	position: absolute;
 	top: 0;
 	right: 0;
@@ -149,7 +149,7 @@
 	display: block;
 	width: 30px;
 	height: 40px;
-	color: #888;
+	color: #82878c;
 	text-indent: -9999px;
 	cursor: pointer;
 	outline: none;
@@ -171,24 +171,24 @@
 
 .menu-item-reorder-nav span:hover,
 .menu-item-reorder-nav span:focus {
-	color: #444;
+	color: #191e23;
 	background: #eee;
 }
 
 .menus-move-down:before {
-	content: '\f346';
+	content: '\f347';
 }
 
 .menus-move-up:before {
-	content: '\f342';
+	content: '\f343';
 }
 
 .menus-move-left:before {
-	content: '\f221';
+	content: '\f341';
 }
 
 .menus-move-right:before {
-	content: '\f222';
+	content: '\f345';
 }
 
 /* @todo: these also need a lot of logic for disabling in JS, or very clever CSS */
@@ -198,7 +198,7 @@
 .menu-item-depth-0 .menus-move-left,
 .menu-item-depth-10 .menus-move-right {
 	color: #d5d5d5 !important;
-	background-color: #fafafa !important;
+	background-color: #fff !important;
 	cursor: default;
 }
 
@@ -474,8 +474,8 @@
 .add-menu-toggle.open,
 .add-menu-toggle.open:hover {
 	background: #eee;
-	border-color: #999;
-	color: #333;
+	border-color: #929793;
+	color: #32373c;
 	-webkit-box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
 	box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
 }
@@ -632,7 +632,7 @@
 }
 
 #available-menu-items .menu-item-handle:focus a.item-add {
-	color: #222;
+	color: #23282d;
 }
 
 #available-menu-items .item-add:before {
@@ -702,7 +702,7 @@ body.adding-menu-items #customize-preview {
 	cursor: default;
 	opacity: .5;
 	background: #fff;
-	color: #777;
+	color: #727773;
 }
 
 .added-menu-item .menu-item-handle {
