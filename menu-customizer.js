@@ -7,11 +7,6 @@
 	// Set up our namespace.
 	var OldPreviewer, api = wp.customize;
 
-	// Fix bug in 4.1RC1: https://core.trac.wordpress.org/ticket/30701
-	if ( ! api.Control.prototype._toggleActive ) {
-		api.Control.prototype._toggleActive = api.Section.prototype._toggleActive;
-	}
-
 	api.Menus = api.Menus || {};
 
 	// Link settings.
