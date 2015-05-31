@@ -489,12 +489,15 @@
 			// Reset search
 			this.collection.doSearch( '' );
 
+			this.$el.find( '.accordion-section-title' ).attr( 'tabindex', '0' );
 			this.$search.focus();
 		},
 
 		// Closes the panel
 		close: function( options ) {
 			options = options || {};
+
+			this.$el.find( '.accordion-section-title' ).attr( 'tabindex', '-1' );
 
 			if ( options.returnFocus && this.currentMenuControl ) {
 				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
@@ -521,6 +524,7 @@
 				isEsc = ( event.which === 27 ),
 				isDown = ( event.which === 40 ),
 				isUp = ( event.which === 38 ),
+				isBackTab = ( event.which === 9  && event.shiftKey ),
 				selected = null,
 				firstVisible = this.$el.find( '> .menu-item-tpl:visible:first' ),
 				lastVisible = this.$el.find( '> .menu-item-tpl:visible:last' ),
@@ -557,8 +561,9 @@
 				return;
 			}
 
-			if ( isEnter ) {
-				this.submit();
+			if ( isSearchFocused && isBackTab ) {
+				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
+				event.preventDefault(); // Avoid additional back-tab.
 			} else if ( isEsc ) {
 				this.close( { returnFocus: true } );
 			}
