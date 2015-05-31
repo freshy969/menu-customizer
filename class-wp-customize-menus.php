@@ -269,7 +269,7 @@ class WP_Customize_Menus {
 					'id'          => 0,
 					'name'        => _x( 'Home', 'nav menu home label' ),
 					'type'        => 'page',
-					'type_label'  => __( 'Page' ),
+					'type_label'  => __( 'Custom Link' ),
 					'obj_type'    => 'custom',
 				);
 				$items[] = $home;
