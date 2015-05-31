@@ -457,7 +457,7 @@ class WP_Customize_Menus {
 		// Create a panel for Menus.
 		$this->manager->add_panel( new WP_Customize_Menus_Panel( $this->manager, 'menus', array(
 			'title'        => __( 'Menus' ),
-			'description'  => '<p>' . __( 'This panel is used for managing your custom navigation menus. You can add pages, posts, categories, tags, and custom links to your menus.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme, and also used in sidebars by adding a "Custom Menu" widget in the Widgets panel.' ) . '</p>',
+			'description'  => '<p>' . __( 'This panel is used for managing navigation menus for content you have already published on your site. You can create menus and add items for existing content such as pages, posts, categories, tags, formats, or custom links.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme or in widget areas by adding a "Custom Menu" widget.' ) . '</p>',
 			'priority'     => 30,
 			//'theme_supports' => 'menus|widgets', @todo allow multiple theme supports
 		) ) );
