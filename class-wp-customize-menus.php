@@ -37,14 +37,15 @@ class WP_Customize_Menus {
 		$this->previewed_menus = array();
 		$this->manager = $manager;
 
+		$this->register_styles( wp_styles() );
+		$this->register_scripts( wp_scripts() );
+
 		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'new_menu_ajax' ) );
 		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) );
 		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) );
 		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) );
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
-		add_action( 'wp_default_scripts', array( $this, 'register_scripts' ) );
-		add_action( 'wp_default_styles', array( $this, 'register_styles' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_action( 'customize_update_menu_name', array( $this, 'update_menu_name' ), 10, 2 );
