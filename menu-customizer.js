@@ -618,7 +618,7 @@
 					return;
 				}
 
-				if ( button.attr( 'aria-expanded' ) === 'true' ) {
+				if ( 'true' === button.attr( 'aria-expanded' ) ) {
 					button.attr( 'aria-expanded', 'false' );
 					help.attr( 'aria-expanded', 'true' );
 					panelMeta.addClass( 'open' );
@@ -632,7 +632,7 @@
 		/**
 		 * Show/hide/save screen options (columns). From common.js.
 		 */
-		ready : function() {
+		ready: function() {
 			var panel = this;
 			this.container.find( '.hide-column-tog' ).click( function() {
 				var $t = $( this ), column = $t.val();
@@ -654,33 +654,33 @@
 			});
 		},
 
-		saveManageColumnsState : function() {
+		saveManageColumnsState: function() {
 			var hidden = this.hidden();
 			$.post( wp.ajax.settings.url, {
 				action: 'hidden-columns',
 				hidden: hidden,
-				screenoptionnonce: $('#screenoptionnonce').val(),
+				screenoptionnonce: $( '#screenoptionnonce' ).val(),
 				page: 'nav-menus'
 			});
 		},
 
-		checked : function(column) {
+		checked: function( column ) {
 			this.container.addClass( 'field-' + column + '-active' );
 		},
 
-		unchecked : function(column) {
+		unchecked: function( column ) {
 			this.container.removeClass( 'field-' + column + '-active' );
 		},
 
-		hidden : function() {
-			this.hidden = function(){
-				return $('.hide-column-tog').not(':checked').map(function() {
+		hidden: function() {
+			this.hidden = function() {
+				return $( '.hide-column-tog' ).not( ':checked' ).map( function() {
 					var id = this.id;
 					return id.substring( id, id.length - 5 );
-				}).get().join(',');
+				}).get().join( ',' );
 			};
 		}
-	});
+	} );
 
 	/**
 	 * wp.customize.Menus.MenuSection
@@ -2141,7 +2141,7 @@
 					spinner.css( 'visibility', 'hidden' );
 
 					// Clear name field.
-					name.val('');
+					name.val( '' );
 
 					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
 
@@ -2293,7 +2293,7 @@
 		var foundControl = null;
 
 		api.control.each( function( control ) {
-			if ( control.params.type === 'menu' && -1 !== _.indexOf( control.setting(), menuItemId ) ) {
+			if ( 'menu' === control.params.type && -1 !== _.indexOf( control.setting(), menuItemId ) ) {
 				foundControl = control;
 			}
 		} );
@@ -2375,4 +2375,4 @@
 		setupUIPreviewing();
 	} );
 
-})( window.wp, jQuery );
+} )( window.wp, jQuery );

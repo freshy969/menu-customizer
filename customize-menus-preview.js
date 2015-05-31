@@ -1,6 +1,6 @@
 /*global jQuery, JSON, _wpCustomizePreviewMenusExports, _ */
 
-wp.customize.menusPreview = ( function ( $ ) {
+wp.customize.menusPreview = ( function( $ ) {
 	'use strict';
 	var self;
 
@@ -18,24 +18,24 @@ wp.customize.menusPreview = ( function ( $ ) {
 		navMenuInstanceArgs: {}
 	};
 
-	wp.customize.bind( 'preview-ready', function () {
+	wp.customize.bind( 'preview-ready', function() {
 		self.previewReady.resolve();
 	} );
-	self.previewReady.done( function () {
+	self.previewReady.done( function() {
 		self.init();
 	} );
 
 	/**
 	 * Bootstrap functionality.
 	 */
-	self.init = function () {
+	self.init = function() {
 		var self = this;
 
 		if ( 'undefined' !== typeof _wpCustomizePreviewMenusExports ) {
 			$.extend( self, _wpCustomizePreviewMenusExports );
 		}
 
-		self.previewReady.done( function () {
+		self.previewReady.done( function() {
 			wp.customize.preview.bind( 'setting', function( args ) {
 				var id, value, matches;
 				args = args.slice();
@@ -63,12 +63,11 @@ wp.customize.menusPreview = ( function ( $ ) {
 	self.refreshMenu = function( menuId ) {
 		var self = this;
 
-		_.each( self.navMenuInstanceArgs, function ( navMenuArgs, instanceNumber ) {
+		_.each( self.navMenuInstanceArgs, function( navMenuArgs, instanceNumber ) {
 			if ( menuId === navMenuArgs.menu ) {
 				self.refreshMenuInstance( instanceNumber );
 			}
 		} );
-
 	};
 
 	/**
@@ -76,7 +75,7 @@ wp.customize.menusPreview = ( function ( $ ) {
 	 *
 	 * @param {int} instanceNumber
 	 */
-	self.refreshMenuInstance = function ( instanceNumber ) {
+	self.refreshMenuInstance = function( instanceNumber ) {
 		var self = this, data, customized, container, request, wpNavArgs;
 
 		if ( ! self.navMenuInstanceArgs[ instanceNumber ] ) {
@@ -133,5 +132,5 @@ wp.customize.menusPreview = ( function ( $ ) {
 	};
 
 	return self;
-}( jQuery ));
 
+}( jQuery ) );
