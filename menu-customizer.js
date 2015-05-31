@@ -1959,7 +1959,7 @@
 					// Register the new setting.
 					settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
 					settingArgs = {
-						transport: 'postMessage',
+						transport: api.Menus.data.menuItemTransport,
 						previewer: self.setting.previewer
 					};
 					api.create( settingId, settingId, '', settingArgs );
