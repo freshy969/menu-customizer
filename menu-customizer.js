@@ -68,54 +68,6 @@
 		sortByField: function( fieldName ) {
 			this.sort_key = fieldName;
 			this.sort();
-		},
-
-		// Controls searching on the current menu item collection.
-		doSearch: function( value ) {
-
-			// Don't do anything if we've already done this search.
-			// Useful because the search handler fires multiple times per keystroke.
-			if ( this.terms === value ) {
-				return;
-			}
-
-			// Updates terms with the value passed.
-			this.terms = value;
-
-			// If we have terms, run a search.
-			if ( 0 < this.terms.length ) {
-				this.search( this.terms );
-			}
-
-			// If search is blank, show all items.
-			// Useful for resetting the views when you clean the input.
-			if ( '' === this.terms ) {
-				this.each( function( menu_item ) {
-					menu_item.set( 'search_matched', true );
-				} );
-			}
-		},
-
-		// Performs a search within the collection.
-		// @uses RegExp
-		// @todo: this algorithm is slow and doesn't work; also, sort results by relevance.
-		// (was based on widget filtering, which is an entirely different use-case).
-		// Maybe look at the internal links search methods for inspiration, per @nacin.
-		search: function( term ) {
-			var match, haystack;
-
-			// Escape the term string for RegExp meta characters.
-			term = term.replace( /[-\/\\^$*+?.()|[\]{}]/g, '\\$&' );
-
-			// Consider spaces as word delimiters and match the whole string
-			// so that matching terms can be combined.
-			term = term.replace( / /g, ')(?=.*' );
-			match = new RegExp( '^(?=.*' + term + ').+', 'i' );
-
-			this.each( function( data ) {
-				haystack = data.get( 'title' );
-				data.set( 'search_matched', match.test( haystack ) );
-			} );
 		}
 	});
 	api.Menus.availableMenuItems = new api.Menus.AvailableItemCollection( api.Menus.data.availableMenuItems );
@@ -203,6 +155,10 @@
 					self.close();
 				}
 			} );
+			
+			this.$el.on( 'input', '#custom-menu-item-name.invalid, #custom-menu-item-url.invalid', function( event ) {
+				$( this ).removeClass( 'invalid' );
+			});
 
 			// Load available items if it looks like we'll need them.
 			api.panel( 'menus' ).container.bind( 'expanded', function() {
@@ -372,11 +328,16 @@
 
 		// Adjust the height of each section of items to fit the screen.
 		itemSectionHeight: function() {
-			var sections, totalHeight, accordionHeight;
+			var sections, totalHeight, accordionHeight, diff;
 			totalHeight = window.innerHeight;
 			sections = this.$el.find( '.accordion-section-content' );
 			accordionHeight =  46 * ( 1 + sections.length ) - 16; // Magic numbers.
-			sections.css( 'max-height', totalHeight - accordionHeight );
+			diff = totalHeight - accordionHeight;
+			if ( 120 < diff && 290 > diff ) {
+				sections.css( 'max-height', diff );				
+			} else if ( 120 >= diff ) {
+				this.$el.addClass( 'allow-scroll' );
+			}
 		},
 
 		// Highlights a menu item.
@@ -436,33 +397,37 @@
 
 		// Adds the custom menu item to the menu.
 		submitLink: function() {
-			var menu_item,
-				item_name = $( '#custom-menu-item-name' ),
-				item_url = $( '#custom-menu-item-url' );
+			var menuItem,
+				itemName = $( '#custom-menu-item-name' ),
+				itemUrl = $( '#custom-menu-item-url' );
 
 			if ( ! this.currentMenuControl ) {
 				return;
 			}
 
-			if ( '' === item_name.val() || '' === item_url.val() || 'http://' === item_url.val() ) {
+			if ( '' === itemName.val() ) {
+				itemName.addClass( 'invalid' );
+				return;
+			} else if ( '' === itemUrl.val() || 'http://' === itemUrl.val() ) {
+				itemUrl.addClass( 'invalid' );
 				return;
 			}
 
-			menu_item = {
+			menuItem = {
 				'id': 0,
-				'name': item_name.val(),
-				'url': item_url.val(),
+				'name': itemName.val(),
+				'url': itemUrl.val(),
 				'type': 'custom',
 				'type_label': api.Menus.data.l10n.custom_label,
 				'obj_type': 'custom'
 			};
 
-			this.currentMenuControl.addItemToMenu( menu_item );
+			this.currentMenuControl.addItemToMenu( menuItem );
 
 			// Reset the custom link form.
 			// @todo: decide whether this should be done as a callback after adding the item, as it is in nav-menu.js.
-			item_url.val( 'http://' );
-			item_name.val( '' );
+			itemUrl.val( 'http://' );
+			itemName.val( '' );
 		},
 
 		// Opens the panel.
@@ -484,9 +449,6 @@
 			} );
 
 			this.$el.find( '.selected' ).removeClass( 'selected' );
-
-			// Reset search
-			this.collection.doSearch( '' );
 
 			this.$search.focus();
 		},
@@ -2335,7 +2297,7 @@
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
-				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title' ),
+				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title h3' ),
 				id = el.closest( '.accordion-section' ).attr( 'id' ),
 				location = el.closest( '.accordion-section' ).find( '.menu-in-location' ),
 				action = title2.find( '.customize-action' );
