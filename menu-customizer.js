@@ -1996,7 +1996,7 @@
 				event.stopPropagation();
 				event.preventDefault();
 			} );
-			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function() {
+			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
