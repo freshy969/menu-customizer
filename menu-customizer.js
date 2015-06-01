@@ -376,11 +376,16 @@
 
 		// Adjust the height of each section of items to fit the screen.
 		itemSectionHeight: function() {
-			var sections, totalHeight, accordionHeight;
+			var sections, totalHeight, accordionHeight, diff;
 			totalHeight = window.innerHeight;
 			sections = this.$el.find( '.accordion-section-content' );
 			accordionHeight =  46 * ( 1 + sections.length ) - 16; // Magic numbers.
-			sections.css( 'max-height', totalHeight - accordionHeight );
+			diff = totalHeight - accordionHeight;
+			if ( 120 < diff && 290 > diff ) {
+				sections.css( 'max-height', diff );				
+			} else if ( 120 >= diff ) {
+				this.$el.addClass( 'allow-scroll' );
+			}
 		},
 
 		// Highlights a menu item.
