@@ -688,7 +688,8 @@
 				wpNavMenu.menuList = section.container.find( '.accordion-section-content:first' );
 				wpNavMenu.targetList = wpNavMenu.menuList;
 				$( '#menu-to-edit' ).removeAttr( 'id' );
-				wpNavMenu.menuList.attr( 'id', '#menu-to-edit' );
+
+				wpNavMenu.menuList.attr( 'id', 'menu-to-edit' ).addClass( 'menu' );
 			}
 
 			if ( expanded && ! section.contentEmbedded ) {
@@ -995,7 +996,7 @@
 		_setupUpdateUI: function() {
 			var self = this, $menuItemRoot, $menuItemContent;
 
-			$menuItemRoot = this.container.find( '.menu-item:first' );
+			$menuItemRoot = this.container;
 			$menuItemContent = $menuItemRoot.find( '.menu-item-settings:first' );
 
 			// Trigger menu item update when hitting Enter within an input.
@@ -1103,8 +1104,12 @@
 		 * @since Menu Customizer 0.3
 		 */
 		actuallyEmbed: function () {
-			this.renderContent();
-			this.actuallyReady();
+			var control = this;
+
+			control.container.data( 'item-depth', control.params.depth );
+			control.container.addClass( control.params.el_classes );
+			control.renderContent();
+			control.actuallyReady();
 		},
 
 		/***********************************************************************
@@ -1255,7 +1260,7 @@
 		toggleForm: function( showOrHide ) {
 			var self = this, $menuitem, $inside, complete;
 
-			$menuitem = this.container.find( 'div.menu-item:first' );
+			$menuitem = this.container;
 			$inside = $menuitem.find( '.menu-item-settings:first' );
 			if ( typeof showOrHide === 'undefined' ) {
 				showOrHide = ! $inside.is( ':visible' );
@@ -1505,7 +1510,7 @@
 			this.params.depth = depth + offset;
 
 			// Update depth class for UI.
-			this.container.find( '.menu-item' )
+			this.container
 				.removeClass( 'menu-item-depth-' + depth )
 				.addClass( 'menu-item-depth-' + ( depth + offset ) );
 
@@ -1530,7 +1535,7 @@
 						childControl.params.depth = childDepth + offset;
 
 						// Update depth class for UI.
-						childControl.container.find( '.menu-item' )
+						childControl.container
 							.removeClass( 'menu-item-depth-' + childDepth )
 							.addClass( 'menu-item-depth-' + ( childDepth + offset ) );
 					}
@@ -1583,10 +1588,12 @@
 
 				removedMenuItemIds = _( oldMenuItemIds ).difference( newMenuItemIds );
 
-				menuItemControls = _( newMenuItemIds ).map( function( menuItemId ) {
+				menuItemControls = [];
+				_( newMenuItemIds ).each( function( menuItemId ) {
 					var menuItemControl = api.Menus.getMenuItemControl( menuItemId );
-
-					return menuItemControl;
+					if ( menuItemControl ) {
+						menuItemControls.push( menuItemControl );
+					}
 				} );
 
 				// Sort menu item controls to their new positions.
@@ -1764,17 +1771,15 @@
 		 * @return {wp.customize.controlConstructor.menu_item[]}
 		 */
 		getMenuItemControls: function() {
-			var self = this, formControls;
+			var self = this, formControls = [];
 
-			formControls = _( this.setting() ).map( function( menuItemId ) {
+			_( this.setting() ).each( function( menuItemId ) {
 				var settingId = menuItemIdToSettingId( menuItemId, self.params.menu_id ),
 					formControl = api.control( settingId );
 
-				if ( ! formControl ) {
-					return;
+				if ( formControl ) {
+					formControls.push( formControl );
 				}
-
-				return formControl;
 			} );
 
 			return formControls;

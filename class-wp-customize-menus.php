@@ -1039,16 +1039,14 @@ class WP_Customize_Menus {
 		</script>
 
 		<script type="text/html" id="tmpl-loading-menu-item">
-			<li class="nav-menu-inserted-item-loading added-menu-item added-dbid-{{ data.id }} customize-control customize-control-menu_item nav-menu-item-wrap">
-				<div class="menu-item menu-item-depth-0 menu-item-edit-inactive">
-					<dl class="menu-item-bar">
-						<dt class="menu-item-handle">
-							<span class="spinner" style="visibility: visible;"></span>
-							<span class="item-type">{{ data.type_label }}</span>
-							<span class="item-title menu-item-title">{{{ data.name }}}</span>
-						</dt>
-					</dl>
-				</div>
+			<li class="nav-menu-inserted-item-loading added-menu-item added-dbid-{{ data.id }} customize-control customize-control-menu_item nav-menu-item-wrap menu-item menu-item-depth-0 menu-item-edit-inactive">
+				<dl class="menu-item-bar">
+					<dt class="menu-item-handle">
+						<span class="spinner" style="visibility: visible;"></span>
+						<span class="item-type">{{ data.type_label }}</span>
+						<span class="item-title menu-item-title">{{{ data.name }}}</span>
+					</dt>
+				</dl>
 			</li>
 		</script>
 		<script type="text/html" id="tmpl-menu-item-reorder-nav">

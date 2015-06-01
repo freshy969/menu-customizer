@@ -378,7 +378,6 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 	 */
 	public function content_template() {
 		?>
-		<div id="menu-item-{{ data.menu_item_id }}" class="{{ data.el_classes }}" data-item-depth="{{ data.depth }}">
 			<dl class="menu-item-bar">
 				<dt class="menu-item-handle">
 					<span class="item-type">{{{ data.item_type_label }}}</span>
@@ -452,7 +451,6 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 				<input type="hidden" name="menu-item-parent-id" class="menu-item-parent-id" id="edit-menu-item-parent-id-{{ data.menu_item_id }}" value="{{ data.parent }}" />
 			</div><!-- .menu-item-settings-->
 			<ul class="menu-item-transport"></ul>
-		</div>
 		<?php
 	}
 }
