@@ -1258,7 +1258,7 @@ class WP_Customize_Menus {
 	 *
 	 * @see wp_nav_menu()
 	 *
-	 * @throws WP_Customize_Menus_Exception
+	 * @throws WP_Customize_Menus_Exception to pass around errors.
 	 */
 	function render_menu() {
 		if ( empty( $_POST[ self::RENDER_QUERY_VAR ] ) ) {
