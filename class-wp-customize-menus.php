@@ -419,7 +419,7 @@ class WP_Customize_Menus {
 	/**
 	 * Register all scripts used by plugin.
 	 *
-	 * @param WP_Scripts $wp_scripts
+	 * @param WP_Scripts $wp_scripts The WP_Scripts object for printing scripts.
 	 */
 	public function register_scripts( $wp_scripts ) {
 		$handle = 'menu-customizer';
@@ -439,7 +439,7 @@ class WP_Customize_Menus {
 	/**
 	 * Register all styles used by plugin.
 	 *
-	 * @param WP_Styles $wp_styles
+	 * @param WP_Styles $wp_styles The WP_Styles object for printing styles.
 	 */
 	public function register_styles( $wp_styles ) {
 		$handle = 'menu-customizer';
@@ -507,7 +507,7 @@ class WP_Customize_Menus {
 			'title'        => __( 'Menus' ),
 			'description'  => '<p>' . __( 'This panel is used for managing navigation menus for content you have already published on your site. You can create menus and add items for existing content such as pages, posts, categories, tags, formats, or custom links.' ) . '</p><p>' . __( 'Menus can be displayed in locations defined by your theme or in widget areas by adding a "Custom Menu" widget.' ) . '</p>',
 			'priority'     => 30,
-			//'theme_supports' => 'menus|widgets', @todo allow multiple theme supports
+			// 'theme_supports' => 'menus|widgets', @todo allow multiple theme supports
 		) ) );
 
 		// Menu loactions.
@@ -800,8 +800,8 @@ class WP_Customize_Menus {
 	/**
 	 * Filter for wp_get_nav_menu_items to apply the previewed changes for a setting.
 	 *
-	 * @param array $items
-	 * @param stdClass $menu aka WP_Term.
+	 * @param array    $items The current menu items.
+	 * @param stdClass $menu  aka WP_Term.
 	 * @return array
 	 */
 	public function filter_nav_menu_items_for_preview( $items, $menu ) {
@@ -1212,7 +1212,7 @@ class WP_Customize_Menus {
 	 * Hash (hmac) the arguments with the nonce and secret auth key to ensure they
 	 * are not tampered with when submitted in the Ajax request.
 	 *
-	 * @param array $args
+	 * @param array $args The arguments to hash.
 	 * @return string
 	 */
 	function hash_nav_menu_args( $args ) {

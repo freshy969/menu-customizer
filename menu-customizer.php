@@ -26,6 +26,9 @@ You should have received a copy of the GNU General Public License
 along with WordPress; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 =====================================================================================
+ *
+ * @package WordPress
+ * @subpackage Customize
  */
 
 require_once( plugin_dir_path( __FILE__ ) . 'class-wp-customize-menus.php' );
