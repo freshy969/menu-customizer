@@ -609,6 +609,11 @@ button.not-a-button {
 	width: 100%;
 }
 
+#custom-menu-item-name.invalid,
+#custom-menu-item-url.invalid {
+	border: 1px solid #f00;
+}
+
 #available-menu-items .item-tpl {
 	position: relative;
 	padding: 20px 15px 20px 60px;

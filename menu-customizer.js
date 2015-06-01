@@ -203,6 +203,10 @@
 					self.close();
 				}
 			} );
+			
+			this.$el.on( 'input', '#custom-menu-item-name.invalid, #custom-menu-item-url.invalid', function( event ) {
+				$( this ).removeClass( 'invalid' );
+			});
 
 			// Load available items if it looks like we'll need them.
 			api.panel( 'menus' ).container.bind( 'expanded', function() {
@@ -437,33 +441,37 @@
 
 		// Adds the custom menu item to the menu.
 		submitLink: function() {
-			var menu_item,
-				item_name = $( '#custom-menu-item-name' ),
-				item_url = $( '#custom-menu-item-url' );
+			var menuItem,
+				itemName = $( '#custom-menu-item-name' ),
+				itemUrl = $( '#custom-menu-item-url' );
 
 			if ( ! this.currentMenuControl ) {
 				return;
 			}
 
-			if ( '' === item_name.val() || '' === item_url.val() || 'http://' === item_url.val() ) {
+			if ( '' === itemName.val() ) {
+				itemName.addClass( 'invalid' );
+				return;
+			} else if ( '' === itemUrl.val() || 'http://' === itemUrl.val() ) {
+				itemUrl.addClass( 'invalid' );
 				return;
 			}
 
-			menu_item = {
+			menuItem = {
 				'id': 0,
-				'name': item_name.val(),
-				'url': item_url.val(),
+				'name': itemName.val(),
+				'url': itemUrl.val(),
 				'type': 'custom',
 				'type_label': api.Menus.data.l10n.custom_label,
 				'obj_type': 'custom'
 			};
 
-			this.currentMenuControl.addItemToMenu( menu_item );
+			this.currentMenuControl.addItemToMenu( menuItem );
 
 			// Reset the custom link form.
 			// @todo: decide whether this should be done as a callback after adding the item, as it is in nav-menu.js.
-			item_url.val( 'http://' );
-			item_name.val( '' );
+			itemUrl.val( 'http://' );
+			itemName.val( '' );
 		},
 
 		// Opens the panel.
