@@ -70,54 +70,6 @@
 		sortByField: function( fieldName ) {
 			this.sort_key = fieldName;
 			this.sort();
-		},
-
-		// Controls searching on the current menu item collection.
-		doSearch: function( value ) {
-
-			// Don't do anything if we've already done this search.
-			// Useful because the search handler fires multiple times per keystroke.
-			if ( this.terms === value ) {
-				return;
-			}
-
-			// Updates terms with the value passed.
-			this.terms = value;
-
-			// If we have terms, run a search.
-			if ( this.terms.length > 0 ) {
-				this.search( this.terms );
-			}
-
-			// If search is blank, show all items.
-			// Useful for resetting the views when you clean the input.
-			if ( this.terms === '' ) {
-				this.each( function ( menu_item ) {
-					menu_item.set( 'search_matched', true );
-				} );
-			}
-		},
-
-		// Performs a search within the collection.
-		// @uses RegExp
-		// @todo: this algorithm is slow and doesn't work; also, sort results by relevance.
-		// (was based on widget filtering, which is an entirely different use-case).
-		// Maybe look at the internal links search methods for inspiration, per @nacin.
-		search: function( term ) {
-			var match, haystack;
-
-			// Escape the term string for RegExp meta characters.
-			term = term.replace( /[-\/\\^$*+?.()|[\]{}]/g, '\\$&' );
-
-			// Consider spaces as word delimiters and match the whole string
-			// so that matching terms can be combined.
-			term = term.replace( / /g, ')(?=.*' );
-			match = new RegExp( '^(?=.*' + term + ').+', 'i' );
-
-			this.each( function ( data ) {
-				haystack = data.get( 'title' );
-				data.set( 'search_matched', match.test( haystack ) );
-			} );
 		}
 	});
 	api.Menus.availableMenuItems = new api.Menus.AvailableItemCollection( api.Menus.data.availableMenuItems );
@@ -205,6 +157,10 @@
 					self.close();
 				}
 			} );
+			
+			this.$el.on( 'input', '#custom-menu-item-name.invalid, #custom-menu-item-url.invalid', function() {
+				$( this ).removeClass( 'invalid' );
+			});
 
 			// Load available items if it looks like we'll need them.
 			api.panel( 'menus' ).container.bind( 'expanded', function() {
@@ -374,11 +330,16 @@
 
 		// Adjust the height of each section of items to fit the screen.
 		itemSectionHeight: function() {
-			var sections, totalHeight, accordionHeight;
+			var sections, totalHeight, accordionHeight, diff;
 			totalHeight = window.innerHeight;
 			sections = this.$el.find( '.accordion-section-content' );
 			accordionHeight =  46 * ( 1 + sections.length ) - 16; // Magic numbers.
-			sections.css( 'max-height', totalHeight - accordionHeight );
+			diff = totalHeight - accordionHeight;
+			if ( 120 < diff && 290 > diff ) {
+				sections.css( 'max-height', diff );
+			} else if ( 120 >= diff ) {
+				this.$el.addClass( 'allow-scroll' );
+			}
 		},
 
 		// Highlights a menu item.
@@ -439,33 +400,37 @@
 
 		// Adds the custom menu item to the menu.
 		submitLink: function() {
-			var menu_item,
-				item_name = $( '#custom-menu-item-name' ),
-				item_url = $( '#custom-menu-item-url' );
+			var menuItem,
+				itemName = $( '#custom-menu-item-name' ),
+				itemUrl = $( '#custom-menu-item-url' );
 
 			if ( ! this.currentMenuControl ) {
 				return;
 			}
 
-			if ( '' === item_name.val() || '' === item_url.val() || 'http://' === item_url.val() ) {
+			if ( '' === itemName.val() ) {
+				itemName.addClass( 'invalid' );
+				return;
+			} else if ( '' === itemUrl.val() || 'http://' === itemUrl.val() ) {
+				itemUrl.addClass( 'invalid' );
 				return;
 			}
 
-			menu_item = {
+			menuItem = {
 				'id': 0,
-				'name': item_name.val(),
-				'url': item_url.val(),
+				'name': itemName.val(),
+				'url': itemUrl.val(),
 				'type': 'custom',
 				'type_label': api.Menus.data.l10n.custom_label,
 				'obj_type': 'custom'
 			};
 
-			this.currentMenuControl.addItemToMenu( menu_item );
+			this.currentMenuControl.addItemToMenu( menuItem );
 
 			// Reset the custom link form.
 			// @todo: decide whether this should be done as a callback after adding the item, as it is in nav-menu.js.
-			item_url.val( 'http://' );
-			item_name.val( '' );
+			itemUrl.val( 'http://' );
+			itemName.val( '' );
 		},
 
 		// Opens the panel.
@@ -487,9 +452,6 @@
 			} );
 
 			this.$el.find( '.selected' ).removeClass( 'selected' );
-
-			// Reset search
-			this.collection.doSearch( '' );
 
 			this.$search.focus();
 		},
@@ -523,6 +485,7 @@
 				isEsc = ( event.which === 27 ),
 				isDown = ( event.which === 40 ),
 				isUp = ( event.which === 38 ),
+				isBackTab = ( event.which === 9  && event.shiftKey ),
 				selected = null,
 				firstVisible = this.$el.find( '> .menu-item-tpl:visible:first' ),
 				lastVisible = this.$el.find( '> .menu-item-tpl:visible:last' ),
@@ -559,8 +522,9 @@
 				return;
 			}
 
-			if ( isEnter ) {
-				this.submit();
+			if ( isSearchFocused && isBackTab ) {
+				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
+				event.preventDefault(); // Avoid additional back-tab.
 			} else if ( isEsc ) {
 				this.close( { returnFocus: true } );
 			}
@@ -1071,11 +1035,19 @@
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
 				if ( self.container.next().is( '.customize-control-menu_item' ) ) {
-					$adjacentFocusTarget = self.container.next().find( '.item-edit:first' );
+					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						$adjacentFocusTarget = self.container.next().find( '.item-edit:first' );
+					} else {
+						$adjacentFocusTarget = self.container.next().find( '.item-delete:first' );
+					}
 				} else if ( self.container.prev().is( '.customize-control-menu_item' ) ) {
-					$adjacentFocusTarget = self.container.prev().find( '.item-edit:first' );
+					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
+						$adjacentFocusTarget = self.container.prev().find( '.item-edit:first' );
+					} else {
+						$adjacentFocusTarget = self.container.prev().find( '.item-delete:first' );
+					}
 				} else {
-					$adjacentFocusTarget = self.container.next( '.customize-control-menu' ).find( '.add-new-menu-items:first' );
+					$adjacentFocusTarget = self.container.next( '.customize-control-nav_menu' ).find( '.add-new-menu-item' );
 				}
 
 				self.container.slideUp( function() {
@@ -1095,11 +1067,9 @@
 					menuItemIds.splice( i, 1 );
 					menuControl.setting( menuItemIds );
 
+					wp.a11y.speak( api.Menus.data.l10n.itemDeleted );
+					self.container.remove();
 					$adjacentFocusTarget.focus(); // keyboard accessibility
-					
-					// Hide spinner.
-					spinner.hide();
-					spinner.css( 'visibility', 'hidden' );
 				} );
 			} );
 		},
@@ -1244,7 +1214,7 @@
 				// Remove processing states.
 				self.container.removeClass( 'saving' );
 				processing( processing() - 1 );
-				
+
 				// Hide spinner.
 				spinner.css( 'visibility', 'hidden' );
 			} );
@@ -1391,6 +1361,7 @@
 			// Update UI.
 			var prev = $( this.container ).prev();
 			prev.before( $( this.container ) );
+			wp.a11y.speak( api.Menus.data.l10n.movedUp );
 			// Maybe update parent & depth if it's a sub-item.
 			if ( 0 !== this.params.depth ) {
 				// @todo
@@ -1408,6 +1379,7 @@
 			// Update UI.
 			var next = $( this.container ).next();
 			next.after( $( this.container ) );
+			wp.a11y.speak( api.Menus.data.l10n.movedDown );
 			// Maybe update parent & depth if it's a sub-item.
 			if ( 0 !== this.params.depth ) {
 				// @todo
@@ -1420,6 +1392,7 @@
 		 */
 		moveLeft: function() {
 			this._moveMenuItemDepthByOne( -1 );
+			wp.a11y.speak( api.Menus.data.l10n.movedLeft );
 		},
 
 		/**
@@ -1427,6 +1400,7 @@
 		 */
 		moveRight: function() {
 			this._moveMenuItemDepthByOne( 1 );
+			wp.a11y.speak( api.Menus.data.l10n.movedRight );
 		},
 
 		/**
@@ -1592,7 +1566,6 @@
 			} );
 
 			control._setupAddition();
-			control._setupDeletion();
 			control._applyCardinalOrderClassNames();
 			control._setupLocations();
 		},
@@ -1719,23 +1692,7 @@
 					api.Menus.availableMenuItemsPanel.open( self );
 				} else {
 					api.Menus.availableMenuItemsPanel.close();
-				}
-			} );
-		},
-
-		/**
-		 * Move menu-delete button to section title. Actual deletion is managed with api.Menus.NewMenuControl.
-		 */
-		_setupDeletion: function() {
-			var self = this;
-
-			this.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
-					return;
-				}
-
-				if ( self.$sectionContent.hasClass( 'deleting' ) ) {
-					return;
+					event.stopPropagation();
 				}
 			} );
 		},
@@ -1903,12 +1860,13 @@
 					}
 
 					$( document ).trigger( 'menu-item-added', [ item ] );
+					wp.a11y.speak( api.Menus.data.l10n.itemAdded );
 
 					callback();
 				}
 				// Remove the placeholder.
 				placeholderContainer.remove();
-					
+
 				// Remove this level of the customizer processing state.
 				processing( processing() - 1 );
 			});
@@ -1947,6 +1905,8 @@
 					return;
 				}
 				self.submit();
+				event.stopPropagation();
+				event.preventDefault();
 			} );
 			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function() {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
@@ -2022,7 +1982,7 @@
 					};
 					api.create( menuSettingId, menuSettingId, '', settingArgs );
 					api( menuSettingId ).set( [] ); // Change to mark as dirty.
-				
+
 					// Add the menu control.
 					ControlConstructor = api.controlConstructor.nav_menu;
 					menuControl = new ControlConstructor( menuSettingId, {
@@ -2056,7 +2016,9 @@
 
 					// Clear name field.
 					name.val('');
-				
+
+					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
+
 					// Focus on the new menu section.
 					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
 				}
@@ -2104,6 +2066,8 @@
 							// Remove the option from the theme location dropdowns.
 							dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
 							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+
+							wp.a11y.speak( api.Menus.data.l10n.menuDeleted );
 						}
 						// Hide spinner.
 						spinner.css( 'visibility', 'hidden' );
@@ -2233,7 +2197,7 @@
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
-				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title' ),
+				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title h3' ),
 				id = el.closest( '.accordion-section' ).attr( 'id' ),
 				location = el.closest( '.accordion-section' ).find( '.menu-in-location' ),
 				action = title2.find( '.customize-action' );

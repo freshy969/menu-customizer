@@ -198,18 +198,18 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 	 */
 	public function content_template() {
 		?>
-		<span class="button-secondary add-new-menu-item" tabindex="0">
+		<button type="button" class="button-secondary add-new-menu-item">
 			<?php _e( 'Add Links' ); ?>
-		</span>
-		<span class="reorder-toggle" tabindex="0">
+		</button>
+		<button type="button" class="not-a-button reorder-toggle">
 			<span class="reorder"><?php _ex( 'Reorder', 'Reorder menu items in Customizer' ); ?></span>
 			<span class="reorder-done"><?php _ex( 'Done', 'Cancel reordering menu items in Customizer' ); ?></span>
-		</span>
+		</button>
 		<span class="add-menu-item-loading spinner"></span>
 		<span class="menu-delete-item">
-			<span class="menu-delete" id="delete-menu-{{ data.menu_id }}" tabindex="0">
+			<button type="button" class="not-a-button menu-delete" id="delete-menu-{{ data.menu_id }}">
 				<?php _e( 'Delete menu' ); ?> <span class="screen-reader-text">{{ data.menu_name }}</span>
-			</span>
+			</button>
 		</span>
 		<?php if ( current_theme_supports( 'menus' ) ) : ?>
 			<ul class="menu-settings">
@@ -470,7 +470,7 @@ class WP_New_Menu_Customize_Control extends WP_Customize_Control {
 	 */
 	public function render_content() {
 		?>
-		<span class="button button-primary" id="create-new-menu-submit" tabindex="0"><?php _e( 'Create Menu' ); ?></span>
+		<button type="button" class="button button-primary" id="create-new-menu-submit"><?php _e( 'Create Menu' ); ?></button>
 		<span class="spinner"></span>
 		<?php
 	}

@@ -269,7 +269,7 @@ class WP_Customize_Menus {
 					'id'          => 0,
 					'name'        => _x( 'Home', 'nav menu home label' ),
 					'type'        => 'page',
-					'type_label'  => __( 'Page' ),
+					'type_label'  => __( 'Custom Link' ),
 					'obj_type'    => 'custom',
 				);
 				$items[] = $home;
@@ -421,7 +421,7 @@ class WP_Customize_Menus {
 	public function register_scripts( $wp_scripts ) {
 		$handle = 'menu-customizer';
 		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.js';
-		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'nav-menu' );
+		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'nav-menu', 'wp-a11y' );
 		$wp_scripts->add( $handle, $src, $deps );
 
 		$handle = 'customize-menus-preview';
@@ -467,6 +467,14 @@ class WP_Customize_Menus {
 				'custom_label'    => _x( 'Custom', 'Custom menu item type label.' ),
 				'menuLocation'    => _x( '(Currently set to: %s)', 'Current menu location.' ),
 				'deleteWarn'      => __( 'You are about to permanently delete this menu. "Cancel" to stop, "OK" to delete.' ),
+				'itemAdded'       => __( 'Menu item added' ),
+				'itemDeleted'     => __( 'Menu item deleted' ),
+				'menuAdded'       => __( 'Menu created' ),
+				'menuDeleted'     => __( 'Menu deleted' ),
+				'movedUp'         => __( 'Menu item moved up' ),
+				'movedDown'       => __( 'Menu item moved down' ),
+				'movedLeft'       => __( 'Menu item moved out of submenu' ),
+				'movedRight'      => __( 'Menu item is now a sub-item' ),
 			),
 			'menuItemTransport'    => 'postMessage',
 		);
@@ -1088,7 +1096,7 @@ class WP_Customize_Menus {
 				<div class="accordion-section-content" data-type="search"></div>
 			</div>
 			<div id="new-custom-menu-item" class="accordion-section">
-				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?></h4>
+				<h4 class="accordion-section-title"><?php _e( 'Links' ); ?><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 				<div class="accordion-section-content">
 					<input type="hidden" value="custom" id="custom-menu-item-type" name="menu-item[-1][menu-item-type]" />
 					<p id="menu-item-url-wrap">
@@ -1121,7 +1129,7 @@ class WP_Customize_Menus {
 				foreach ( $post_types as $type ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $type->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span></h4>
+						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 						<div class="accordion-section-content" data-type="<?php echo $type->name; ?>" data-obj_type="post_type"></div>
 					</div>
 					<?php
@@ -1133,7 +1141,7 @@ class WP_Customize_Menus {
 				foreach ( $taxonomies as $tax ) {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $tax->name ); ?>" class="accordion-section">
-						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span></h4>
+						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
 						<div class="accordion-section-content" data-type="<?php echo $tax->name; ?>" data-obj_type="taxonomy"></div>
 					</div>
 					<?php
