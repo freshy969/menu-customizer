@@ -1760,6 +1760,12 @@
 			this.isReordering = showOrHide;
 			this.$sectionContent.toggleClass( 'reordering', showOrHide );
 
+			if ( this.isReordering ) {
+				this.$sectionContent.sortable( 'disable' );
+			} else {
+				this.$sectionContent.sortable( 'enable' );
+			}
+
 			if ( showOrHide ) {
 				_( this.getMenuItemControls() ).each( function( formControl ) {
 					formControl.collapseForm();
