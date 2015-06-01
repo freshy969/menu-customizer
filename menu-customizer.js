@@ -687,8 +687,9 @@
 			if ( expanded ) {
 				wpNavMenu.menuList = section.container.find( '.accordion-section-content:first' );
 				wpNavMenu.targetList = wpNavMenu.menuList;
-				$( '#menu-to-edit' ).removeAttr( 'id' );
 
+				// Add attributes needed by wpNavMenu
+				$( '#menu-to-edit' ).removeAttr( 'id' );
 				wpNavMenu.menuList.attr( 'id', 'menu-to-edit' ).addClass( 'menu' );
 			}
 
@@ -1161,6 +1162,7 @@
 				inputs = $( self.container ).find( ':input[name]' );
 				inputs.each( function() {
 					var name = this.name;
+					name = name.replace( /\[\d+]/, '' ); // Remove the ID-part of the name which is used by nav-menus.php.
 					item[name] = $( this ).val();
 				} );
 			} else {
@@ -1207,7 +1209,7 @@
 						api.control.each( function( control ) {
 							if ( control.params.type === 'menu_item' && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
 								control.params.menu_item_parent_id = id;
-								control.container.find( '.menu-item-parent-id' ).val( id );
+								control.container.find( '.menu-item-data-parent-id' ).val( id );
 								control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
 							}
 						} );
@@ -1665,6 +1667,31 @@
 					} );
 
 					self.setting( menuItemIds );
+				}
+			} );
+
+			menuList.on( 'sortstop', function ( event, ui ) {
+				var id, menuItemControl;
+				id = ui.item.find( '.menu-item-data-db-id' ).val();
+				if ( ! id ) {
+					return;
+				}
+				id = parseInt( id, 10 );
+
+				menuItemControl = api.Menus.getMenuItemControl( id );
+				if ( ! menuItemControl ) {
+					api.control.each( function( control ) {
+						if ( control.params.type === 'menu_item' && control.params.original_id === id ) {
+							menuItemControl = control;
+						}
+					} );
+				}
+
+				if ( menuItemControl ) {
+					// Ensure that the sortable's own stop() callback has fully fired.
+					setTimeout( function () {
+						menuItemControl.updateMenuItem();
+					} );
 				}
 			} );
 
@@ -2179,7 +2206,7 @@
 	/**
 	 * Given a menu item ID, get the control associated with it.
 	 *
-	 * @param {string} menuItemId
+	 * @param {number} menuItemId
 	 * @return {object|null}
 	 */
 	api.Menus.getMenuItemControl = function( menuItemId ) {
