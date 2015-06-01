@@ -4,6 +4,8 @@
 
 	wpNavMenu.originalInit = wpNavMenu.init;
 
+	wpNavMenu.options.menuItemDepthPerLevel = 24;
+
 	wpNavMenu.init = function() {
 		this.jQueryExtensions();
 	};

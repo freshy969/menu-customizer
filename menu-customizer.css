@@ -405,7 +405,7 @@
 }
 
 /* Submenu depths. 30px even on nav-menus.php; need to reduce here for space. */
-/* WARNING: The factors will be hardcoded into the javascript, currently even. @todo varying depth factors in JS. */
+/* WARNING: The factors will be hardcoded into the javascript, currently even. */
 .menu-item-depth-0 { margin-left: 0px; }
 .menu-item-depth-1 { margin-left: 24px; }
 .menu-item-depth-2 { margin-left: 42px; }
