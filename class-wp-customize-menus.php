@@ -1,12 +1,15 @@
 <?php
 /**
- * Customize Menu Class
- *
- * Implements menu management in the Customizer.
+ * Base Customize Menus
  *
  * @package WordPress
  * @subpackage Customize
- * @since 4.2.0
+ */
+
+/**
+ * Base Customize Menus class which implements menu management in the Customizer.
+ *
+ * @since 4.3.0
  */
 class WP_Customize_Menus {
 
@@ -23,6 +26,7 @@ class WP_Customize_Menus {
 	 * Previewed Menus.
 	 *
 	 * @access public
+	 * @var array
 	 */
 	public $previewed_menus;
 
@@ -31,7 +35,7 @@ class WP_Customize_Menus {
 	 *
 	 * @since Menu Customizer 0.3
 	 * @access public
-	 * @param $manager WP_Customize_Manager instance
+	 * @param object $manager An instance of the WP_Customize_Manager class.
 	 */
 	public function __construct( $manager ) {
 		$this->previewed_menus = array();
@@ -162,8 +166,7 @@ class WP_Customize_Menus {
 
 		// For performance reasons, we omit some object properties from the checklist.
 		// The following is a hacky way to restore them when adding non-custom items.
-		// @todo: do we really need this - do we need to populate the description field here? (note: copied from existing core system)
-
+		// @todo: do we really need this - do we need to populate the description field here? (note: copied from existing core system).
 		if ( ! empty( $menu_item_data['obj_type'] ) &&
 			'custom' != $menu_item_data['obj_type'] &&
 			! empty( $menu_item_data['id'] )
@@ -183,7 +186,7 @@ class WP_Customize_Menus {
 			$_menu_items = array_map( 'wp_setup_nav_menu_item', array( $_object ) );
 			$_menu_item = array_shift( $_menu_items );
 
-			// Restore the missing menu item properties
+			// Restore the missing menu item properties.
 			$menu_item_data['menu-item-description'] = $_menu_item->description;
 		}
 
@@ -349,7 +352,7 @@ class WP_Customize_Menus {
 		}
 	}
 
-	/*
+	/**
 	 * Performs post queries for available-item searching.
 	 *
 	 * Based on WP_Editor::wp_link_query().
@@ -523,7 +526,6 @@ class WP_Customize_Menus {
 		) );
 
 		// @todo if ( ! $menus ) : make a "default" menu
-
 		if ( $menus ) {
 			$choices = array( '' => __( '&mdash; Select &mdash;' ) );
 			foreach ( $menus as $menu ) {
@@ -799,7 +801,7 @@ class WP_Customize_Menus {
 	 * Filter for wp_get_nav_menu_items to apply the previewed changes for a setting.
 	 *
 	 * @param array $items
-	 * @param stdClass $menu aka WP_Term
+	 * @param stdClass $menu aka WP_Term.
 	 * @return array
 	 */
 	public function filter_nav_menu_items_for_preview( $items, $menu ) {
@@ -863,7 +865,7 @@ class WP_Customize_Menus {
 		$items = $value; // Ordered array of item ids.
 
 		if ( $original_ids === $items ) {
-			// This menu is completely unchanged - don't need to do anything else
+			// This menu is completely unchanged - don't need to do anything else.
 			return $value;
 		}
 
@@ -940,7 +942,7 @@ class WP_Customize_Menus {
 	 * @param int   $menu_id The ID of the menu. If "0", makes the menu a draft orphan.
 	 * @param int   $item_id The ID of the menu item. If "0", creates a new menu item.
 	 * @param array $data    The new data for the menu item.
-	 * @param int|WP_Error   The menu item's database ID or WP_Error object on failure.
+	 * @param bool  $clone   Whether or not to create a clone of the item.
 	 */
 	public function update_item( $menu_id, $item_id, $data, $clone = false ) {
 		$item = get_post( $item_id );
@@ -1102,7 +1104,6 @@ class WP_Customize_Menus {
 			<?php
 
 			// @todo: consider using add_meta_box/do_accordion_section and making screen-optional?
-
 			// Containers for per-post-type item browsing; items added with JS.
 			$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'object' );
 			if ( $post_types ) {
@@ -1133,7 +1134,6 @@ class WP_Customize_Menus {
 	}
 
 	// Start functionality specific to partial-refresh of menu changes in Customizer preview.
-
 	const RENDER_AJAX_ACTION = 'customize_render_menu_partial';
 	const RENDER_NONCE_POST_KEY = 'render-menu-nonce';
 	const RENDER_QUERY_VAR = 'wp_customize_menu_render';
@@ -1234,7 +1234,7 @@ class WP_Customize_Menus {
 	 */
 	function export_preview_data() {
 
-		// Why not wp_localize_script? Because we're not localizing, and it forces values into strings
+		// Why not wp_localize_script? Because we're not localizing, and it forces values into strings.
 		$exports = array(
 			'renderQueryVar' => self::RENDER_QUERY_VAR,
 			'renderNonceValue' => wp_create_nonce( self::RENDER_AJAX_ACTION ),
@@ -1257,6 +1257,8 @@ class WP_Customize_Menus {
 	 * Render a specific menu via wp_nav_menu() using the supplied arguments.
 	 *
 	 * @see wp_nav_menu()
+	 *
+	 * @throws WP_Customize_Menus_Exception
 	 */
 	function render_menu() {
 		if ( empty( $_POST[ self::RENDER_QUERY_VAR ] ) ) {
@@ -1268,7 +1270,6 @@ class WP_Customize_Menus {
 			$this->manager->remove_preview_signature();
 
 			// @todo Instead of throwing Exceptions, we'll have to switch to passing around WP_Error objects.
-
 			if ( empty( $_POST[ self::RENDER_NONCE_POST_KEY ] ) ) {
 				throw new WP_Customize_Menus_Exception( __( 'Missing nonce param', 'customize-partial-preview-refresh' ) );
 			}
@@ -1313,5 +1314,7 @@ class WP_Customize_Menus {
 	}
 }
 
-
+/**
+ * Customize Menus Exception Class
+ */
 class WP_Customize_Menus_Exception extends Exception {}
