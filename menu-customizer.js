@@ -155,7 +155,7 @@
 					self.close();
 				}
 			} );
-			
+
 			this.$el.on( 'input', '#custom-menu-item-name.invalid, #custom-menu-item-url.invalid', function() {
 				$( this ).removeClass( 'invalid' );
 			});
@@ -334,7 +334,7 @@
 			accordionHeight =  46 * ( 1 + sections.length ) - 16; // Magic numbers.
 			diff = totalHeight - accordionHeight;
 			if ( 120 < diff && 290 > diff ) {
-				sections.css( 'max-height', diff );				
+				sections.css( 'max-height', diff );
 			} else if ( 120 >= diff ) {
 				this.$el.addClass( 'allow-scroll' );
 			}
