@@ -421,7 +421,7 @@ class WP_Customize_Menus {
 	public function register_scripts( $wp_scripts ) {
 		$handle = 'menu-customizer';
 		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.js';
-		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion' );
+		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'nav-menu' );
 		$wp_scripts->add( $handle, $src, $deps );
 
 		$handle = 'customize-menus-preview';
@@ -474,6 +474,26 @@ class WP_Customize_Menus {
 		$data = sprintf( 'var _wpCustomizeMenusSettings = %s;', json_encode( $settings ) );
 		wp_scripts()->add_data( 'menu-customizer', 'data', $data );
 
+		// This is copied from nav-menus.php, and it has an unfortunate object name of `menus`.
+		$nav_menus_l10n = array(
+			'oneThemeLocationNoMenus' => null,
+			'moveUp'       => __( 'Move up one' ),
+			'moveDown'     => __( 'Move down one' ),
+			'moveToTop'    => __( 'Move to the top' ),
+			/* translators: %s: previous item name */
+			'moveUnder'    => __( 'Move under %s' ),
+			/* translators: %s: previous item name */
+			'moveOutFrom'  => __( 'Move out from under %s' ),
+			/* translators: %s: previous item name */
+			'under'        => __( 'Under %s' ),
+			/* translators: %s: previous item name */
+			'outFrom'      => __( 'Out from under %s' ),
+			/* translators: 1: item name, 2: item position, 3: total number of items */
+			'menuFocus'    => __( '%1$s. Menu item %2$d of %3$d.' ),
+			/* translators: 1: item name, 2: item position, 3: parent item name */
+			'subMenuFocus' => __( '%1$s. Sub item number %2$d under %3$s.' ),
+		);
+		wp_localize_script( 'nav-menu', 'menus', $nav_menus_l10n );
 	}
 
 	/**
