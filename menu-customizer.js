@@ -156,7 +156,7 @@
 				}
 			} );
 			
-			this.$el.on( 'input', '#custom-menu-item-name.invalid, #custom-menu-item-url.invalid', function( event ) {
+			this.$el.on( 'input', '#custom-menu-item-name.invalid, #custom-menu-item-url.invalid', function() {
 				$( this ).removeClass( 'invalid' );
 			});
 
