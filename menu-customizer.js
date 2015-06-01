@@ -68,54 +68,6 @@
 		sortByField: function( fieldName ) {
 			this.sort_key = fieldName;
 			this.sort();
-		},
-
-		// Controls searching on the current menu item collection.
-		doSearch: function( value ) {
-
-			// Don't do anything if we've already done this search.
-			// Useful because the search handler fires multiple times per keystroke.
-			if ( this.terms === value ) {
-				return;
-			}
-
-			// Updates terms with the value passed.
-			this.terms = value;
-
-			// If we have terms, run a search.
-			if ( this.terms.length > 0 ) {
-				this.search( this.terms );
-			}
-
-			// If search is blank, show all items.
-			// Useful for resetting the views when you clean the input.
-			if ( this.terms === '' ) {
-				this.each( function ( menu_item ) {
-					menu_item.set( 'search_matched', true );
-				} );
-			}
-		},
-
-		// Performs a search within the collection.
-		// @uses RegExp
-		// @todo: this algorithm is slow and doesn't work; also, sort results by relevance.
-		// (was based on widget filtering, which is an entirely different use-case).
-		// Maybe look at the internal links search methods for inspiration, per @nacin.
-		search: function( term ) {
-			var match, haystack;
-
-			// Escape the term string for RegExp meta characters.
-			term = term.replace( /[-\/\\^$*+?.()|[\]{}]/g, '\\$&' );
-
-			// Consider spaces as word delimiters and match the whole string
-			// so that matching terms can be combined.
-			term = term.replace( / /g, ')(?=.*' );
-			match = new RegExp( '^(?=.*' + term + ').+', 'i' );
-
-			this.each( function ( data ) {
-				haystack = data.get( 'title' );
-				data.set( 'search_matched', match.test( haystack ) );
-			} );
 		}
 	});
 	api.Menus.availableMenuItems = new api.Menus.AvailableItemCollection( api.Menus.data.availableMenuItems );
@@ -498,9 +450,6 @@
 			} );
 
 			this.$el.find( '.selected' ).removeClass( 'selected' );
-
-			// Reset search
-			this.collection.doSearch( '' );
 
 			this.$search.focus();
 		},
