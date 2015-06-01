@@ -1,6 +1,7 @@
 {
 	"preset": "wordpress",
 	"requirePaddingNewLinesBeforeLineComments": null,
+	"requireCamelCaseOrUpperCaseIdentifiers": null,
 	"excludeFiles": [
 		"**/vendor/**",
 		"**/*.min.js",

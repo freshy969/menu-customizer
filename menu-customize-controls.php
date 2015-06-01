@@ -1,14 +1,25 @@
 <?php
 /**
  * Custom Customizer Controls for the Menu Customizer.
+ *
+ * @package WordPress
+ * @subpackage Customize
  */
 
 /**
  * Customize Menu Panel Class
  *
  * Needed to add screen options.
+ *
+ * @since 4.3.0
  */
 class WP_Customize_Menus_Panel extends WP_Customize_Panel {
+	/**
+	 * Control type
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $type = 'menus';
 
 	/**
@@ -83,6 +94,12 @@ class WP_Customize_Menus_Panel extends WP_Customize_Panel {
  * Custom section only needed in JS.
  */
 class WP_Customize_Menu_Section extends WP_Customize_Section {
+	/**
+	 * Control type
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $type = 'menu';
 }
 
@@ -92,6 +109,12 @@ class WP_Customize_Menu_Section extends WP_Customize_Section {
  * Implements the new-menu-ui toggle button instead of a regular section.
  */
 class WP_Customize_New_Menu_Section extends WP_Customize_Section {
+	/**
+	 * Control type
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $type = 'new_menu';
 
 	/**
@@ -113,14 +136,26 @@ class WP_Customize_New_Menu_Section extends WP_Customize_Section {
 	}
 }
 
-
 /**
  * Customize Menu Location Control Class
  *
  * This custom control is only needed for JS.
  */
 class WP_Customize_Menu_Location_Control extends WP_Customize_Control {
+	/**
+	 * Control type
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $type = 'menu_location';
+
+	/**
+	 * Location ID
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $location_id = '';
 
 	/**
@@ -170,7 +205,20 @@ class WP_Customize_Menu_Location_Control extends WP_Customize_Control {
  * Customize Nav Menu Control Class
  */
 class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
+	/**
+	 * Control type
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $type = 'nav_menu';
+
+	/**
+	 * Menu ID
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $menu_id;
 
 	/**
@@ -222,7 +270,7 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 
 					<li class="customize-control customize-control-checkbox">
 						<input type="checkbox" data-menu-id="{{ data.menu_id }}" data-location-id="<?php echo esc_attr( $location ); ?>" id="menu-locations-{{ data.menu_id }}-<?php echo esc_attr( $location ); ?>" /> <label for="menu-locations-{{ data.menu_id }}-<?php echo esc_attr( $location ); ?>"><?php echo $description; ?></label>
-						<span class="theme-location-set"> <?php printf( _x( "(Current: %s)", 'Current menu location' ), '<span class="current-menu-location-name-' . $location . '"></span>' ); ?> </span>
+						<span class="theme-location-set"> <?php printf( _x( '(Current: %s)', 'Current menu location' ), '<span class="current-menu-location-name-' . $location . '"></span>' ); ?> </span>
 					</li>
 
 				<?php endforeach; ?>
@@ -237,12 +285,60 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
  * Customize Menu Item Control Class
  */
 class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
+	/**
+	 * Control type
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $type = 'menu_item';
+
+	/**
+	 * Menu ID
+	 *
+	 * @access public
+	 * @var int
+	 */
 	public $menu_id = 0;
+
+	/**
+	 * Item ID
+	 *
+	 * @access public
+	 * @var object
+	 */
 	public $item;
+
+	/**
+	 * Menu item ID
+	 *
+	 * @access public
+	 * @var int
+	 */
 	public $menu_item_id = 0;
+
+	/**
+	 * Original menu item ID
+	 *
+	 * @access public
+	 * @var int
+	 */
 	public $original_id = 0;
+
+	/**
+	 * Depth
+	 *
+	 * @access public
+	 * @var int
+	 */
 	public $depth = 0;
+
+	/**
+	 * Menu item parent ID
+	 *
+	 * @access public
+	 * @var int
+	 */
 	public $menu_item_parent_id = 0;
 
 	/**
@@ -250,9 +346,9 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 	 *
 	 * @uses WP_Customize_Control::__construct()
 	 *
-	 * @param WP_Customize_Manager $manager
-	 * @param string $id
-	 * @param array $args
+	 * @param object $manager An instance of the WP_Customize_Manager class.
+	 * @param string $id      The control ID.
+	 * @param array  $args    Overrides class property defaults.
 	 */
 	public function __construct( $manager, $id, $args = array() ) {
 		parent::__construct( $manager, $id, $args );
@@ -328,9 +424,8 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 	/**
 	 * Determine the depth of a menu item by recursion.
 	 *
-	 * @param int $parent_id The id of the parent menu item
-	 * @param int $depth Inverse current item depth
-	 *
+	 * @param int $parent_id The id of the parent menu item.
+	 * @param int $depth Inverse current item depth.
 	 * @return int Depth of the original menu item.
 	 */
 	public function depth( $parent_id, $depth = 0 ) {
@@ -461,6 +556,12 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
  * New Menu Customize Control Class
  */
 class WP_New_Menu_Customize_Control extends WP_Customize_Control {
+	/**
+	 * Control type
+	 *
+	 * @access public
+	 * @var string
+	 */
 	public $type = 'new_menu';
 
 	/**
