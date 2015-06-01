@@ -2350,7 +2350,7 @@
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
-				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title' ),
+				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title h3' ),
 				id = el.closest( '.accordion-section' ).attr( 'id' ),
 				location = el.closest( '.accordion-section' ).find( '.menu-in-location' ),
 				action = title2.find( '.customize-action' );
