@@ -7,7 +7,7 @@ Manage your Menus in the Customizer. WordPress core feature-plugin.
 **Tags:** [menus](https://wordpress.org/plugins/tags/menus), [custom menus](https://wordpress.org/plugins/tags/custom menus), [customizer](https://wordpress.org/plugins/tags/customizer), [theme customizer](https://wordpress.org/plugins/tags/theme customizer), [gsoc](https://wordpress.org/plugins/tags/gsoc)  
 **Requires at least:** 4.3-alpha  
 **Tested up to:** trunk  
-**Stable tag:** 0.4  
+**Stable tag:** 0.5  
 **License:** GPLv2  
 
 [![Build Status](https://travis-ci.org/voldemortensen/menu-customizer.png?branch=master)](https://travis-ci.org/voldemortensen/menu-customizer) 
@@ -35,6 +35,10 @@ Several improvements to the Customizer are also in the works as a part of this p
 ## Changelog ##
 
 See full details here: https://plugins.trac.wordpress.org/log/menu-customizer
+### 0.5 ###
+* Many, many fixes and improvements, see the full changelog and a summary on github: https://github.com/voldemortensen/menu-customizer/issues?q=is%3Aissue+is%3Aclosed+milestone%3A0.5
+* Note that WordPress 4.3 alpa is now required.
+
 ### 0.4 ###
 * In-Customizer previewing of “original” menu item links.
 * A redesign of the screen options popup.

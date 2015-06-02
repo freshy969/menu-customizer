@@ -1265,52 +1265,40 @@ class WP_Customize_Menus {
 			return;
 		}
 
-		$generic_error = __( 'An error has occurred. Please reload the page and try again.', 'customize-partial-preview-refresh' );
-		try {
-			$this->manager->remove_preview_signature();
+		$this->manager->remove_preview_signature();
 
-			// @todo Instead of throwing Exceptions, we'll have to switch to passing around WP_Error objects.
-			if ( empty( $_POST[ self::RENDER_NONCE_POST_KEY ] ) ) {
-				throw new WP_Customize_Menus_Exception( __( 'Missing nonce param', 'customize-partial-preview-refresh' ) );
-			}
-			if ( ! is_customize_preview() ) {
-				throw new WP_Customize_Menus_Exception( __( 'Expected customizer preview', 'customize-partial-preview-refresh' ) );
-			}
-			if ( ! check_ajax_referer( self::RENDER_AJAX_ACTION, self::RENDER_NONCE_POST_KEY, false ) ) {
-				throw new WP_Customize_Menus_Exception( __( 'Nonce check failed. Reload and try again?', 'customize-partial-preview-refresh' ) );
-			}
-			if ( ! current_user_can( 'edit_theme_options' ) ) {
-				throw new WP_Customize_Menus_Exception( __( 'Current user cannot!', 'customize-partial-preview-refresh' ) );
-			}
-			if ( ! isset( $_POST['wp_nav_menu_args'] ) ) {
-				throw new WP_Customize_Menus_Exception( __( 'Missing wp_nav_menu_args param', 'customize-partial-preview-refresh' ) );
-			}
-			if ( ! isset( $_POST['wp_nav_menu_args_hash'] ) ) {
-				throw new WP_Customize_Menus_Exception( __( 'Missing wp_nav_menu_args_hash param', 'customize-partial-preview-refresh' ) );
-			}
-			$wp_nav_menu_args_hash = wp_unslash( sanitize_text_field( $_POST['wp_nav_menu_args_hash'] ) );
-			$wp_nav_menu_args = json_decode( wp_unslash( $_POST['wp_nav_menu_args'] ), true );
-			if ( json_last_error() ) {
-				throw new WP_Customize_Menus_Exception( sprintf( __( 'JSON Error: %s', 'customize-partial-preview-refresh' ), json_last_error() ) );
-			}
-			if ( ! is_array( $wp_nav_menu_args ) ) {
-				throw new WP_Customize_Menus_Exception( __( 'Expected wp_nav_menu_args to be an array', 'customize-partial-preview-refresh' ) );
-			}
-			if ( $this->hash_nav_menu_args( $wp_nav_menu_args ) !== $wp_nav_menu_args_hash ) {
-				throw new WP_Customize_Menus_Exception( __( 'Supplied wp_nav_menu_args does not hash to be wp_nav_menu_args_hash', 'customize-partial-preview-refresh' ) );
-			}
-
-			$wp_nav_menu_args['echo'] = false;
-			wp_send_json_success( wp_nav_menu( $wp_nav_menu_args ) );
-		} catch ( Exception $e ) {
-			if ( $e instanceof WP_Customize_Menus_Exception && ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ) {
-				$message = $e->getMessage();
-			} else {
-				trigger_error( esc_html( sprintf( '%s in %s: %s', get_class( $e ), __FUNCTION__, $e->getMessage() ) ), E_USER_WARNING );
-				$message = $generic_error;
-			}
-			wp_send_json_error( compact( 'message' ) );
+		if ( empty( $_POST[ self::RENDER_NONCE_POST_KEY ] ) ) {
+			wp_send_json_error( 'missing_nonce_param' );
 		}
+		if ( ! is_customize_preview() ) {
+			wp_send_json_error( 'expected_customize_preview' );
+		}
+		if ( ! check_ajax_referer( self::RENDER_AJAX_ACTION, self::RENDER_NONCE_POST_KEY, false ) ) {
+			wp_send_json_error( 'nonce_check_fail' );
+		}
+		if ( ! current_user_can( 'edit_theme_options' ) ) {
+			wp_send_json_error( 'unauthorized' );
+		}
+		if ( ! isset( $_POST['wp_nav_menu_args'] ) ) {
+			wp_send_json_error( 'missing_param' );
+		}
+		if ( ! isset( $_POST['wp_nav_menu_args_hash'] ) ) {
+			wp_send_json_error( 'missing_param' );
+		}
+		$wp_nav_menu_args_hash = sanitize_text_field( wp_unslash( $_POST['wp_nav_menu_args_hash'] ) );
+		$wp_nav_menu_args = json_decode( wp_unslash( $_POST['wp_nav_menu_args'] ), true );
+		if ( json_last_error() ) {
+			wp_send_json_error( 'json_parse_error' );
+		}
+		if ( ! is_array( $wp_nav_menu_args ) ) {
+			wp_send_json_error( 'wp_nav_menu_args_not_array' );
+		}
+		if ( $this->hash_nav_menu_args( $wp_nav_menu_args ) !== $wp_nav_menu_args_hash ) {
+			wp_send_json_error( 'wp_nav_menu_args_hash_mismatch' );
+		}
+
+		$wp_nav_menu_args['echo'] = false;
+		wp_send_json_success( wp_nav_menu( $wp_nav_menu_args ) );
 	}
 }
 
