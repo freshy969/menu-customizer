@@ -1005,8 +1005,8 @@ class WP_Customize_Menus {
 				<dl class="menu-item-bar">
 					<dt class="menu-item-handle">
 						<span class="item-type">{{ data.type_label }}</span>
-						<span class="item-title">{{{ data.name }}}</span>
-						<a class="item-add" href="#">Add Menu Item</a>
+						<span class="item-title">{{ data.name }}</span>
+						<a class="item-add" href="#"><?php _e( 'Add Menu Item' ); ?></a>
 					</dt>
 				</dl>
 			</div>
@@ -1038,10 +1038,10 @@ class WP_Customize_Menus {
 				<?php
 				printf(
 					'<span class="menus-move-up" tabindex="0">%1$s</span><span class="menus-move-down" tabindex="0">%2$s</span><span class="menus-move-left" tabindex="0">%3$s</span><span class="menus-move-right" tabindex="0">%4$s</span>',
-					esc_html__( 'Move up' ),
-					esc_html__( 'Move down' ),
-					esc_html__( 'Move one level up' ),
-					esc_html__( 'Move one level down' )
+					__( 'Move up' ),
+					__( 'Move down' ),
+					__( 'Move one level up' ),
+					__( 'Move one level down' )
 				);
 				?>
 			</div>
@@ -1083,19 +1083,21 @@ class WP_Customize_Menus {
 					<input type="hidden" value="custom" id="custom-menu-item-type" name="menu-item[-1][menu-item-type]" />
 					<p id="menu-item-url-wrap">
 						<label class="howto" for="custom-menu-item-url">
-							<span>URL</span>
+							<span><?php _e( 'URL' ); ?></span>
 							<input id="custom-menu-item-url" name="menu-item[-1][menu-item-url]" type="text" class="code menu-item-textbox" value="http://">
 						</label>
 					</p>
 					<p id="menu-item-name-wrap">
 						<label class="howto" for="custom-menu-item-name">
-							<span>Link Text</span>
+							<span><?php _e( 'Link Text' ); ?></span>
 							<input id="custom-menu-item-name" name="menu-item[-1][menu-item-title]" type="text" class="regular-text menu-item-textbox">
 						</label>
 					</p>
 					<p class="button-controls">
 						<span class="add-to-menu">
-							<input type="submit" class="button-secondary submit-add-to-menu right" value="Add to Menu" name="add-custom-menu-item" id="custom-menu-item-submit">
+							<input type="submit" class="button-secondary submit-add-to-menu right" value="
+							Add to Menu
+							" name="add-custom-menu-item" id="custom-menu-item-submit">
 							<span class="spinner"></span>
 						</span>
 					</p>
@@ -1111,7 +1113,7 @@ class WP_Customize_Menus {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $type->name ); ?>" class="accordion-section">
 						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
-						<div class="accordion-section-content" data-type="<?php echo $type->name; ?>" data-obj_type="post_type"></div>
+						<div class="accordion-section-content" data-type="<?php echo $type->name; ?>" data-object-type="post_type"></div>
 					</div>
 					<?php
 				}

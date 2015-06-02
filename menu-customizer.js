@@ -174,7 +174,7 @@
 				    visibleHeight = self.$el.find( '.accordion-section.open' ).height();
 				if ( ! self.loading && $( this ).scrollTop() > 3 / 4 * totalHeight - visibleHeight ) {
 					var type = $( this ).data( 'type' ),
-					    obj_type = $( this ).data( 'obj_type' );
+					    obj_type = $( this ).data( 'object-type' );
 					if ( 'search' === type ) {
 						if ( self.searchTerm ) {
 							self.doSearch( self.pages.search );
