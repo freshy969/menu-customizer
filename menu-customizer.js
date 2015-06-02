@@ -2293,12 +2293,13 @@
 	 */
 	function setupUIPreviewing() {
 		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function( e ) {
-			var el = $( e.currentTarget ),
-				name = el.val(),
-				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
-				title2 = el.closest( '.accordion-section' ).find( '.customize-section-title h3' ),
-				id = el.closest( '.accordion-section' ).attr( 'id' ),
-				location = el.closest( '.accordion-section' ).find( '.menu-in-location' ),
+			var input = $( e.currentTarget ),
+				section = input.closest( '.accordion-section' ),
+				name = input.val(),
+				title = section.find( '.accordion-section-title' ),
+				title2 = section.find( '.customize-section-title h3' ),
+				id = section.attr( 'id' ),
+				location = section.find( '.menu-in-location' ),
 				action = title2.find( '.customize-action' );
 			// Empty names are not allowed (will not be saved), don't update to one.
 			if ( name ) {
@@ -2313,6 +2314,14 @@
 				id = id.replace( 'accordion-section-nav_menus[', '' );
 				id = id.replace( ']', '' );
 				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
+
+				// Update menu name in other location checkboxes.
+				section.find( '.customize-control-checkbox input' ).each( function() {
+					var locationId = $( this ).data( 'location-id' );
+					if ( $( this ).prop( 'checked' ) ) {
+						$( '.current-menu-location-name-' + locationId ).text( name );
+					}
+				} );
 			}
 		} );
 		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e ) {
