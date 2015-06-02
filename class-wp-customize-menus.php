@@ -269,17 +269,17 @@ class WP_Customize_Menus {
 			if ( 0 === $page && 'page' === $type ) {
 				// Add "Home" link. Treat as a page, but switch to custom on add.
 				$home = array(
-					'id'          => 0,
-					'name'        => _x( 'Home', 'nav menu home label' ),
-					'type'        => 'page',
-					'type_label'  => __( 'Custom Link' ),
-					'obj_type'    => 'custom',
+					'id'               => 0,
+					'name'             => _x( 'Home', 'nav menu home label' ),
+					'type'             => 'page',
+					'objectTypeLabel'  => __( 'Custom Link' ),
+					'obj_type'         => 'custom',
 				);
 				$items[] = $home;
 			}
 			$args = array(
-				'numberposts' => 10,
-				'offset'        => 10 * $page,
+				'numberposts'    => 10,
+				'offset'         => 10 * $page,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
 				'post_type'      => $type,
@@ -287,11 +287,11 @@ class WP_Customize_Menus {
 			$posts = get_posts( $args );
 			foreach ( $posts as $post ) {
 				$items[] = array(
-					'id'         => 'post-' . $post->ID,
-					'name'       => $post->post_title,
-					'type'       => $type,
-					'type_label' => get_post_type_object( $type )->labels->singular_name,
-					'obj_type'   => 'post_type',
+					'id'              => 'post-' . $post->ID,
+					'name'            => $post->post_title,
+					'type'            => $type,
+					'objectTypeLabel' => get_post_type_object( $type )->labels->singular_name,
+					'obj_type'        => 'post_type',
 				);
 			}
 		} else {
@@ -311,11 +311,11 @@ class WP_Customize_Menus {
 
 			foreach ( $terms as $term ) {
 				$items[] = array(
-					'id'         => 'term-' . $term->term_id,
-					'name'       => $term->name,
-					'type'       => $type,
-					'type_label' => get_taxonomy( $type )->labels->singular_name,
-					'obj_type'   => 'taxonomy',
+					'id'              => 'term-' . $term->term_id,
+					'name'            => $term->name,
+					'type'            => $type,
+					'objectTypeLabel' => get_taxonomy( $type )->labels->singular_name,
+					'obj_type'        => 'taxonomy',
 				);
 			}
 		}
