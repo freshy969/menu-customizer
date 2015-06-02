@@ -433,9 +433,13 @@
 .menu-item-depth-10 > .menu-item-bar { margin-right: 120px; }
 .menu-item-depth-11 > .menu-item-bar { margin-right: 128px; }
 
-.menu .sortable-placeholder {
-	float: left !important;
+.control-section-menu .menu .sortable-placeholder {
+	margin-top: 0;
+	margin-bottom: 1px;
+	max-width: calc(100% - 2px);
+	float: left;
 	display: list-item;
+	border-color: #a0a5aa;
 }
 
 .menu-item-depth-0 .menu-item-transport { margin-left: 0px; }
