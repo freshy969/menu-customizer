@@ -478,6 +478,7 @@ class WP_Customize_Menus {
 				'movedDown'       => __( 'Menu item moved down' ),
 				'movedLeft'       => __( 'Menu item moved out of submenu' ),
 				'movedRight'      => __( 'Menu item is now a sub-item' ),
+				'customizingMenus' => _x( 'Customizing &#9656; Menus', '&#9656 is the unicode right-pointing triangle' ),
 			),
 			'menuItemTransport'    => 'postMessage',
 		);

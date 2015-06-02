@@ -2046,9 +2046,9 @@
 					sectionId = 'nav_menus[' + response.data.id + ']';
 					sectionParams = {
 						id: sectionId,
-						active: true,
 						panel: 'menus',
 						title: response.data.name,
+						customizeAction: api.Menus.data.l10n.customizingMenus,
 						type: 'menu',
 						priority: priority
 					};
