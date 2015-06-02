@@ -167,11 +167,11 @@ class WP_Customize_Menus {
 		// For performance reasons, we omit some object properties from the checklist.
 		// The following is a hacky way to restore them when adding non-custom items.
 		// @todo: do we really need this - do we need to populate the description field here? (note: copied from existing core system).
-		if ( ! empty( $menu_item_data['obj_type'] ) &&
-			'custom' != $menu_item_data['obj_type'] &&
+		if ( ! empty( $menu_item_data['objectType'] ) &&
+			'custom' != $menu_item_data['objectType'] &&
 			! empty( $menu_item_data['id'] )
 		) {
-			switch ( $menu_item_data['obj_type'] ) {
+			switch ( $menu_item_data['objectType'] ) {
 				case 'post_type' :
 					$id = absint( str_replace( 'post-', '', $menu_item_data['id'] ) );
 					$_object = get_post( $id );
@@ -191,7 +191,7 @@ class WP_Customize_Menus {
 		}
 
 		// Make the "Home" item into the custom link that it actually is.
-		if ( 'page' == $menu_item_data['type'] && 'custom' == $menu_item_data['obj_type'] ) {
+		if ( 'page' == $menu_item_data['type'] && 'custom' == $menu_item_data['objectType'] ) {
 			$menu_item_data['type'] = 'custom';
 			$menu_item_data['url'] = home_url( '/' );
 		}
@@ -201,7 +201,7 @@ class WP_Customize_Menus {
 			'menu-item-db-id'        => 0,
 			'menu-item-object-id'    => $id,
 			'menu-item-object'       => ( isset( $menu_item_data['type'] ) ? $menu_item_data['type'] : '' ),
-			'menu-item-type'         => ( isset( $menu_item_data['obj_type'] ) ? $menu_item_data['obj_type'] : '' ),
+			'menu-item-type'         => ( isset( $menu_item_data['objectType'] ) ? $menu_item_data['objectType'] : '' ),
 			'menu-item-title'        => ( isset( $menu_item_data['name'] ) ? $menu_item_data['name'] : '' ),
 			'menu-item-url'          => ( isset( $menu_item_data['url'] ) ? $menu_item_data['url'] : '' ),
 			'menu-item-description'  => ( isset( $menu_item_data['menu-item-description'] ) ? $menu_item_data['menu-item-description'] : '' ),
@@ -273,7 +273,7 @@ class WP_Customize_Menus {
 					'name'             => _x( 'Home', 'nav menu home label' ),
 					'type'             => 'page',
 					'objectTypeLabel'  => __( 'Custom Link' ),
-					'obj_type'         => 'custom',
+					'objectType'       => 'custom',
 				);
 				$items[] = $home;
 			}
@@ -291,7 +291,7 @@ class WP_Customize_Menus {
 					'name'            => $post->post_title,
 					'type'            => $type,
 					'objectTypeLabel' => get_post_type_object( $type )->labels->singular_name,
-					'obj_type'        => 'post_type',
+					'objectType'      => 'post_type',
 				);
 			}
 		} else {
@@ -315,7 +315,7 @@ class WP_Customize_Menus {
 					'name'            => $term->name,
 					'type'            => $type,
 					'objectTypeLabel' => get_taxonomy( $type )->labels->singular_name,
-					'obj_type'        => 'taxonomy',
+					'objectType'      => 'taxonomy',
 				);
 			}
 		}
@@ -393,7 +393,7 @@ class WP_Customize_Menus {
 				'id'         => 'post-' . $post->ID,
 				'name'       => trim( esc_html( strip_tags( get_the_title( $post ) ) ) ),
 				'type'       => $post->post_type,
-				'type_label' => $pts[ $post->post_type ]->labels->singular_name,
+				'objectTypeLabel' => $pts[ $post->post_type ]->labels->singular_name,
 				'obj_type'   => 'post_type',
 			);
 		}
@@ -409,7 +409,7 @@ class WP_Customize_Menus {
 				'id'         => 'term-' . $term->term_id,
 				'name'       => $term->name,
 				'type'       => $term->taxonomy,
-				'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
+				'objectTypeLabel' => get_taxonomy( $term->taxonomy )->labels->singular_name,
 				'obj_type'   => 'taxonomy',
 			);
 		}
@@ -1004,7 +1004,7 @@ class WP_Customize_Menus {
 			<div id="menu-item-tpl-{{ data.id }}" class="menu-item-tpl" data-menu-item-id="{{ data.id }}">
 				<dl class="menu-item-bar">
 					<dt class="menu-item-handle">
-						<span class="item-type">{{ data.type_label }}</span>
+						<span class="item-type">{{ data.objectTypeLabel }}</span>
 						<span class="item-title">{{ data.name }}</span>
 						<a class="item-add" href="#"><?php _e( 'Add Menu Item' ); ?></a>
 					</dt>
@@ -1014,7 +1014,7 @@ class WP_Customize_Menus {
 
 		<script type="text/html" id="tmpl-available-menu-item-type">
 			<div id="available-menu-items-{{ data.type }}" class="accordion-section">
-				<h4 class="accordion-section-title">{{ data.type_label }}</h4>
+				<h4 class="accordion-section-title">{{ data.objectTypeLabel }}</h4>
 				<div class="accordion-section-content">
 				</div>
 			</div>
@@ -1026,7 +1026,7 @@ class WP_Customize_Menus {
 					<dl class="menu-item-bar">
 						<dt class="menu-item-handle">
 							<span class="spinner" style="visibility: visible;"></span>
-							<span class="item-type">{{ data.type_label }}</span>
+							<span class="item-type">{{ data.objectTypeLabel }}</span>
 							<span class="item-title menu-item-title">{{{ data.name }}}</span>
 						</dt>
 					</dl>
@@ -1125,7 +1125,7 @@ class WP_Customize_Menus {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $tax->name ); ?>" class="accordion-section">
 						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
-						<div class="accordion-section-content" data-type="<?php echo $tax->name; ?>" data-obj_type="taxonomy"></div>
+						<div class="accordion-section-content" data-type="<?php echo $tax->name; ?>" data-object-type="taxonomy"></div>
 					</div>
 					<?php
 				}
