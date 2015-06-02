@@ -841,17 +841,17 @@
 		// Update theme location checkboxes.
 		updateMenuLocationCheckboxes: function( to, from ) {
 			var locationNames = $( '.current-menu-location-name-' + this.params.locationId ),
-			    setTo = locationNames.parent(),
+				setTo = locationNames.parent(),
 				oldBox = $( '#menu-locations-' + from + '-' + this.params.locationId ),
 				newBox = $( '#menu-locations-' + to + '-' + this.params.locationId ),
-			    menuName;
+				menuName;
 			if ( 0 === to ) {
 				setTo.hide();
 				oldBox.prop( 'checked', false );
 			} else if ( ! to ) {
 				setTo.hide();
 			} else {
-				menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
+				menuName = api.section( 'nav_menus[' + to + ']' ).container.find( '.live-update-section-title' ).val();
 				setTo.show();
 				locationNames.text( menuName );
 				oldBox.prop( 'checked', false );
