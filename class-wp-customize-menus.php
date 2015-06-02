@@ -394,7 +394,7 @@ class WP_Customize_Menus {
 				'name'       => trim( esc_html( strip_tags( get_the_title( $post ) ) ) ),
 				'type'       => $post->post_type,
 				'type_label' => $pts[ $post->post_type ]->labels->singular_name,
-				'obj_type'   => 'post',
+				'obj_type'   => 'post_type',
 			);
 		}
 		// Query taxonomy terms.
