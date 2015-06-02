@@ -501,7 +501,6 @@ class WP_Customize_Menus {
 		$this->manager->register_panel_type( 'WP_Customize_Menus_Panel' );
 		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Control' );
 		$this->manager->register_control_type( 'WP_Customize_Menu_Item_Control' );
-		$this->manager->register_section_type( 'WP_Customize_Menu_Section' );
 
 		// Create a panel for Menus.
 		$this->manager->add_panel( new WP_Customize_Menus_Panel( $this->manager, 'menus', array(

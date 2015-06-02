@@ -2059,7 +2059,6 @@
 						params: sectionParams
 					} );
 					api.section.add( sectionId, menuSection );
-					api.section( sectionId ).activate(); // @todo core this shouldn't be necessary.
 
 					// Register the menu control setting.
 					menuSettingId = 'nav_menu_' + response.data.id;
