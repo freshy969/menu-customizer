@@ -139,11 +139,11 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test preview method.
+	 * Test preview method for updated menu.
 	 *
 	 * @see WP_Customize_Nav_Menu_Setting::preview()
 	 */
-	function test_preview() {
+	function test_preview_updated() {
 		do_action( 'customize_register', $this->wp_customize );
 
 		$menu_id = wp_update_nav_menu_object( 0, array(
@@ -176,6 +176,38 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertEquals( 1, $value['parent'] );
 		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
 		$this->assertEqualSets( $value, wp_array_slice_assoc( $term, array_keys( $value ) ) );
+
+		$menu_object = wp_get_nav_menu_object( $menu_id );
+		$this->assertEquals( (object) $term, $menu_object );
+		$this->assertEquals( $post_value['name'], $menu_object->name );
+	}
+
+	/**
+	 * Test preview method for inserted menu.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::preview()
+	 */
+	function test_preview_inserted() {
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_id = -123;
+		$post_value = array(
+			'name' => 'New Menu Name 1',
+			'description' => 'New Menu Description 1',
+			'parent' => 0,
+		);
+		$setting_id = "nav_menu[$menu_id]";
+		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
+
+		$this->wp_customize->set_post_value( $setting->id, $post_value );
+		$setting->preview();
+		$value = $setting->value();
+		$this->assertEquals( $post_value, $value );
+
+		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
+		$this->assertNotEmpty( $term );
+		$this->assertNotInstanceOf( 'WP_Error', $term );
+		$this->assertEqualSets( $post_value, wp_array_slice_assoc( $term, array_keys( $value ) ) );
 
 		$menu_object = wp_get_nav_menu_object( $menu_id );
 		$this->assertEquals( (object) $term, $menu_object );
