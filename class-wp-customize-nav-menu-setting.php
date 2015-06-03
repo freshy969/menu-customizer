@@ -207,8 +207,13 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		$menu = $this->value();
 
 		// Handle deleted menus.
-		if ( is_null( $menu ) ) {
+		if ( false === $menu ) {
 			return false;
+		}
+
+		// Handle sanitization failure by preventing short-circuiting.
+		if ( null === $menu ) {
+			return $pre;
 		}
 
 		$_term = (object) array_merge(
@@ -260,9 +265,15 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * we remove that in this override.
 	 *
 	 * @param array $value The value to sanitize.
-	 * @return array|null Null if an input isn't valid, otherwise the sanitized value.
+	 * @return array|false|null Null if an input isn't valid. False if it is marked for deletion. Otherwise the sanitized value.
 	 */
 	public function sanitize( $value ) {
+		// Menu is marked for deletion.
+		if ( false === $value ) {
+			return $value;
+		}
+
+		// Invalid.
 		if ( ! is_array( $value ) ) {
 			return null;
 		}

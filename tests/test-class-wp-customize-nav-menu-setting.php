@@ -235,8 +235,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertInternalType( 'array', $setting->value() );
 		$this->assertInternalType( 'array', get_term( $menu_id, 'nav_menu', ARRAY_A ) );
 		$setting->preview();
-		$this->assertNull( $setting->value() );
-
+		$this->assertFalse( $setting->value() );
 		$this->assertFalse( get_term( $menu_id, 'nav_menu', ARRAY_A ) );
 	}
 
@@ -352,6 +351,42 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertEquals( $menu_id, $update_result['previous_term_id'] );
 		$this->assertNull( $update_result['error'] );
 		$this->assertEquals( 'inserted', $update_result['status'] );
+	}
+
+	/**
+	 * Test protected update() method via the save() method, for deleted menu.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::update()
+	 */
+	function test_save_deleted() {
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_name = 'Lorem Ipsum';
+		$menu_id = wp_create_nav_menu( $menu_name );
+		$setting_id = "nav_menu[$menu_id]";
+		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
+
+		$menu = wp_get_nav_menu_object( $menu_id );
+		$this->assertEquals( $menu_name, $menu->name );
+
+		$this->wp_customize->set_post_value( $setting_id, false );
+		$setting->save();
+
+		$this->assertFalse( wp_get_nav_menu_object( $menu_id ) );
+
+		$save_response = apply_filters( 'customize_save_response', array() );
+		$this->assertArrayHasKey( 'nav_menu_updates', $save_response );
+		$update_result = array_shift( $save_response['nav_menu_updates'] );
+		$this->assertArrayHasKey( 'term_id', $update_result );
+		$this->assertArrayHasKey( 'previous_term_id', $update_result );
+		$this->assertArrayHasKey( 'error', $update_result );
+		$this->assertArrayHasKey( 'status', $update_result );
+
+		$this->assertEquals( $menu_id, $update_result['term_id'] );
+		$this->assertNull( $update_result['previous_term_id'] );
+		$this->assertNull( $update_result['error'] );
+		$this->assertEquals( 'deleted', $update_result['status'] );
+
 	}
 
 }
