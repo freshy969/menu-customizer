@@ -12,10 +12,12 @@ node_js:
     - 0.10
 
 env:
-    - WP_VERSION=latest WP_MULTISITE=0
-    - WP_VERSION=latest WP_MULTISITE=1
-    - WP_VERSION=4.2 WP_MULTISITE=0
-    - WP_VERSION=4.2 WP_MULTISITE=1
+    - WP_VERSION=trunk WP_MULTISITE=0
+    - WP_VERSION=trunk WP_MULTISITE=1
+
+branches:
+    only:
+        - master
 
 before_script:
     - export DEV_LIB_PATH=dev-lib
