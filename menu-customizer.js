@@ -1654,6 +1654,8 @@
 
 			menuList.sortable( {
 				items: '> .customize-control-menu_item',
+				handle: '.menu-item-handle',
+				placeholder: 'sortable-placeholder',
 				connectWith: '.accordion-section-content.ui-sortable:has(.customize-control-menu_item)',
 				update: function () {
 					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
