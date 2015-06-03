@@ -1027,7 +1027,7 @@ class WP_Customize_Menus {
 						<dt class="menu-item-handle">
 							<span class="spinner" style="visibility: visible;"></span>
 							<span class="item-type">{{ data.objectTypeLabel }}</span>
-							<span class="item-title menu-item-title">{{{ data.name }}}</span>
+							<span class="item-title menu-item-title">{{ data.name }}</span>
 						</dt>
 					</dl>
 				</div>
