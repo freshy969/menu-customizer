@@ -1665,16 +1665,12 @@
 					} );
 
 					self.setting( menuItemIds );
-				},
-				start: function( e, ui ) {
-					self.isSorting = true;
-				},
-				stop: function( e, ui ) {
-					setTimeout( function() {
-						self.isSorting = false;
-					}, 300 );
 				}
 			} );
+
+			menuList.on( 'sortstart', function () {
+				self.isSorting = true;
+			});
 
 			menuList.on( 'sortstop', function ( event, ui ) {
 				var id, menuItemControl;
@@ -1699,6 +1695,11 @@
 						menuItemControl.updateMenuItem();
 					} );
 				}
+
+				setTimeout( function() {
+					self.isSorting = false;
+				}, 300 );
+
 			} );
 
 			self.isReordering = false;
