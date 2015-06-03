@@ -1,0 +1,300 @@
+<?php
+/**
+ * WordPress Customize Nav Menu Setting class.
+ *
+ * @package WordPress
+ * @subpackage Customize
+ * @since 4.3.0
+ */
+
+/**
+ * Customize Setting to represent a nav_menu.
+ *
+ * Subclass of WP_Customize_Setting to represent a nav_menu taxonomy term, and
+ * the IDs for the nav_menu_items associated with the nav menu.
+ *
+ * @since 4.3.0
+ *
+ * @see wp_get_nav_menu_object()
+ * @see get_term()
+ * @see WP_Customize_Setting
+ */
+class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
+
+	const ID_PATTERN = '/^nav_menu\[(?P<term_id>-?\d+)\]$/';
+
+	const TAXONOMY = 'nav_menu';
+
+	/**
+	 * Currently-previewed values for all settings of this type.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::value()
+	 * @see WP_Customize_Nav_Menu_Setting::preview()
+	 *
+	 * @var array[]
+	 */
+	static $current_previewed_values = array();
+
+	/**
+	 * Setting type.
+	 *
+	 * @var string
+	 */
+	public $type = 'nav_menu';
+
+	/**
+	 * Default setting value;
+	 *
+	 * @see get_term_by()
+	 *
+	 * @todo Include object_ids for the menu items associated with this nav_menu?
+	 *
+	 * @var array
+	 */
+	public $default = array(
+		'term_id' => -1,
+		'term_taxonomy_id' => -1,
+		'name' => '',
+		'slug' => '',
+		'description' => '',
+		'parent' => 0,
+		'count' => 0,
+		'taxonomy' => self::TAXONOMY,
+		'term_group' => 0,
+	);
+
+	/**
+	 * Default transport.
+	 *
+	 * @var string
+	 */
+	public $transport = 'postMessage';
+
+	/**
+	 * The term ID represented by this setting instance.
+	 *
+	 * A negative value represents a placeholder ID for a new menu not yet saved.
+	 *
+	 * @var int
+	 */
+	public $term_id;
+
+	/**
+	 * Previous (placeholder) term ID used before creating a new menu.
+	 *
+	 * This value will be exported to JS via the customize_save_response filter
+	 * so that JavaScript can update the settings to refer to the newly-assigned
+	 * term ID. This value is always negative to indicate it does not refer to
+	 * a real term.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::update()
+	 * @see WP_Customize_Nav_Menu_Setting::amend_customize_save_response()
+	 *
+	 * @var int
+	 */
+	public $previous_term_id;
+
+	/**
+	 * Whether or not preview() was called.
+	 *
+	 * @var bool
+	 */
+	public $is_previewed = false;
+
+	/**
+	 * Status for calling the update method, used in customize_save_response filter.
+	 *
+	 * When status is inserted, the placeholder term ID is stored in $previous_term_id.
+	 * When status is error, the error is stored in $update_error.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::update()
+	 * @see WP_Customize_Nav_Menu_Setting::amend_customize_save_response()
+	 *
+	 * @var string updated|inserted|deleted|error
+	 */
+	public $update_status;
+
+	/**
+	 * Any error object returned by wp_update_nav_menu_object() when setting is updated.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::update()
+	 * @see WP_Customize_Nav_Menu_Setting::amend_customize_save_response()
+	 *
+	 * @var WP_Error
+	 */
+	public $update_error;
+
+	/**
+	 * Constructor.
+	 *
+	 * Any supplied $args override class property defaults.
+	 *
+	 * @param WP_Customize_Manager $manager Manager instance.
+	 * @param string               $id      An specific ID of the setting. Can be a
+	 *                                       theme mod or option name.
+	 * @param array                $args    Setting arguments.
+	 * @throws Exception If $id is not valid for this setting type.
+	 */
+	public function __construct( WP_Customize_Manager $manager, $id, array $args = array() ) {
+		unset( $args['type'] );
+
+		if ( empty( $manager->menus ) ) {
+			throw new Exception( 'Expected WP_Customize_Manager::$menus to be set.' );
+		}
+
+		if ( ! preg_match( self::ID_PATTERN, $id, $matches ) ) {
+			throw new Exception( "Illegal widget setting ID: $id" );
+		}
+
+		$this->term_id = intval( $matches['term_id'] );
+
+		parent::__construct( $manager, $id, $args );
+	}
+
+	/**
+	 * Get the instance data for a given widget setting.
+	 *
+	 * Note that we are using get_term_by() instead of wp_get_nav_menu_object()
+	 * because we want an array as opposed to an object.
+	 *
+	 * @see get_term_by()
+	 * @return array
+	 */
+	public function value() {
+		if ( $this->is_previewed ) {
+			assert( array_key_exists( $this->id, self::$current_previewed_values ) );
+			return self::$current_previewed_values[ $this->id ];
+		}
+		$value = false;
+
+		// Note that a term_id of less than one indicates a nav_menu not yet inserted.
+		if ( $this->term_id > 0 ) {
+			$value = get_term_by( 'id', $this->term_id, self::TAXONOMY, 'array' );
+		}
+
+		if ( ! is_array( $value ) ) {
+			$value = $this->default;
+		}
+		return $value;
+	}
+
+	/**
+	 * Handle previewing the setting.
+	 *
+	 * @see WP_Customize_Manager::post_value()
+	 * @return void
+	 */
+	public function preview() {
+		if ( $this->is_previewed ) {
+			return;
+		}
+		$this->is_previewed = true;
+
+		if ( ! isset( $this->_original_value ) ) {
+			$this->_original_value = $this->value();
+		}
+		if ( ! isset( $this->_previewed_blog_id ) ) {
+			$this->_previewed_blog_id = get_current_blog_id();
+		}
+		$undefined = new stdClass();
+		$value = $this->post_value( $undefined );
+
+		if ( $undefined !== $value ) {
+			self::$current_previewed_values[ $this->id ] = $value;
+		}
+
+		// @todo Now add filters to ensure that this menu's previewed value is applied. May require Core hooks.
+	}
+
+	/**
+	 * Create/update the nav_menu term for this setting.
+	 *
+	 * Any created menus will have their assigned term IDs exported to the client
+	 * via the customize_save_response filter. Likewise, any errors will be exported
+	 * to the client via the customize_save_response() filter.
+	 *
+	 * To delete a menu, the client can send false as the value.
+	 *
+	 * @see wp_update_nav_menu_object()
+	 *
+	 * @param array|false $value {
+	 *     The value to update. Note that slug cannot be updated via wp_update_nav_menu_object().
+	 *     If false, then the menu will be deleted entirely.
+	 *
+	 *     @type string $name        The name of the menu to save.
+	 *     @type string $description The term description. Default empty string.
+	 *     @type int    $parent      The id of the parent term. Default 0.
+	 * }
+	 * @return void
+	 */
+	protected function update( $value ) {
+		$is_placeholder_term = ( $this->term_id < 0 );
+		$is_delete = ( false === $value );
+
+		if ( $is_delete ) {
+			// If the current setting term is a placeholder, a delete request is a no-op.
+			if ( $is_placeholder_term ) {
+				$this->update_status = 'deleted';
+			} else {
+				$r = wp_delete_nav_menu( $this->term_id );
+				if ( is_wp_error( $r ) ) {
+					$this->update_status = 'error';
+					$this->update_error = $r;
+				} else {
+					$this->update_status = 'deleted';
+				}
+				// @todo send back the IDs for all nav_menu_item posts that were deleted, so these settings (and controls) can be removed from Customizer.
+			}
+		} else {
+			// Insert or update menu.
+			$value = wp_parse_args( $value, array(
+				'name' => '',
+				'description' => '',
+				'parent' => 0,
+			) );
+			$menu_data = wp_array_slice_assoc( $value, array( 'description', 'parent' ) );
+			if ( isset( $value['name'] ) ) {
+				$menu_data['menu-name'] = $value['name'];
+			}
+			$r = wp_update_nav_menu_object( $is_placeholder_term ? 0 : $this->term_id, $menu_data );
+			if ( is_wp_error( $r ) ) {
+				$this->update_status = 'error';
+				$this->update_error = $r;
+			} else {
+				if ( $is_placeholder_term ) {
+					$this->previous_term_id = $this->term_id;
+					$this->term_id = $r;
+					$this->update_status = 'inserted';
+				} else {
+					$this->update_status = 'updated';
+				}
+			}
+		}
+
+		add_filter( 'customize_save_response', array( $this, 'amend_customize_save_response' ) );
+	}
+
+	/**
+	 * Export data for the JS client.
+	 *
+	 * @param array $data Additional information passed back to the 'saved'
+	 *                      event on `wp.customize`.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::update()
+	 * @return array
+	 */
+	function amend_customize_save_response( $data ) {
+		if ( ! isset( $data['nav_menu_updates'] ) ) {
+			$data['nav_menu_updates'] = array();
+		}
+		$result = array(
+			'term_id' => $this->term_id,
+			'previous_term_id' => $this->previous_term_id,
+			'error' => $this->update_error ? $this->update_error->get_error_code() : null,
+			'status' => $this->update_status,
+		);
+
+		$data['nav_menu_updates'][] = $result;
+		return $data;
+	}
+}
