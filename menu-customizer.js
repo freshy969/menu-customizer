@@ -937,7 +937,7 @@
 				e.preventDefault();
 				e.stopPropagation();
 				var menuControl = self.getMenuControl();
-				if ( menuControl.isReordering ) {
+				if ( menuControl.isReordering || menuControl.isSorting ) {
 					return;
 				}
 				self.toggleForm();
@@ -1661,7 +1661,6 @@
 			menuList.sortable( {
 				items: '.customize-control-menu_item',
 				connectWith: '.accordion-section-content:has(.customize-control-menu_item)',
-				helper : 'clone',
 				update: function () {
 					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
 
@@ -1670,6 +1669,14 @@
 					} );
 
 					self.setting( menuItemIds );
+				},
+				start: function( e, ui ) {
+					self.isSorting = true;
+				},
+				stop: function( e, ui ) {
+					setTimeout( function() {
+						self.isSorting = false;
+					}, 300 );
 				}
 			} );
 
