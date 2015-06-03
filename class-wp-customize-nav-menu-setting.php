@@ -26,16 +26,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	const TAXONOMY = 'nav_menu';
 
 	/**
-	 * Currently-previewed values for all settings of this type.
-	 *
-	 * @see WP_Customize_Nav_Menu_Setting::value()
-	 * @see WP_Customize_Nav_Menu_Setting::preview()
-	 *
-	 * @var array[]
-	 */
-	static $current_previewed_values = array();
-
-	/**
 	 * Setting type.
 	 *
 	 * @var string
@@ -52,15 +42,9 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * @var array
 	 */
 	public $default = array(
-		'term_id' => -1,
-		'term_taxonomy_id' => -1,
 		'name' => '',
-		'slug' => '',
 		'description' => '',
 		'parent' => 0,
-		'count' => 0,
-		'taxonomy' => self::TAXONOMY,
-		'term_group' => 0,
 	);
 
 	/**
@@ -74,6 +58,8 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * The term ID represented by this setting instance.
 	 *
 	 * A negative value represents a placeholder ID for a new menu not yet saved.
+	 *
+	 * @todo Should we use GUIDs instead of negative integers for placeholders?
 	 *
 	 * @var int
 	 */
@@ -136,8 +122,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * @throws Exception If $id is not valid for this setting type.
 	 */
 	public function __construct( WP_Customize_Manager $manager, $id, array $args = array() ) {
-		unset( $args['type'] );
-
 		if ( empty( $manager->menus ) ) {
 			throw new Exception( 'Expected WP_Customize_Manager::$menus to be set.' );
 		}
@@ -161,19 +145,28 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * @return array
 	 */
 	public function value() {
-		if ( $this->is_previewed ) {
-			assert( array_key_exists( $this->id, self::$current_previewed_values ) );
-			return self::$current_previewed_values[ $this->id ];
-		}
-		$value = false;
+		if ( $this->is_previewed && $this->_previewed_blog_id === get_current_blog_id() ) {
+			$undefined = new stdClass(); // Symbol.
+			$post_value = $this->post_value( $undefined );
+			if ( $undefined === $post_value ) {
+				$value = $this->_original_value;
+			} else {
+				$value = $post_value;
+			}
+		} else {
+			$value = false;
 
-		// Note that a term_id of less than one indicates a nav_menu not yet inserted.
-		if ( $this->term_id > 0 ) {
-			$value = get_term_by( 'id', $this->term_id, self::TAXONOMY, 'array' );
-		}
+			// Note that a term_id of less than one indicates a nav_menu not yet inserted.
+			if ( $this->term_id > 0 ) {
+				$term = get_term_by( 'id', $this->term_id, self::TAXONOMY, ARRAY_A );
+				if ( is_array( $term ) ) {
+					$value = wp_array_slice_assoc( $term, array( 'name', 'description', 'parent' ) );
+				}
+			}
 
-		if ( ! is_array( $value ) ) {
-			$value = $this->default;
+			if ( ! is_array( $value ) ) {
+				$value = $this->default;
+			}
 		}
 		return $value;
 	}
@@ -189,21 +182,40 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 			return;
 		}
 		$this->is_previewed = true;
-
-		if ( ! isset( $this->_original_value ) ) {
-			$this->_original_value = $this->value();
-		}
-		if ( ! isset( $this->_previewed_blog_id ) ) {
-			$this->_previewed_blog_id = get_current_blog_id();
-		}
-		$undefined = new stdClass();
-		$value = $this->post_value( $undefined );
-
-		if ( $undefined !== $value ) {
-			self::$current_previewed_values[ $this->id ] = $value;
-		}
+		$this->_original_value = $this->value();
+		$this->_previewed_blog_id = get_current_blog_id();
 
 		// @todo Now add filters to ensure that this menu's previewed value is applied. May require Core hooks.
+	}
+
+	/**
+	 * Sanitize an input.
+	 *
+	 * Note that parent::sanitize() erroneously does wp_unslash() on $value, but
+	 * we remove that in this override.
+	 *
+	 * @param array $value The value to sanitize.
+	 * @return array|null Null if an input isn't valid, otherwise the sanitized value.
+	 */
+	public function sanitize( $value ) {
+		if ( ! is_array( $value ) ) {
+			return null;
+		}
+
+		$default = array(
+			'name' => '',
+			'description' => '',
+			'parent' => 0,
+		);
+		$value = array_merge( $default, $value );
+		$value = wp_array_slice_assoc( $value, array_keys( $default ) );
+
+		$value['name'] = trim( esc_html( $value['name'] ) ); // This sanitization code is used in wp-admin/nav-menus.php.
+		$value['description'] = sanitize_text_field( $value['description'] );
+		$value['parent'] = max( 0, intval( $value['parent'] ) );
+
+		/** This filter is documented in wp-includes/class-wp-customize-setting.php */
+		return apply_filters( "customize_sanitize_{$this->id}", $value, $this );
 	}
 
 	/**
@@ -247,11 +259,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 			}
 		} else {
 			// Insert or update menu.
-			$value = wp_parse_args( $value, array(
-				'name' => '',
-				'description' => '',
-				'parent' => 0,
-			) );
 			$menu_data = wp_array_slice_assoc( $value, array( 'description', 'parent' ) );
 			if ( isset( $value['name'] ) ) {
 				$menu_data['menu-name'] = $value['name'];

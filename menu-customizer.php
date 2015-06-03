@@ -31,7 +31,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * @subpackage Customize
  */
 
+require_once ABSPATH . WPINC . '/class-wp-customize-manager.php';
+require_once ABSPATH . WPINC . '/class-wp-customize-setting.php';
 require_once( plugin_dir_path( __FILE__ ) . 'class-wp-customize-menus.php' );
+require_once( plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-setting.php' );
 
 /**
  * Initialize the Customizer Menus
