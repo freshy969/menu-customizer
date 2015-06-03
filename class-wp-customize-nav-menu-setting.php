@@ -141,7 +141,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * Note that we are using get_term_by() instead of wp_get_nav_menu_object()
 	 * because we want an array as opposed to an object.
 	 *
-	 * @see get_term_by()
+	 * @see wp_get_nav_menu_object()
 	 * @return array
 	 */
 	public function value() {
@@ -158,9 +158,9 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 
 			// Note that a term_id of less than one indicates a nav_menu not yet inserted.
 			if ( $this->term_id > 0 ) {
-				$term = get_term_by( 'id', $this->term_id, self::TAXONOMY, ARRAY_A );
-				if ( is_array( $term ) ) {
-					$value = wp_array_slice_assoc( $term, array( 'name', 'description', 'parent' ) );
+				$term = wp_get_nav_menu_object( $this->term_id );
+				if ( $term ) {
+					$value = wp_array_slice_assoc( (array) $term, array( 'name', 'description', 'parent' ) );
 				}
 			}
 
