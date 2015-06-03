@@ -1651,16 +1651,10 @@
 			if ( ! menuList.is( self.$sectionContent ) ) {
 				throw new Error( 'Unexpected menuList.' );
 			}
-			/**
-			 * Wrap the menuitems so we can target sortable correctly.
-			 */
-			var sortableWrapper = menuList
-				.find( '> .customize-control-menu_item' )
-				.wrapAll( '<li><ul class="menu ui-sortable"></ul></li>' );
 
 			menuList.sortable( {
-				items: '.customize-control-menu_item',
-				connectWith: '.accordion-section-content:has(.customize-control-menu_item)',
+				items: '> .customize-control-menu_item',
+				connectWith: '.accordion-section-content.ui-sortable:has(.customize-control-menu_item)',
 				update: function () {
 					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
 
