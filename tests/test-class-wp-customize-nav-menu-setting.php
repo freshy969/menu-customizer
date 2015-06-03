@@ -49,6 +49,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 	 * Test constants and statics.
 	 */
 	function test_constants() {
+		do_action( 'customize_register', $this->wp_customize );
 		$this->assertTrue( taxonomy_exists( WP_Customize_Nav_Menu_Setting::TAXONOMY ) );
 	}
 
