@@ -266,7 +266,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test protected update() method via the save() method.
+	 * Test protected update() method via the save() method, for updated menu.
 	 *
 	 * @see WP_Customize_Nav_Menu_Setting::update()
 	 */
@@ -310,6 +310,48 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertNull( $update_result['error'] );
 		$this->assertEquals( 'updated', $update_result['status'] );
 
+	}
+
+	/**
+	 * Test protected update() method via the save() method, for inserted menu.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::update()
+	 */
+	function test_save_inserted() {
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_id = -123;
+		$post_value = array(
+			'name' => 'New Menu Name 1',
+			'description' => 'New Menu Description 1',
+			'parent' => 0,
+		);
+		$setting_id = "nav_menu[$menu_id]";
+		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
+
+		$this->wp_customize->set_post_value( $setting->id, $post_value );
+
+		$this->assertNull( $setting->previous_term_id );
+		$this->assertLessThan( 0, $setting->term_id );
+		$setting->save();
+		$this->assertEquals( $menu_id, $setting->previous_term_id );
+		$this->assertGreaterThan( 0, $setting->term_id );
+
+		$menu = get_term( $setting->term_id, 'nav_menu' );
+		$this->assertEqualSets( $post_value, wp_array_slice_assoc( (array) $menu, array_keys( $post_value ) ) );
+
+		$save_response = apply_filters( 'customize_save_response', array() );
+		$this->assertArrayHasKey( 'nav_menu_updates', $save_response );
+		$update_result = array_shift( $save_response['nav_menu_updates'] );
+		$this->assertArrayHasKey( 'term_id', $update_result );
+		$this->assertArrayHasKey( 'previous_term_id', $update_result );
+		$this->assertArrayHasKey( 'error', $update_result );
+		$this->assertArrayHasKey( 'status', $update_result );
+
+		$this->assertEquals( $menu->term_id, $update_result['term_id'] );
+		$this->assertEquals( $menu_id, $update_result['previous_term_id'] );
+		$this->assertNull( $update_result['error'] );
+		$this->assertEquals( 'inserted', $update_result['status'] );
 	}
 
 }
