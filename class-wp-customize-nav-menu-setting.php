@@ -192,7 +192,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * Filter the get_term() result to supply the previewed menu object.
 	 *
 	 * @see get_term()
-	 * @param bool|mixed $pre        Potential override of the normal return value for get_term().
+	 * @param null|mixed $pre        Potential override of the normal return value for get_term().
 	 * @param array      $args       These arguments are defined on get_term().
 	 * @return bool|array|object
 	 */
@@ -205,6 +205,12 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		}
 
 		$menu = $this->value();
+
+		// Handle deleted menus.
+		if ( is_null( $menu ) ) {
+			return false;
+		}
+
 		$_term = (object) array_merge(
 			array(
 				'term_id' => $this->term_id,

@@ -215,6 +215,32 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test preview method for deleted menu.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::preview()
+	 */
+	function test_preview_deleted() {
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_id = wp_update_nav_menu_object( 0, array(
+			'menu-name' => 'Name 1',
+			'description' => 'Description 1',
+			'parent' => 0,
+		) );
+		$setting_id = "nav_menu[$menu_id]";
+		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
+
+		$this->wp_customize->set_post_value( $setting_id, false );
+
+		$this->assertInternalType( 'array', $setting->value() );
+		$this->assertInternalType( 'array', get_term( $menu_id, 'nav_menu', ARRAY_A ) );
+		$setting->preview();
+		$this->assertNull( $setting->value() );
+
+		$this->assertFalse( get_term( $menu_id, 'nav_menu', ARRAY_A ) );
+	}
+
+	/**
 	 * Test sanitize method.
 	 *
 	 * @see WP_Customize_Nav_Menu_Setting::sanitize()
