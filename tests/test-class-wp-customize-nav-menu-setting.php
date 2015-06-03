@@ -154,24 +154,32 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$setting_id = "nav_menu[$menu_id]";
 		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
 
-		$this->wp_customize->set_post_value( $setting_id, array(
+		$post_value = array(
 			'name' => 'Name 2',
 			'description' => 'Description 2',
 			'parent' => 1,
-		) );
+		);
+		$this->wp_customize->set_post_value( $setting_id, $post_value );
 
 		$value = $setting->value();
 		$this->assertEquals( 'Name 1', $value['name'] );
 		$this->assertEquals( 'Description 1', $value['description'] );
 		$this->assertEquals( 0, $value['parent'] );
 
+		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
+		$this->assertEqualSets( $value, wp_array_slice_assoc( $term, array_keys( $value ) ) );
+
 		$setting->preview();
 		$value = $setting->value();
 		$this->assertEquals( 'Name 2', $value['name'] );
 		$this->assertEquals( 'Description 2', $value['description'] );
 		$this->assertEquals( 1, $value['parent'] );
+		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
+		$this->assertEqualSets( $value, wp_array_slice_assoc( $term, array_keys( $value ) ) );
 
-		// @todo Now we need to check Menu API calls to see if the preview filters are applying.
+		$menu_object = wp_get_nav_menu_object( $menu_id );
+		$this->assertEquals( (object) $term, $menu_object );
+		$this->assertEquals( $post_value['name'], $menu_object->name );
 	}
 
 	/**

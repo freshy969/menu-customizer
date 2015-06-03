@@ -185,7 +185,66 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		$this->_original_value = $this->value();
 		$this->_previewed_blog_id = get_current_blog_id();
 
-		// @todo Now add filters to ensure that this menu's previewed value is applied. May require Core hooks.
+		add_filter( 'pre_get_term', array( $this, 'filter_pre_get_term' ), 10, 2 );
+	}
+
+	/**
+	 * Filter the get_term() result to supply the previewed menu object.
+	 *
+	 * @see get_term()
+	 * @param bool|mixed $pre        Potential override of the normal return value for get_term().
+	 * @param array      $args       These arguments are defined on get_term().
+	 * @return bool|array|object
+	 */
+	function filter_pre_get_term( $pre, $args ) {
+		if ( self::TAXONOMY !== $args['taxonomy'] ) {
+			return $pre;
+		}
+		if ( $args['term'] !== $this->term_id ) {
+			return $pre;
+		}
+
+		$menu = $this->value();
+		$_term = (object) array_merge(
+			array(
+				'term_id' => $this->term_id,
+				'term_taxonomy_id' => $this->term_id,
+				'slug' => sanitize_title( $menu['name'] ),
+				'count' => 0,
+				'term_group' => 0,
+				'taxonomy' => self::TAXONOMY,
+				'filter' => $args['filter'],
+			),
+			$menu
+		);
+
+		$taxonomy = $args['taxonomy'];
+		$filter = $args['filter'];
+		$output = $args['output'];
+
+		/*
+		 * The following lines are adapted from get_term().
+		 */
+
+		/** This filter is documented in wp-includes/taxonomy.php */
+		$_term = apply_filters( 'get_term', $_term, $args['taxonomy'] );
+
+		/** This filter is documented in wp-includes/taxonomy.php */
+		$_term = apply_filters( "get_$taxonomy", $_term, $taxonomy );
+
+		$_term = sanitize_term( $_term, $taxonomy, $filter );
+
+		if ( OBJECT === $output ) {
+			return $_term;
+		} elseif ( ARRAY_A === $output ) {
+			$__term = get_object_vars( $_term );
+			return $__term;
+		} elseif ( ARRAY_N === $output ) {
+			$__term = array_values( get_object_vars( $_term ) );
+			return $__term;
+		} else {
+			return $_term;
+		}
 	}
 
 	/**
