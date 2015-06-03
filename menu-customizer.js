@@ -1661,6 +1661,7 @@
 			menuList.sortable( {
 				items: '.customize-control-menu_item',
 				connectWith: '.accordion-section-content:has(.customize-control-menu_item)',
+				helper : 'clone',
 				update: function () {
 					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
 
