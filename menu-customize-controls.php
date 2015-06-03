@@ -404,7 +404,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 		$this->json['title'] = $title;
 		$this->json['el_classes'] = implode( ' ', $classes );
 
-		$this->json['item_type_label'] = $item->objectTypeLabel;
+		$this->json['item_type_label'] = $item->type_label;
 		$this->json['item_type'] = $item->type;
 		$this->json['url'] = $item->url;
 		$this->json['target'] = $item->target;
