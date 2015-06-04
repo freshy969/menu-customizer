@@ -808,9 +808,15 @@ li.assigned-to-menu-location .add-new-menu-item {
 	text-decoration: underline;
 }
 
-.menu-delete:hover {
+.menu-delete:hover,
+.menu-delete:focus {
 	color: #f00;
 	text-decoration: none;
+}
+
+.menu-delete:focus {
+	box-shadow: 0 0 0 1px #5b9dd9,
+	            0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 .menu-item-handle {
