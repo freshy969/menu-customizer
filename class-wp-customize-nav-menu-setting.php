@@ -21,7 +21,7 @@
  */
 class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 
-	const ID_PATTERN = '/^nav_menu\[(?P<term_id>-?\d+)\]$/';
+	const ID_PATTERN = '/^nav_menu\[(?P<id>-?\d+)\]$/';
 
 	const TAXONOMY = 'nav_menu';
 
@@ -130,16 +130,13 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 			throw new Exception( "Illegal widget setting ID: $id" );
 		}
 
-		$this->term_id = intval( $matches['term_id'] );
+		$this->term_id = intval( $matches['id'] );
 
 		parent::__construct( $manager, $id, $args );
 	}
 
 	/**
 	 * Get the instance data for a given widget setting.
-	 *
-	 * Note that we are using get_term_by() instead of wp_get_nav_menu_object()
-	 * because we want an array as opposed to an object.
 	 *
 	 * @see wp_get_nav_menu_object()
 	 * @return array
@@ -160,7 +157,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 			if ( $this->term_id > 0 ) {
 				$term = wp_get_nav_menu_object( $this->term_id );
 				if ( $term ) {
-					$value = wp_array_slice_assoc( (array) $term, array( 'name', 'description', 'parent' ) );
+					$value = wp_array_slice_assoc( (array) $term, array_keys( $this->default ) );
 				}
 			}
 
@@ -316,12 +313,12 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * @return void
 	 */
 	protected function update( $value ) {
-		$is_placeholder_term = ( $this->term_id < 0 );
+		$is_placeholder = ( $this->term_id < 0 );
 		$is_delete = ( false === $value );
 
 		if ( $is_delete ) {
 			// If the current setting term is a placeholder, a delete request is a no-op.
-			if ( $is_placeholder_term ) {
+			if ( $is_placeholder ) {
 				$this->update_status = 'deleted';
 			} else {
 				$r = wp_delete_nav_menu( $this->term_id );
@@ -339,12 +336,12 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 			if ( isset( $value['name'] ) ) {
 				$menu_data['menu-name'] = $value['name'];
 			}
-			$r = wp_update_nav_menu_object( $is_placeholder_term ? 0 : $this->term_id, $menu_data );
+			$r = wp_update_nav_menu_object( $is_placeholder ? 0 : $this->term_id, $menu_data );
 			if ( is_wp_error( $r ) ) {
 				$this->update_status = 'error';
 				$this->update_error = $r;
 			} else {
-				if ( $is_placeholder_term ) {
+				if ( $is_placeholder ) {
 					$this->previous_term_id = $this->term_id;
 					$this->term_id = $r;
 					$this->update_status = 'inserted';
@@ -352,6 +349,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 					$this->update_status = 'updated';
 				}
 			}
+			// @todo Send back the saved sanitized value to update the client?
 		}
 
 		add_filter( 'customize_save_response', array( $this, 'amend_customize_save_response' ) );
