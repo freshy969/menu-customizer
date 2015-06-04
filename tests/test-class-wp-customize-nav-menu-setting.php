@@ -46,6 +46,15 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Helper for getting the nav_menu_options option.
+	 *
+	 * @return array
+	 */
+	function get_nav_menu_items_option() {
+		return get_option( 'nav_menu_options', array( 'auto_add' => array() ) );
+	}
+
+	/**
 	 * Test constants and statics.
 	 */
 	function test_constants() {
@@ -155,10 +164,14 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$setting_id = "nav_menu[$menu_id]";
 		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
 
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$this->assertNotContains( $menu_id, $nav_menu_options['auto_add'] );
+
 		$post_value = array(
 			'name' => 'Name 2',
 			'description' => 'Description 2',
 			'parent' => 1,
+			'auto_add' => true,
 		);
 		$this->wp_customize->set_post_value( $setting_id, $post_value );
 
@@ -181,6 +194,9 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$menu_object = wp_get_nav_menu_object( $menu_id );
 		$this->assertEquals( (object) $term, $menu_object );
 		$this->assertEquals( $post_value['name'], $menu_object->name );
+
+		$nav_menu_options = get_option( 'nav_menu_options', array( 'auto_add' => array() ) );
+		$this->assertContains( $menu_id, $nav_menu_options['auto_add'] );
 	}
 
 	/**
@@ -196,6 +212,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 			'name' => 'New Menu Name 1',
 			'description' => 'New Menu Description 1',
 			'parent' => 0,
+			'auto_add' => false,
 		);
 		$setting_id = "nav_menu[$menu_id]";
 		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
@@ -213,6 +230,9 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$menu_object = wp_get_nav_menu_object( $menu_id );
 		$this->assertEquals( (object) $term, $menu_object );
 		$this->assertEquals( $post_value['name'], $menu_object->name );
+
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$this->assertNotContains( $menu_id, $nav_menu_options['auto_add'] );
 	}
 
 	/**
@@ -230,6 +250,12 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		) );
 		$setting_id = "nav_menu[$menu_id]";
 		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$nav_menu_options['auto_add'][] = $menu_id;
+		update_option( 'nav_menu_options', $nav_menu_options );
+
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$this->assertContains( $menu_id, $nav_menu_options['auto_add'] );
 
 		$this->wp_customize->set_post_value( $setting_id, false );
 
@@ -238,6 +264,9 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$setting->preview();
 		$this->assertFalse( $setting->value() );
 		$this->assertFalse( get_term( $menu_id, 'nav_menu', ARRAY_A ) );
+
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$this->assertNotContains( $menu_id, $nav_menu_options['auto_add'] );
 	}
 
 	/**
@@ -256,13 +285,15 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 			'name' => ' Hello <b>world</b> ',
 			'description' => "New\nline",
 			'parent' => -12,
+			'auto_add' => true,
 			'extra' => 'ignored',
 		);
 		$sanitized = $setting->sanitize( $value );
 		$this->assertEquals( 'Hello &lt;b&gt;world&lt;/b&gt;', $sanitized['name'] );
 		$this->assertEquals( 'New line', $sanitized['description'] );
 		$this->assertEquals( 0, $sanitized['parent'] );
-		$this->assertEqualSets( array( 'name', 'description', 'parent' ), array_keys( $sanitized ) );
+		$this->assertEquals( true, $sanitized['auto_add'] );
+		$this->assertEqualSets( array( 'name', 'description', 'parent', 'auto_add' ), array_keys( $sanitized ) );
 	}
 
 	/**
@@ -278,22 +309,29 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 			'description' => 'Description 1',
 			'parent' => 0,
 		) );
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$nav_menu_options['auto_add'][] = $menu_id;
+		update_option( 'nav_menu_options', $nav_menu_options );
+
 		$setting_id = "nav_menu[$menu_id]";
 		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
 
+		$auto_add = false;
 		$new_value = array(
 			'name' => 'Name 2',
 			'description' => 'Description 2',
 			'parent' => 1,
+			'auto_add' => $auto_add,
 		);
 
 		$this->wp_customize->set_post_value( $setting_id, $new_value );
 		$setting->save();
 
 		$menu_object = wp_get_nav_menu_object( $menu_id );
-		foreach ( $new_value as $k => $v ) {
-			$this->assertEquals( $v, $menu_object->$k );
+		foreach ( array( 'name', 'description', 'parent' ) as $key ) {
+			$this->assertEquals( $new_value[ $key ], $menu_object->$key );
 		}
+		unset( $new_value['auto_add'] );
 		$this->assertEqualSets( $new_value, wp_array_slice_assoc( (array) $menu_object, array_keys( $new_value ) ) );
 		$this->assertEquals( $new_value, $setting->value() );
 
@@ -310,6 +348,8 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertNull( $update_result['error'] );
 		$this->assertEquals( 'updated', $update_result['status'] );
 
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$this->assertNotContains( $menu_id, $nav_menu_options['auto_add'] );
 	}
 
 	/**
@@ -325,6 +365,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 			'name' => 'New Menu Name 1',
 			'description' => 'New Menu Description 1',
 			'parent' => 0,
+			'auto_add' => true,
 		);
 		$setting_id = "nav_menu[$menu_id]";
 		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
@@ -337,7 +378,11 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertEquals( $menu_id, $setting->previous_term_id );
 		$this->assertGreaterThan( 0, $setting->term_id );
 
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$this->assertContains( $setting->term_id, $nav_menu_options['auto_add'] );
+
 		$menu = get_term( $setting->term_id, 'nav_menu' );
+		unset( $post_value['auto_add'] );
 		$this->assertEqualSets( $post_value, wp_array_slice_assoc( (array) $menu, array_keys( $post_value ) ) );
 
 		$save_response = apply_filters( 'customize_save_response', array() );
@@ -366,6 +411,9 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$menu_id = wp_create_nav_menu( $menu_name );
 		$setting_id = "nav_menu[$menu_id]";
 		$setting = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$nav_menu_options['auto_add'][] = $menu_id;
+		update_option( 'nav_menu_options', $nav_menu_options );
 
 		$menu = wp_get_nav_menu_object( $menu_id );
 		$this->assertEquals( $menu_name, $menu->name );
@@ -388,6 +436,8 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertNull( $update_result['error'] );
 		$this->assertEquals( 'deleted', $update_result['status'] );
 
+		$nav_menu_options = $this->get_nav_menu_items_option();
+		$this->assertNotContains( $menu_id, $nav_menu_options['auto_add'] );
 	}
 
 }

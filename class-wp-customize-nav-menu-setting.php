@@ -45,6 +45,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		'name' => '',
 		'description' => '',
 		'parent' => 0,
+		'auto_add' => false,
 	);
 
 	/**
@@ -183,6 +184,8 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		$this->_previewed_blog_id = get_current_blog_id();
 
 		add_filter( 'pre_get_term', array( $this, 'filter_pre_get_term' ), 10, 2 );
+		add_filter( 'default_option_nav_menu_options', array( $this, 'filter_nav_menu_options' ) );
+		add_filter( 'option_nav_menu_options', array( $this, 'filter_nav_menu_options' ) );
 	}
 
 	/**
@@ -194,10 +197,14 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * @return bool|array|object
 	 */
 	function filter_pre_get_term( $pre, $args ) {
-		if ( self::TAXONOMY !== $args['taxonomy'] ) {
-			return $pre;
-		}
-		if ( $args['term'] !== $this->term_id ) {
+		$abort = (
+			self::TAXONOMY !== $args['taxonomy']
+			||
+			get_current_blog_id() !== $this->_previewed_blog_id
+			||
+			$args['term'] !== $this->term_id
+		);
+		if ( $abort ) {
 			return $pre;
 		}
 
@@ -256,6 +263,25 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	}
 
 	/**
+	 * Filter the nav_menu_options option to include this menu's auto_add preference.
+	 *
+	 * @param array $nav_menu_options  Nav menu options including auto_add.
+	 * @return array
+	 */
+	function filter_nav_menu_options( $nav_menu_options ) {
+		if ( $this->_previewed_blog_id !== get_current_blog_id() ) {
+			return $nav_menu_options;
+		}
+		$menu = $this->value();
+		$nav_menu_options = $this->filter_nav_menu_options_value(
+			$nav_menu_options,
+			$this->term_id,
+			false === $menu ? false : $menu['auto_add']
+		);
+		return $nav_menu_options;
+	}
+
+	/**
 	 * Sanitize an input.
 	 *
 	 * Note that parent::sanitize() erroneously does wp_unslash() on $value, but
@@ -279,6 +305,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 			'name' => '',
 			'description' => '',
 			'parent' => 0,
+			'auto_add' => false,
 		);
 		$value = array_merge( $default, $value );
 		$value = wp_array_slice_assoc( $value, array_keys( $default ) );
@@ -286,6 +313,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		$value['name'] = trim( esc_html( $value['name'] ) ); // This sanitization code is used in wp-admin/nav-menus.php.
 		$value['description'] = sanitize_text_field( $value['description'] );
 		$value['parent'] = max( 0, intval( $value['parent'] ) );
+		$value['auto_add'] = ! empty( $value['auto_add'] );
 
 		/** This filter is documented in wp-includes/class-wp-customize-setting.php */
 		return apply_filters( "customize_sanitize_{$this->id}", $value, $this );
@@ -309,6 +337,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 *     @type string $name        The name of the menu to save.
 	 *     @type string $description The term description. Default empty string.
 	 *     @type int    $parent      The id of the parent term. Default 0.
+	 *     @type bool   $auto_add    Whether pages will auto_add to this menu. Default false.
 	 * }
 	 * @return void
 	 */
@@ -316,6 +345,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		$is_placeholder = ( $this->term_id < 0 );
 		$is_delete = ( false === $value );
 
+		$auto_add = null;
 		if ( $is_delete ) {
 			// If the current setting term is a placeholder, a delete request is a no-op.
 			if ( $is_placeholder ) {
@@ -327,6 +357,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 					$this->update_error = $r;
 				} else {
 					$this->update_status = 'deleted';
+					$auto_add = false;
 				}
 				// @todo send back the IDs for all nav_menu_item posts that were deleted, so these settings (and controls) can be removed from Customizer.
 			}
@@ -348,11 +379,46 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 				} else {
 					$this->update_status = 'updated';
 				}
+				$auto_add = $value['auto_add'];
 			}
 			// @todo Send back the saved sanitized value to update the client?
 		}
 
+		if ( null !== $auto_add ) {
+			$nav_menu_options = $this->filter_nav_menu_options_value(
+				(array) get_option( 'nav_menu_options', array() ),
+				$this->term_id,
+				$auto_add
+			);
+			update_option( 'nav_menu_options', $nav_menu_options );
+		}
+
 		add_filter( 'customize_save_response', array( $this, 'amend_customize_save_response' ) );
+	}
+
+	/**
+	 * Update a nav_menu_options array.
+	 *
+	 * @see WP_Customize_Nav_Menu_Setting::filter_nav_menu_options()
+	 * @see WP_Customize_Nav_Menu_Setting::update()
+	 *
+	 * @param array $nav_menu_options  Array as returned by get_option( 'nav_menu_options' ).
+	 * @param int   $menu_id           The term ID for the given menu.
+	 * @param bool  $auto_add          Whether to auto-add or not.
+	 * @return array
+	 */
+	protected function filter_nav_menu_options_value( $nav_menu_options, $menu_id, $auto_add ) {
+		$nav_menu_options = (array) $nav_menu_options;
+		if ( ! isset( $nav_menu_options['auto_add'] ) ) {
+			$nav_menu_options['auto_add'] = array();
+		}
+		$i = array_search( $menu_id, $nav_menu_options['auto_add'] );
+		if ( $auto_add && false === $i ) {
+			array_push( $nav_menu_options['auto_add'], $this->term_id );
+		} else if ( ! $auto_add && false !== $i ) {
+			array_splice( $nav_menu_options['auto_add'], $i, 1 );
+		}
+		return $nav_menu_options;
 	}
 
 	/**
