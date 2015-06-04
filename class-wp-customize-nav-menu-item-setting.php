@@ -216,6 +216,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		$this->_previewed_blog_id = get_current_blog_id();
 
 		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_wp_get_nav_menu_items' ), 10, 3 );
+		// @todo Add get_post_metadata filters for plugins to add their data.
 	}
 
 	/**
@@ -314,7 +315,13 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	 */
 	public function value_as_wp_post_nav_menu_item() {
 		$item = (object) $this->value();
+		unset( $item->nav_menu_term_id );
 		$item->post_type = 'nav_menu_item';
+		$item->menu_order = $item->position;
+		$item->post_author = get_current_user_id();
+		if ( $item->title ) {
+			$item->post_title = $item->title;
+		}
 		$item->ID = $this->post_id;
 		$post = new WP_Post( (object) $item );
 		$post = wp_setup_nav_menu_item( $post );

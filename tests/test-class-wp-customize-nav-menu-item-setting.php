@@ -184,8 +184,10 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 
 		$post_value = array(
 			'type' => 'post_type',
+			'object' => 'post',
 			'object_id' => $second_post_id,
 			'title' => 'Saludos',
+			'status' => 'publish',
 			'nav_menu_term_id' => $secondary_menu_id,
 		);
 		$setting_id = "nav_menu_item[$item_id]";
@@ -205,7 +207,49 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 	 * @see WP_Customize_Nav_Menu_Item_Setting::preview()
 	 */
 	function test_preview_inserted() {
-		$this->markTestIncomplete( 'Needs to be implemented.' );
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_id = wp_create_nav_menu( 'Primary' );
+		$post_id = $this->factory->post->create( array( 'post_title' => 'Hello World' ) );
+		$item_ids = array();
+		for ( $i = 0; $i < 5; $i += 1 ) {
+			$item_id = wp_update_nav_menu_item( $menu_id, 0, array(
+				'menu-item-type' => 'post_type',
+				'menu-item-object' => 'post',
+				'menu-item-object-id' => $post_id,
+				'menu-item-title' => "Item $i",
+				'menu-item-status' => 'publish',
+				'menu-item-position' => $i + 1,
+			) );
+			$item_ids[] = $item_id;
+		}
+
+		$post_value = array(
+			'type' => 'post_type',
+			'object' => 'post',
+			'object_id' => $post_id,
+			'title' => 'Inserted item',
+			'status' => 'publish',
+			'nav_menu_term_id' => $menu_id,
+			'position' => count( $item_ids ) + 1,
+		);
+
+		$new_item_id = -10;
+		$setting_id = "nav_menu_item[$new_item_id]";
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, $setting_id );
+		$this->wp_customize->set_post_value( $setting_id, $post_value );
+		unset( $post_value['nav_menu_term_id'] );
+
+		$current_items = wp_get_nav_menu_items( $menu_id );
+		$setting->preview();
+		$preview_items = wp_get_nav_menu_items( $menu_id );
+		$this->assertNotEquals( count( $current_items ), count( $preview_items ) );
+
+		$last_item = array_pop( $preview_items );
+		$this->assertEquals( $new_item_id, $last_item->db_id );
+		foreach ( $post_value as $key => $value ) {
+			$this->assertEquals( $value, $last_item->$key, "Mismatch for $key property." );
+		}
 	}
 
 	/**
