@@ -171,6 +171,14 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 						(array) wp_setup_nav_menu_item( $post ),
 						array_keys( $this->default )
 					);
+					$menus = wp_get_post_terms( $post->ID, WP_Customize_Nav_Menu_Setting::TAXONOMY, array(
+						'fields' => 'ids',
+					) );
+					if ( ! empty( $menus ) ) {
+						$value['nav_menu_term_id'] = array_shift( $menus );
+					} else {
+						$value['nav_menu_term_id'] = 0;
+					}
 				}
 			}
 

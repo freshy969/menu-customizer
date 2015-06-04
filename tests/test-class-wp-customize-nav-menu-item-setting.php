@@ -144,16 +144,17 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 
 		$value = $setting->value();
 		$this->assertEquals( $menu_item->title, $value['title'] );
-		$this->assertEqualSets(
-			wp_array_slice_assoc( (array) $menu_item, array_keys( $value ) ),
-			$value
-		);
+		$this->assertEquals( $menu_item->type, $value['type'] );
+		$this->assertEquals( $menu_item->object_id, $value['object_id'] );
+		$this->assertEquals( $menu_id, $value['nav_menu_term_id'] );
 
-		wp_update_nav_menu_item( $menu_id, $item_id, array(
+		$other_menu_id = wp_create_nav_menu( 'Menu2' );
+		wp_update_nav_menu_item( $other_menu_id, $item_id, array(
 			'menu-item-title' => 'Hola',
 		) );
 		$value = $setting->value();
 		$this->assertEquals( 'Hola', $value['title'] );
+		$this->assertEquals( $other_menu_id, $value['nav_menu_term_id'] );
 	}
 
 	/**
