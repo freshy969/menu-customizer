@@ -197,14 +197,14 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * @return bool|array|object
 	 */
 	function filter_pre_get_term( $pre, $args ) {
-		$abort = (
-			self::TAXONOMY !== $args['taxonomy']
-			||
-			get_current_blog_id() !== $this->_previewed_blog_id
-			||
-			$args['term'] !== $this->term_id
+		$ok = (
+			self::TAXONOMY === $args['taxonomy']
+			&&
+			get_current_blog_id() === $this->_previewed_blog_id
+			&&
+			$args['term'] === $this->term_id
 		);
-		if ( $abort ) {
+		if ( ! $ok ) {
 			return $pre;
 		}
 

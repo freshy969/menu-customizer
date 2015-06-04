@@ -91,6 +91,14 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	public $previous_post_id;
 
 	/**
+	 * When previewing or updating a menu item, this stores the previous nav_menu_term_id
+	 * which ensures that we can apply the proper filters.
+	 *
+	 * @var int
+	 */
+	public $original_nav_menu_term_id;
+
+	/**
 	 * Whether or not preview() was called.
 	 *
 	 * @var bool
@@ -141,6 +149,9 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		}
 
 		$this->post_id = intval( $matches['id'] );
+
+		$menu = $this->value();
+		$this->original_nav_menu_term_id = $menu['nav_menu_term_id'];
 
 		parent::__construct( $manager, $id, $args );
 	}
@@ -201,6 +212,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		}
 		$this->is_previewed = true;
 		$this->_original_value = $this->value();
+		$this->original_nav_menu_term_id = $this->_original_value['nav_menu_term_id'];
 		$this->_previewed_blog_id = get_current_blog_id();
 
 		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_wp_get_nav_menu_items' ), 10, 3 );
@@ -216,22 +228,97 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	 * @return array
 	 */
 	function filter_wp_get_nav_menu_items( $items, $menu, $args ) {
-		$menu_item = $this->value();
+		$this_item = $this->value();
+		$current_nav_menu_term_id = $this_item['nav_menu_term_id'];
+		unset( $this_item['nav_menu_term_id'] );
 
-		// Skip filtering other menus.
-		if ( $menu->term_id !== $menu_item['nav_menu_term_id'] ) {
+		$should_filter = (
+			$menu->term_id === $this->original_nav_menu_term_id
+			||
+			$menu->term_id === $current_nav_menu_term_id
+		);
+		if ( ! $should_filter ) {
 			return $items;
 		}
 
-		// Handle deleted menu item.
-		if ( false === $menu_item ) {
-			// @todo Remove $menu_item from $items
+		// Handle deleted menu item, or menu item moved to another menu.
+		$should_remove = (
+			false === $this_item
+			||
+			(
+				$this->original_nav_menu_term_id === $menu->term_id
+				&&
+				$current_nav_menu_term_id !== $this->original_nav_menu_term_id
+			)
+		);
+		if ( $should_remove ) {
+			$filtered_items = array();
+			foreach ( $items as $item ) {
+				if ( $item->db_id !== $this->post_id ) {
+					$filtered_items[] = $item;
+				}
+			}
+			return $filtered_items;
 		}
 
-		// @todo if $menu === $menu_item['nav_menu_term_id'], ensure among $items
-		// @todo if $this->post_id < 0, then we will surely need to append $menu_item to list
-		// @todo make sure that any item in $items is updated with the properties of $menu_item
+		$mutated = false;
+		$should_update = (
+			is_array( $this_item )
+			&&
+			$current_nav_menu_term_id === $menu->term_id
+		);
+		if ( $should_update ) {
+			foreach ( $items as $item ) {
+				if ( $item->db_id === $this->post_id ) {
+					foreach ( $this_item as $key => $value ) {
+						$item->$key = $value;
+					}
+					$mutated = true;
+				}
+			}
+
+			// Not found so we have to append it..
+			if ( ! $mutated ) {
+				$items[] = $this->value_as_wp_post_nav_menu_item();
+				$mutated = true;
+			}
+		}
+
+		// Re-apply the tail logic also applied on $items by wp_get_nav_menu_items().
+		if ( $mutated ) {
+			// @todo We should probably re-apply some constraints imposed by $args.
+			unset( $args['include'] );
+
+			// Remove invalid items only in frontend.
+			if ( ! is_admin() ) {
+				$items = array_filter( $items, '_is_valid_nav_menu_item' );
+			}
+
+			if ( ARRAY_A === $args['output'] ) {
+				$GLOBALS['_menu_item_sort_prop'] = $args['output_key'];
+				usort( $items, '_sort_nav_menu_items' );
+				$i = 1;
+				foreach ( $items as $k => $item ) {
+					$items[ $k ]->$args['output_key'] = $i++;
+				}
+			}
+		}
+
 		return $items;
+	}
+
+	/**
+	 * Get the value emulated into a WP_Post and set up as a nav_menu_item.
+	 *
+	 * @return WP_Post With {@see wp_setup_nav_menu_item()} applied.
+	 */
+	public function value_as_wp_post_nav_menu_item() {
+		$item = (object) $this->value();
+		$item->post_type = 'nav_menu_item';
+		$item->ID = $this->post_id;
+		$post = new WP_Post( (object) $item );
+		$post = wp_setup_nav_menu_item( $post );
+		return $post;
 	}
 
 	/**
@@ -283,7 +370,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 			if ( ! is_array( $value ) ) {
 				$value = explode( ' ', $value );
 			}
-			$menu_item_value[ $key ] = implode( ' ', array_map( 'sanitize_html_class', explode( ' ', $value ) ) );
+			$menu_item_value[ $key ] = implode( ' ', array_map( 'sanitize_html_class', $value ) );
 		}
 		foreach ( array( 'title', 'attr_title', 'description' ) as $key => $value ) {
 			$menu_item_value[ $key ] = sanitize_text_field( $value );
