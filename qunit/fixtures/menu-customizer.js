@@ -15,15 +15,13 @@ window._wpCustomizeMenusSettings = {
 		'movedDown'        : 'Menu item moved down' ,
 		'movedLeft'        : 'Menu item moved out of submenu' ,
 		'movedRight'       : 'Menu item is now a sub-item' ,
-		'customizingMenus' : 'Customizing &#9656; Menus',
+		'customizingMenus' : 'Customizing &#9656; Menus'
 	},
 	'menuItemTransport' : 'postMessage'
-
 };
 window._wpCustomizeSettings.panels.menus = {
 	'active' : true,
 	'content' : '', /* @TODO: Add content */
 	'description' : 'lorem ipsum',
 	'type' : 'menu'
-
-}
+};
