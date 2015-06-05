@@ -294,7 +294,46 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 	 * @see WP_Customize_Nav_Menu_Item_Setting::sanitize()
 	 */
 	function test_sanitize() {
-		$this->markTestIncomplete( 'Needs to be implemented.' );
+		do_action( 'customize_register', $this->wp_customize );
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, 'nav_menu_item[123]' );
+
+		$this->assertNull( $setting->sanitize( 'not an array' ) );
+		$this->assertNull( $setting->sanitize( 123 ) );
+
+		$unsanitized = array(
+			'object_id' => 'bad',
+			'object' => '<b>hello</b>',
+			'menu_item_parent' => 'asdasd',
+			'position' => -123,
+			'type' => 'custom<b>',
+			'title' => 'Hi<script>alert(1)</script>',
+			'url' => 'javascript:alert(1)',
+			'target' => '" onclick="',
+			'attr_title' => '<b>evil</b>',
+			'description' => '<b>Hello world</b>',
+			'classes' => 'hello " inject="',
+			'xfn' => 'hello " inject="',
+			'status' => 'forbidden',
+			'nav_menu_term_id' => 'heilo',
+		);
+
+		$sanitized = $setting->sanitize( $unsanitized );
+		$this->assertEqualSets( array_keys( $unsanitized ), array_keys( $sanitized ) );
+
+		$this->assertEquals( 0, $sanitized['object_id'] );
+		$this->assertEquals( 'bhellob', $sanitized['object'] );
+		$this->assertEquals( 0, $sanitized['menu_item_parent'] );
+		$this->assertEquals( 0, $sanitized['position'] );
+		$this->assertEquals( 'customb', $sanitized['type'] );
+		$this->assertEquals( 'Hi', $sanitized['title'] );
+		$this->assertEquals( '', $sanitized['url'] );
+		$this->assertEquals( 'onclick', $sanitized['target'] );
+		$this->assertEquals( 'evil', $sanitized['attr_title'] );
+		$this->assertEquals( 'Hello world', $sanitized['description'] );
+		$this->assertEquals( 'hello  inject', $sanitized['classes'] );
+		$this->assertEquals( 'hello  inject', $sanitized['xfn'] );
+		$this->assertEquals( 'publish', $sanitized['status'] );
+		$this->assertEquals( 0, $sanitized['nav_menu_term_id'] );
 	}
 
 	/**

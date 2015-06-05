@@ -366,23 +366,29 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		);
 		$menu_item_value = array_merge( $default, $menu_item_value );
 		$menu_item_value = wp_array_slice_assoc( $menu_item_value, array_keys( $default ) );
-
-		foreach ( array( 'object_id', 'menu_item_parent', 'position', 'nav_menu_term_id' ) as $key ) {
-			$menu_item_value[ $key ] = max( 0, intval( $menu_item_value[ $key ] ) );
+		$menu_item_value['position'] = max( 0, intval( $menu_item_value['position'] ) );
+		foreach ( array( 'object_id', 'menu_item_parent', 'nav_menu_term_id' ) as $key ) {
+			// Note we need to allow negative-integer IDs for previewed objects not inserted yet.
+			$menu_item_value[ $key ] = intval( $menu_item_value[ $key ] );
 		}
 		foreach ( array( 'type', 'object', 'target' ) as $key ) {
 			$menu_item_value[ $key ] = sanitize_key( $menu_item_value[ $key ] );
 		}
-		foreach ( array( 'xfn', 'classes' ) as $key => $value ) {
+		foreach ( array( 'xfn', 'classes' ) as $key ) {
+			$value = $menu_item_value[ $key ];
 			if ( ! is_array( $value ) ) {
 				$value = explode( ' ', $value );
 			}
 			$menu_item_value[ $key ] = implode( ' ', array_map( 'sanitize_html_class', $value ) );
 		}
-		foreach ( array( 'title', 'attr_title', 'description' ) as $key => $value ) {
-			$menu_item_value[ $key ] = sanitize_text_field( $value );
+		foreach ( array( 'title', 'attr_title', 'description' ) as $key ) {
+			// @todo Should esc_attr() the attr_title as well?
+			$menu_item_value[ $key ] = sanitize_text_field( $menu_item_value[ $key ] );
 		}
 		$menu_item_value['url'] = esc_url_raw( $menu_item_value['url'] );
+		if ( ! get_post_status_object( $menu_item_value['status'] ) ) {
+			$menu_item_value['status'] = 'publish';
+		}
 
 		/** This filter is documented in wp-includes/class-wp-customize-setting.php */
 		return apply_filters( "customize_sanitize_{$this->id}", $menu_item_value, $this );
