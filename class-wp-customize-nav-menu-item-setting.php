@@ -316,6 +316,8 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	public function value_as_wp_post_nav_menu_item() {
 		$item = (object) $this->value();
 		unset( $item->nav_menu_term_id );
+		$item->post_status = $item->status;
+		unset( $item->status );
 		$item->post_type = 'nav_menu_item';
 		$item->menu_order = $item->position;
 		$item->post_author = get_current_user_id();

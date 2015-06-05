@@ -193,12 +193,21 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 		$setting_id = "nav_menu_item[$item_id]";
 		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, $setting_id );
 		$this->wp_customize->set_post_value( $setting_id, $post_value );
+		unset( $post_value['nav_menu_term_id'] );
 		$setting->preview();
 
 		// Make sure the menu item appears in the new menu.
 		$this->assertNotContains( $item_id, wp_list_pluck( wp_get_nav_menu_items( $primary_menu_id ), 'db_id' ) );
 		$menu_items = wp_get_nav_menu_items( $secondary_menu_id );
-		$this->assertContains( $item_id, wp_list_pluck( $menu_items, 'db_id' ) );
+		$db_ids = wp_list_pluck( $menu_items, 'db_id' );
+		$this->assertContains( $item_id, $db_ids );
+		$i = array_search( $item_id, $db_ids );
+		$updated_item = $menu_items[ $i ];
+		$post_value['post_status'] = $post_value['status'];
+		unset( $post_value['status'] );
+		foreach ( $post_value as $key => $value ) {
+			$this->assertEquals( $value, $updated_item->$key, "Key $key mismatch" );
+		}
 	}
 
 	/**
@@ -247,6 +256,8 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 
 		$last_item = array_pop( $preview_items );
 		$this->assertEquals( $new_item_id, $last_item->db_id );
+		$post_value['post_status'] = $post_value['status'];
+		unset( $post_value['status'] );
 		foreach ( $post_value as $key => $value ) {
 			$this->assertEquals( $value, $last_item->$key, "Mismatch for $key property." );
 		}
@@ -342,7 +353,49 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 	 * @see WP_Customize_Nav_Menu_Item_Setting::update()
 	 */
 	function test_save_updated() {
-		$this->markTestIncomplete( 'Needs to be implemented.' );
+		do_action( 'customize_register', $this->wp_customize );
+
+		$first_post_id = $this->factory->post->create( array( 'post_title' => 'Hello World' ) );
+		$second_post_id = $this->factory->post->create( array( 'post_title' => 'Hola Muno' ) );
+
+		$primary_menu_id = wp_create_nav_menu( 'Primary' );
+		$secondary_menu_id = wp_create_nav_menu( 'Secondary' );
+		$item_title = 'Greetings';
+		$item_id = wp_update_nav_menu_item( $primary_menu_id, 0, array(
+			'menu-item-type' => 'post_type',
+			'menu-item-object' => 'post',
+			'menu-item-object-id' => $first_post_id,
+			'menu-item-title' => $item_title,
+			'menu-item-status' => 'publish',
+		) );
+		$this->assertNotEmpty( wp_get_nav_menu_items( $primary_menu_id, array( 'post_status' => 'publish,draft' ) ) );
+
+		$post_value = array(
+			'type' => 'post_type',
+			'object' => 'post',
+			'object_id' => $second_post_id,
+			'title' => 'Saludos',
+			'status' => 'publish',
+			'nav_menu_term_id' => $secondary_menu_id,
+		);
+		$setting_id = "nav_menu_item[$item_id]";
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, $setting_id );
+		$this->wp_customize->set_post_value( $setting_id, $post_value );
+		unset( $post_value['nav_menu_term_id'] );
+		$setting->save();
+
+		// Make sure the menu item appears in the new menu.
+		$this->assertNotContains( $item_id, wp_list_pluck( wp_get_nav_menu_items( $primary_menu_id ), 'db_id' ) );
+		$menu_items = wp_get_nav_menu_items( $secondary_menu_id );
+		$db_ids = wp_list_pluck( $menu_items, 'db_id' );
+		$this->assertContains( $item_id, $db_ids );
+		$i = array_search( $item_id, $db_ids );
+		$updated_item = $menu_items[ $i ];
+		$post_value['post_status'] = $post_value['status'];
+		unset( $post_value['status'] );
+		foreach ( $post_value as $key => $value ) {
+			$this->assertEquals( $value, $updated_item->$key, "Key $key mismatch" );
+		}
 	}
 
 	/**
