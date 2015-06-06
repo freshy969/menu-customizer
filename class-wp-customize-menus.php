@@ -53,6 +53,8 @@ class WP_Customize_Menus {
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_action( 'customize_update_menu_name', array( $this, 'update_menu_name' ), 10, 2 );
+		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
+		add_filter( 'customize_dynamic_setting_class', array( $this, 'filter_dynamic_setting_class' ), 10, 3 );
 		add_action( 'customize_update_menu_autoadd', array( $this, 'update_menu_autoadd' ), 10, 2 );
 		add_action( 'customize_preview_nav_menu', array( $this, 'preview_nav_menu' ), 10, 1 );
 		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_nav_menu_items_for_preview' ), 10, 2 );
@@ -489,6 +491,48 @@ class WP_Customize_Menus {
 	}
 
 	/**
+	 * Filter a dynamic setting's constructor args.
+	 *
+	 * For a dynamic setting to be registered, this filter must be employed
+	 * to override the default false value with an array of args to pass to
+	 * the WP_Customize_Setting constructor.
+	 *
+	 * @param false|array $setting_args The arguments to the WP_Customize_Setting constructor.
+	 * @param string      $setting_id   ID for dynamic setting, usually coming from `$_POST['customized']`.
+	 * @return array|false
+	 */
+	public function filter_dynamic_setting_args( $setting_args, $setting_id ) {
+		if ( preg_match( WP_Customize_Nav_Menu_Setting::ID_PATTERN, $setting_id ) ) {
+			$setting_args = array(
+				'type' => WP_Customize_Nav_Menu_Setting::TYPE,
+			);
+		} else if ( preg_match( WP_Customize_Nav_Menu_Item_Setting::ID_PATTERN, $setting_id ) ) {
+			$setting_args = array(
+				'type' => WP_Customize_Nav_Menu_Item_Setting::TYPE,
+			);
+		}
+		return $setting_args;
+	}
+
+	/**
+	 * Allow non-statically created settings to be constructed with custom WP_Customize_Setting subclass.
+	 *
+	 * @param string $setting_class WP_Customize_Setting or a subclass.
+	 * @param string $setting_id    ID for dynamic setting, usually coming from `$_POST['customized']`.
+	 * @param array  $setting_args  WP_Customize_Setting or a subclass.
+	 * @return string
+	 */
+	public function filter_dynamic_setting_class( $setting_class, $setting_id, $setting_args ) {
+		unset( $setting_id );
+		if ( ! empty( $setting_arg['type'] ) && WP_Customize_Nav_Menu_Setting::TYPE === $setting_arg['type'] ) {
+			$setting_class = 'WP_Customize_Nav_Menu_Setting';
+		} else if ( ! empty( $setting_arg['type'] ) && WP_Customize_Nav_Menu_Item_Setting::TYPE === $setting_arg['type'] ) {
+			$setting_class = 'WP_Customize_Nav_Menu_Item_Setting';
+		}
+		return $setting_class;
+	}
+
+	/**
 	 * Add the customizer settings and controls.
 	 *
 	 * @since Menu Customizer 0.0
@@ -586,29 +630,6 @@ class WP_Customize_Menus {
 				$menu_items[ $menu_item->ID ] = $menu_item;
 			}
 
-			// @todo we need to implement something like WP_Customize_Widgets::prepreview_added_sidebars_widgets() so that wp_get_nav_menu_items() will include the new menu items
-			if ( ! empty( $_POST['customized'] ) && ( $customized = json_decode( wp_unslash( $_POST['customized'] ), true ) ) && is_array( $customized ) ) {
-				foreach ( $customized as $incoming_setting_id => $incoming_setting_value ) {
-					if ( preg_match( '/^nav_menus\[(?P<menu_id>\d+)\]\[(?P<menu_item_id>\d+)\]$/', $incoming_setting_id, $matches ) ) {
-						if ( ! isset( $menu_items[ $matches['menu_item_id'] ] ) ) {
-							$incoming_setting_value = (object) $incoming_setting_value;
-							if ( ! isset( $incoming_setting_value->ID ) ) {
-								// @TODO: This should be supplied already
-								$incoming_setting_value->ID = $matches['menu_item_id'];
-							}
-							if ( ! isset( $incoming_setting_value->title ) ) {
-								// @TODO: This should be supplied already
-								$incoming_setting_value->title = 'UNTITLED';
-							}
-							if ( ! isset( $incoming_setting_value->menu_item_parent ) ) {
-								// @TODO: This should be supplied already
-								$incoming_setting_value->menu_item_parent = 0;
-							}
-							$menu_items[ $matches['menu_item_id'] ] = $incoming_setting_value;
-						}
-					}
-				}
-			}
 
 			$item_ids = array();
 			foreach ( array_values( $menu_items ) as $i => $item ) {
