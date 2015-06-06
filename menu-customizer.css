@@ -136,7 +136,7 @@
 	cursor: not-allowed;
 }
 
-.menu-item-reorder-nav span {
+.menu-item-reorder-nav button {
 	position: relative;
 	overflow: hidden;
 	float: left;
@@ -146,10 +146,13 @@
 	color: #82878c;
 	text-indent: -9999px;
 	cursor: pointer;
+	background: transparent;
+	border: none;
+	box-shadow: none;
 	outline: none;
 }
 
-.menu-item-reorder-nav span:before {
+.menu-item-reorder-nav button:before {
 	display: inline-block;
 	position: absolute;
 	top: 0;
@@ -163,8 +166,8 @@
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.menu-item-reorder-nav span:hover,
-.menu-item-reorder-nav span:focus {
+.menu-item-reorder-nav button:hover,
+.menu-item-reorder-nav button:focus {
 	color: #191e23;
 	background: #eee;
 }
