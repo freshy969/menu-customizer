@@ -1657,6 +1657,14 @@
 				self.isSorting = true;
 			});
 
+			menuList.on( 'sortupdate', function() {
+					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
+
+					menuItemIds = $.map( menuItemContainerIds, function( menuItemContainerId ) {
+						return parseInt( menuItemContainerId.replace( 'customize-control-nav_menus-' + self.params.menu_id + '-', '' ), 10 );
+					} );
+				} );
+
 			menuList.on( 'sortstop', function ( event, ui ) {
 				var id, menuItemControl;
 
