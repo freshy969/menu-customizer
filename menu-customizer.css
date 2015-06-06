@@ -52,16 +52,6 @@
 	text-align: right;
 }
 
-/* Preferable for this to not break. But @todo: check functionality in translations. */
-.is-submenu {
-	white-space: normal;
-	display: inline-block;
-}
-
-.menu-item-depth-0 .is-submenu {
-	display: none;
-}
-
 .wp-customizer .menu-item-settings {
 	max-width: 100%;
 	overflow: hidden;
