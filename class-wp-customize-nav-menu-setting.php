@@ -25,12 +25,14 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 
 	const TAXONOMY = 'nav_menu';
 
+	const TYPE = 'nav_menu';
+
 	/**
 	 * Setting type.
 	 *
 	 * @var string
 	 */
-	public $type = 'nav_menu';
+	public $type = self::TYPE;
 
 	/**
 	 * Default setting value;
@@ -46,6 +48,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		'description' => '',
 		'parent' => 0,
 		'auto_add' => false,
+		// @todo theme_locations
 	);
 
 	/**

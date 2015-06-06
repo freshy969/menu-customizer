@@ -24,12 +24,14 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 
 	const POST_TYPE = 'nav_menu_item';
 
+	const TYPE = 'nav_menu_item';
+
 	/**
 	 * Setting type.
 	 *
 	 * @var string
 	 */
-	public $type = 'nav_menu_item';
+	public $type = self::TYPE;
 
 	/**
 	 * Default setting value.
@@ -55,6 +57,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		'status' => 'publish',
 		'nav_menu_term_id' => 0, // This will be supplied as the $menu_id arg for wp_update_nav_menu_item().
 		// @todo what about additional fields added by wp_update_nav_menu_item action?
+		// @todo also expose invalid?
 	);
 
 	/**
