@@ -113,8 +113,14 @@
 .wp-customizer .menu-item .submitbox .submitdelete {
 	display: block;
 	float: left;
-	margin: .5em 0;
+	margin: 0;
 	padding: 0;
+	cursor: pointer;
+}
+
+.wp-customizer .menu-item .submitdelete:focus {
+	box-shadow: 0 0 0 1px #5b9dd9,
+	            0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 /* Menu-item reordering nav. */
@@ -496,11 +502,13 @@
 	font-size: 0;
 	width: 30px;
 	height: 38px;
+	cursor: pointer;
 }
 
 .adding-menu-items .menu-item .item-delete:before {
 	content: "\f335";
 	font-size: 20px;
+	position: absolute;
 	top: 9px;
 	left: 5px;
 }

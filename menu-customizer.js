@@ -1011,7 +1011,7 @@
 			var self = this, $removeBtn, spinner;
 
 			// Configure delete button.
-			$removeBtn = this.container.find( 'a.item-delete' );
+			$removeBtn = this.container.find( '.item-delete' );
 			spinner = this.container.find( '.item-title .spinner' );
 
 			$removeBtn.on( 'click', function( e ) {
