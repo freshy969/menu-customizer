@@ -503,6 +503,7 @@
 	width: 30px;
 	height: 38px;
 	cursor: pointer;
+	cursor: pointer;
 }
 
 .adding-menu-items .menu-item .item-delete:before {
@@ -667,7 +668,7 @@ button.not-a-button {
 	font-size: 14px;
 }
 
-#available-menu-items a.item-add {
+#available-menu-items .item-add {
 	font-size: 0;
 	position: absolute;
 	top: 1px;
@@ -675,10 +676,13 @@ button.not-a-button {
 	color: #82878c;
 	width: 30px;
 	height: 38px;
+	cursor: pointer;
 }
 
-#available-menu-items .menu-item-handle:focus a.item-add {
+#available-menu-items .menu-item-handle .item-add:focus {
 	color: #23282d;
+	box-shadow: 0 0 0 1px #5b9dd9,
+	            0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 #available-menu-items .item-add:before {
