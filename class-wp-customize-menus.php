@@ -515,7 +515,7 @@ class WP_Customize_Menus {
 
 		// Require JS-rendered control types.
 		$this->manager->register_panel_type( 'WP_Customize_Menus_Panel' );
-//		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Control' );
+		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Control' );
 		$this->manager->register_control_type( 'WP_Customize_Menu_Item_Control' );
 		$this->manager->register_section_type( 'WP_Customize_Menu_Section' );
 
@@ -656,13 +656,13 @@ class WP_Customize_Menus {
 				'default'   => $item_ids,
 				'transport' => 'postMessage',
 			) );
-/*
+
 			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $this->manager, $nav_menu_setting_id, array(
 				'section'   => $section_id,
 				'menu_id'   => $menu_id,
 				'priority'  => 998,
 			) ) );
-*/
+
 			// Add the auto-add new pages option.
 			$auto_add = get_option( 'nav_menu_options' );
 			if ( ! isset( $auto_add['auto_add'] ) ) {
@@ -678,16 +678,14 @@ class WP_Customize_Menus {
 				'type'      => 'menu_autoadd',
 				'default'   => $auto_add,
 				'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
-
 			) );
-/*
+
 			$this->manager->add_control( $menu_autoadd_setting_id, array(
 				'label'     => __( 'Automatically add new top-level pages to this menu.' ),
 				'section'   => $section_id,
 				'type'      => 'checkbox',
 				'priority'  => 999,
 			) );
-*/
 		}
 
 		// Add the add-new-menu section and controls.
