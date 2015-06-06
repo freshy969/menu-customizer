@@ -258,6 +258,8 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 		$this->assertEquals( $new_item_id, $last_item->db_id );
 		$post_value['post_status'] = $post_value['status'];
 		unset( $post_value['status'] );
+		$post_value['menu_order'] = $post_value['position'];
+		unset( $post_value['position'] );
 		foreach ( $post_value as $key => $value ) {
 			$this->assertEquals( $value, $last_item->$key, "Mismatch for $key property." );
 		}
@@ -396,6 +398,20 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 		foreach ( $post_value as $key => $value ) {
 			$this->assertEquals( $value, $updated_item->$key, "Key $key mismatch" );
 		}
+
+		// Verify the Ajax responses is being amended.
+		$save_response = apply_filters( 'customize_save_response', array() );
+		$this->assertArrayHasKey( 'nav_menu_item_updates', $save_response );
+		$update_result = array_shift( $save_response['nav_menu_item_updates'] );
+		$this->assertArrayHasKey( 'post_id', $update_result );
+		$this->assertArrayHasKey( 'previous_post_id', $update_result );
+		$this->assertArrayHasKey( 'error', $update_result );
+		$this->assertArrayHasKey( 'status', $update_result );
+
+		$this->assertEquals( $item_id, $update_result['post_id'] );
+		$this->assertNull( $update_result['previous_post_id'] );
+		$this->assertNull( $update_result['error'] );
+		$this->assertEquals( 'updated', $update_result['status'] );
 	}
 
 	/**
@@ -404,7 +420,67 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 	 * @see WP_Customize_Nav_Menu_Item_Setting::update()
 	 */
 	function test_save_inserted() {
-		$this->markTestIncomplete( 'Needs to be implemented.' );
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_id = wp_create_nav_menu( 'Primary' );
+		$post_id = $this->factory->post->create( array( 'post_title' => 'Hello World' ) );
+		$item_ids = array();
+		for ( $i = 0; $i < 5; $i += 1 ) {
+			$item_id = wp_update_nav_menu_item( $menu_id, 0, array(
+				'menu-item-type' => 'post_type',
+				'menu-item-object' => 'post',
+				'menu-item-object-id' => $post_id,
+				'menu-item-title' => "Item $i",
+				'menu-item-status' => 'publish',
+				'menu-item-position' => $i + 1,
+			) );
+			$item_ids[] = $item_id;
+		}
+
+		$post_value = array(
+			'type' => 'post_type',
+			'object' => 'post',
+			'object_id' => $post_id,
+			'title' => 'Inserted item',
+			'status' => 'publish',
+			'nav_menu_term_id' => $menu_id,
+			'position' => count( $item_ids ) + 1,
+		);
+
+		$new_item_id = -10;
+		$setting_id = "nav_menu_item[$new_item_id]";
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, $setting_id );
+		$this->wp_customize->set_post_value( $setting_id, $post_value );
+		unset( $post_value['nav_menu_term_id'] );
+
+		$current_items = wp_get_nav_menu_items( $menu_id );
+		$setting->save();
+		$preview_items = wp_get_nav_menu_items( $menu_id );
+		$this->assertNotEquals( count( $current_items ), count( $preview_items ) );
+
+		$last_item = array_pop( $preview_items );
+		$this->assertEquals( $setting->post_id, $last_item->db_id );
+		$post_value['post_status'] = $post_value['status'];
+		unset( $post_value['status'] );
+		$post_value['menu_order'] = $post_value['position'];
+		unset( $post_value['position'] );
+		foreach ( $post_value as $key => $value ) {
+			$this->assertEquals( $value, $last_item->$key, "Mismatch for $key property." );
+		}
+
+		// Verify the Ajax responses is being amended.
+		$save_response = apply_filters( 'customize_save_response', array() );
+		$this->assertArrayHasKey( 'nav_menu_item_updates', $save_response );
+		$update_result = array_shift( $save_response['nav_menu_item_updates'] );
+		$this->assertArrayHasKey( 'post_id', $update_result );
+		$this->assertArrayHasKey( 'previous_post_id', $update_result );
+		$this->assertArrayHasKey( 'error', $update_result );
+		$this->assertArrayHasKey( 'status', $update_result );
+
+		$this->assertEquals( $setting->post_id, $update_result['post_id'] );
+		$this->assertEquals( $new_item_id, $update_result['previous_post_id'] );
+		$this->assertNull( $update_result['error'] );
+		$this->assertEquals( 'inserted', $update_result['status'] );
 	}
 
 	/**

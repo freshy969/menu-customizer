@@ -320,6 +320,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		unset( $item->status );
 		$item->post_type = 'nav_menu_item';
 		$item->menu_order = $item->position;
+		unset( $item->position );
 		$item->post_author = get_current_user_id();
 		if ( $item->title ) {
 			$item->post_title = $item->title;
