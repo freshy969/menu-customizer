@@ -489,7 +489,48 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 	 * @see WP_Customize_Nav_Menu_Item_Setting::update()
 	 */
 	function test_save_deleted() {
-		$this->markTestIncomplete( 'Needs to be implemented.' );
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_id = wp_create_nav_menu( 'Primary' );
+		$post_id = $this->factory->post->create( array( 'post_title' => 'Hello World' ) );
+		$item_ids = array();
+		for ( $i = 0; $i < 5; $i += 1 ) {
+			$item_id = wp_update_nav_menu_item( $menu_id, 0, array(
+				'menu-item-type' => 'post_type',
+				'menu-item-object' => 'post',
+				'menu-item-object-id' => $post_id,
+				'menu-item-title' => "Item $i",
+				'menu-item-status' => 'publish',
+				'menu-item-position' => $i + 1,
+			) );
+			$item_ids[] = $item_id;
+		}
+
+		$delete_item_id = $item_ids[2];
+		$setting_id = "nav_menu_item[$delete_item_id]";
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, $setting_id );
+		$this->wp_customize->set_post_value( $setting_id, false );
+
+		$current_items = wp_get_nav_menu_items( $menu_id );
+		$this->assertContains( $delete_item_id, wp_list_pluck( $current_items, 'db_id' ) );
+		$setting->save();
+		$preview_items = wp_get_nav_menu_items( $menu_id );
+		$this->assertNotEquals( count( $current_items ), count( $preview_items ) );
+		$this->assertContains( $delete_item_id, wp_list_pluck( $current_items, 'db_id' ) );
+
+		// Verify the Ajax responses is being amended.
+		$save_response = apply_filters( 'customize_save_response', array() );
+		$this->assertArrayHasKey( 'nav_menu_item_updates', $save_response );
+		$update_result = array_shift( $save_response['nav_menu_item_updates'] );
+		$this->assertArrayHasKey( 'post_id', $update_result );
+		$this->assertArrayHasKey( 'previous_post_id', $update_result );
+		$this->assertArrayHasKey( 'error', $update_result );
+		$this->assertArrayHasKey( 'status', $update_result );
+
+		$this->assertEquals( $delete_item_id, $update_result['post_id'] );
+		$this->assertNull( $update_result['previous_post_id'] );
+		$this->assertNull( $update_result['error'] );
+		$this->assertEquals( 'deleted', $update_result['status'] );
 	}
 
 }
