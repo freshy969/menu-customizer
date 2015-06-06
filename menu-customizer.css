@@ -680,6 +680,28 @@ button.not-a-button {
 	top: 11px;
 }
 
+#available-menu-items .menu-item-handle.item-added {
+	background-color: #eee;
+}
+
+#available-menu-items .menu-item-handle .item-added {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	padding: 0;
+	width: 72px;
+	margin: -15px 0 0 -36px;
+	text-align: center;
+	background: rgba(0,0,0,.5);
+	color: #fff;
+	border-radius: 3px;
+}
+
+#available-menu-items .menu-item-handle.item-added .item-added {
+	display: block;
+}
+
 #available-menu-items .accordion-section-title.loading .spinner,
 #available-menu-items-search.loading .accordion-section-title .spinner {
 	visibility: visible;

@@ -383,6 +383,8 @@
 			}
 
 			this.currentMenuControl.addItemToMenu( menu_item.attributes );
+
+			$( menuitemTpl ).find( '.menu-item-handle' ).addClass( 'item-added' );
 		},
 
 		// Submit handler for keypress and click on custom menu item.
@@ -472,6 +474,7 @@
 			this.selected = null;
 
 			$( 'body' ).removeClass( 'adding-menu-items' );
+			$( '#available-menu-items .menu-item-handle.item-added' ).removeClass( 'item-added' );
 
 			this.$search.val( '' );
 		},
