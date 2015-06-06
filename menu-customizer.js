@@ -5,6 +5,7 @@
 	wpNavMenu.originalInit = wpNavMenu.init;
 
 	wpNavMenu.options.menuItemDepthPerLevel = 24;
+	wpNavMenu.options.sortableItems         = '> .customize-control-menu_item';
 
 	wpNavMenu.init = function() {
 		this.jQueryExtensions();
@@ -1652,34 +1653,18 @@
 				throw new Error( 'Unexpected menuList.' );
 			}
 
-			menuList.sortable( {
-				items: '> .customize-control-menu_item',
-				handle: '.menu-item-handle',
-				placeholder: 'sortable-placeholder',
-				connectWith: '.accordion-section-content.ui-sortable:has(.customize-control-menu_item)',
-				update: function () {
-					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
-
-					menuItemIds = $.map( menuItemContainerIds, function( menuItemContainerId ) {
-						return parseInt( menuItemContainerId.replace( 'customize-control-nav_menus-' + self.params.menu_id + '-', '' ), 10 );
-					} );
-
-					self.setting( menuItemIds );
-				}
-			} );
-
 			menuList.on( 'sortstart', function () {
 				self.isSorting = true;
 			});
 
 			menuList.on( 'sortstop', function ( event, ui ) {
 				var id, menuItemControl;
+
 				id = ui.item.find( '.menu-item-data-db-id' ).val();
 				if ( ! id ) {
 					return;
 				}
 				id = parseInt( id, 10 );
-
 				menuItemControl = api.Menus.getMenuItemControl( id );
 				if ( ! menuItemControl ) {
 					api.control.each( function( control ) {
@@ -1699,7 +1684,6 @@
 				setTimeout( function() {
 					self.isSorting = false;
 				}, 300 );
-
 			} );
 
 			self.isReordering = false;
@@ -1711,6 +1695,7 @@
 				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
 					return;
 				}
+
 
 				self.toggleReordering( ! self.isReordering );
 			} );
