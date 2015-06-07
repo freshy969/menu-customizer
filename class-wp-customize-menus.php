@@ -44,21 +44,18 @@ class WP_Customize_Menus {
 		$this->register_styles( wp_styles() );
 		$this->register_scripts( wp_scripts() );
 
-		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'new_menu_ajax' ) );
-		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) );
-		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) );
-		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) );
+		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'new_menu_ajax' ) ); // Removed.
+		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) ); // Removed.
+		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) ); // Removed.
+		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) ); // Removed.
+
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
-		add_action( 'customize_update_menu_name', array( $this, 'update_menu_name' ), 10, 2 );
 		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
 		add_filter( 'customize_dynamic_setting_class', array( $this, 'filter_dynamic_setting_class' ), 10, 3 );
 		add_action( 'customize_update_menu_autoadd', array( $this, 'update_menu_autoadd' ), 10, 2 );
-		add_action( 'customize_preview_nav_menu', array( $this, 'preview_nav_menu' ), 10, 1 );
-		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_nav_menu_items_for_preview' ), 10, 2 );
-		add_action( 'customize_update_nav_menu', array( $this, 'update_nav_menu' ), 10, 2 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 		add_action( 'customize_preview_init', array( $this, 'customize_preview_init' ) );
@@ -71,27 +68,7 @@ class WP_Customize_Menus {
 	 * @access public
 	 */
 	public function new_menu_ajax() {
-		check_ajax_referer( 'customize-menus', 'customize-nav-menu-nonce' );
-
-		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
-		}
-
-		$menu_name = sanitize_text_field( $_POST['menu-name'] );
-
-		if ( empty( $menu_name ) ) {
-			wp_send_json_error( array( 'message' => __( 'Menu name is required.' ) ) );
-		}
-
-		// Create the menu.
-		$menu_id = wp_create_nav_menu( $menu_name );
-
-		if ( is_wp_error( $menu_id ) ) {
-			wp_send_json_error( array( 'message' => wp_strip_all_tags( $menu_id->get_error_message(), true ) ) );
-		}
-
-		// Output the data for this new menu.
-		wp_send_json_success( array( 'name' => $menu_name, 'id' => $menu_id ) );
+		wp_send_json_error( 'ajax_eliminated' );
 	}
 
 	/**
@@ -101,24 +78,7 @@ class WP_Customize_Menus {
 	 * @access public
 	 */
 	public function delete_menu_ajax() {
-		check_ajax_referer( 'customize-menus', 'customize-nav-menu-nonce' );
-
-		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
-		}
-
-		$menu_id = absint( $_POST['menu'] );
-
-		if ( is_nav_menu( $menu_id ) ) {
-			$deletion = wp_delete_nav_menu( $menu_id );
-			if ( is_wp_error( $deletion ) ) {
-				wp_send_json_error( array( 'message' => wp_strip_all_tags( $deletion->get_error_message(), true ) ) );
-			} else {
-				wp_send_json_success();
-			}
-		} else {
-			wp_send_json_error( array( 'message' => __( 'Error: invalid menu to delete.' ) ) );
-		}
+		wp_send_json_error( 'ajax_eliminated' );
 	}
 
 	/**
@@ -128,23 +88,7 @@ class WP_Customize_Menus {
 	 * @access public
 	 */
 	public function update_item_ajax() {
-		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
-
-		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
-		}
-
-		$clone = $_POST['clone'];
-		$item_id = $_POST['item_id'];
-		$menu_item_data = (array) $_POST['menu-item'];
-
-		$id = $this->update_item( 0, $item_id, $menu_item_data, $clone );
-
-		if ( is_wp_error( $id ) ) {
-			wp_send_json_error( array( 'message' => wp_strip_all_tags( $id->get_error_message(), true ) ) );
-		} else {
-			wp_send_json_success( $id );
-		}
+		wp_send_json_error( 'ajax_eliminated' );
 	}
 
 	/**
@@ -154,98 +98,7 @@ class WP_Customize_Menus {
 	 * @access public
 	 */
 	public function add_item_ajax() {
-		check_ajax_referer( 'customize-menus', 'customize-menu-item-nonce' );
-
-		if ( ! current_user_can( 'edit_theme_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
-		}
-
-		require_once ABSPATH . 'wp-admin/includes/nav-menu.php';
-
-		$menu_item_data = (array) $_POST['menu-item'];
-		$menu_id = absint( $_POST['menu'] ); // Used only for display, new item is created as an orphan - menu id of 0.
-		$id = 0;
-
-		// For performance reasons, we omit some object properties from the checklist.
-		// The following is a hacky way to restore them when adding non-custom items.
-		// @todo: do we really need this - do we need to populate the description field here? (note: copied from existing core system).
-		if ( ! empty( $menu_item_data['obj_type'] ) &&
-			'custom' != $menu_item_data['obj_type'] &&
-			! empty( $menu_item_data['id'] )
-		) {
-			switch ( $menu_item_data['obj_type'] ) {
-				case 'post_type' :
-					$id = absint( str_replace( 'post-', '', $menu_item_data['id'] ) );
-					$_object = get_post( $id );
-				break;
-
-				case 'taxonomy' :
-					$id = absint( str_replace( 'term-', '', $menu_item_data['id'] ) );
-					$_object = get_term( $id, $menu_item_data['type'] );
-				break;
-			}
-
-			$_menu_items = array_map( 'wp_setup_nav_menu_item', array( $_object ) );
-			$_menu_item = array_shift( $_menu_items );
-
-			// Restore the missing menu item properties.
-			$menu_item_data['menu-item-description'] = $_menu_item->description;
-		}
-
-		// Make the "Home" item into the custom link that it actually is.
-		if ( 'page' == $menu_item_data['type'] && 'custom' == $menu_item_data['obj_type'] ) {
-			$menu_item_data['type'] = 'custom';
-			$menu_item_data['url'] = home_url( '/' );
-		}
-
-		// Map data from menu customizer keys to nav-menu.php keys.
-		$item_data = array(
-			'menu-item-db-id'        => 0,
-			'menu-item-object-id'    => $id,
-			'menu-item-object'       => ( isset( $menu_item_data['type'] ) ? $menu_item_data['type'] : '' ),
-			'menu-item-type'         => ( isset( $menu_item_data['obj_type'] ) ? $menu_item_data['obj_type'] : '' ),
-			'menu-item-title'        => ( isset( $menu_item_data['name'] ) ? $menu_item_data['name'] : '' ),
-			'menu-item-url'          => ( isset( $menu_item_data['url'] ) ? $menu_item_data['url'] : '' ),
-			'menu-item-description'  => ( isset( $menu_item_data['menu-item-description'] ) ? $menu_item_data['menu-item-description'] : '' ),
-		);
-
-		// `wp_save_nav_menu_items` requires `menu-item-db-id` to not be set for custom items.
-		if ( 'custom' == $item_data['menu-item-type'] ) {
-			unset( $item_data['menu-item-db-id'] );
-		}
-
-		$items_id = wp_save_nav_menu_items( 0, array( 0 => $item_data ) );
-		if ( is_wp_error( $items_id ) ) {
-			wp_send_json_error( array( 'message' => wp_strip_all_tags( $items_id->get_error_message(), true ) ) );
-		} else if ( empty( $items_id ) ) {
-			wp_send_json_error( array( 'message' => __( 'Menu ID is required.' ) ) );
-		}
-
-		$item = get_post( $items_id[0] );
-		if ( ! empty( $item->ID ) ) {
-			$item = wp_setup_nav_menu_item( $item );
-			$item->label = $item->title; // Don't show "(pending)" in ajax-added item.
-
-			// Output the json for this item's control.
-			require_once( plugin_dir_path( __FILE__ ) . '/menu-customize-controls.php' );
-
-			$section_id = 'nav_menus[' . $menu_id . ']';
-			$setting_id = $section_id . '[' . $item->ID . ']';
-			$this->manager->add_setting( $setting_id, array(
-				'type' => 'option',
-				'default' => array(),
-			) );
-			$control = new WP_Customize_Menu_Item_Control( $this->manager, $setting_id, array(
-				'label'       => $item->title,
-				'section'     => $section_id,
-				'priority'    => $_POST['priority'],
-				'menu_id'     => $menu_id,
-				'item'        => $item,
-			) );
-			wp_send_json_success( $control->json() );
-		}
-
-		wp_send_json_error( array( 'message' => __( 'The menu item could not be added.' ) ) );
+		wp_send_json_error( 'ajax_eliminated' );
 	}
 
 	/**
@@ -481,6 +334,8 @@ class WP_Customize_Menus {
 				'movedLeft'       => __( 'Menu item moved out of submenu' ),
 				'movedRight'      => __( 'Menu item is now a sub-item' ),
 				'customizingMenus' => _x( 'Customizing &#9656; Menus', '&#9656 is the unicode right-pointing triangle' ),
+				'invalidTitleTpl' => __( '%s (Invalid)' ),
+				'pendingTitleTpl' => __( '%s (Pending)' ),
 			),
 			'menuItemTransport'    => 'postMessage',
 		);
@@ -536,15 +391,14 @@ class WP_Customize_Menus {
 	 * Add the customizer settings and controls.
 	 *
 	 * @since Menu Customizer 0.0
-	 * @param WP_Customize_Manager $manager Theme Customizer object.
 	 */
-	public function customize_register( $manager ) {
-		require_once( plugin_dir_path( __FILE__ ) . '/menu-customize-controls.php' );
+	public function customize_register() {
 
 		// Require JS-rendered control types.
 		$this->manager->register_panel_type( 'WP_Customize_Menus_Panel' );
 		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Control' );
-		$this->manager->register_control_type( 'WP_Customize_Menu_Item_Control' );
+		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Name_Control' );
+		$this->manager->register_control_type( 'WP_Customize_Nav_Menu_Item_Control' );
 
 		// Create a panel for Menus.
 		$this->manager->add_panel( new WP_Customize_Menus_Panel( $this->manager, 'menus', array(
@@ -553,444 +407,154 @@ class WP_Customize_Menus {
 			'priority'     => 30,
 			// 'theme_supports' => 'menus|widgets', @todo allow multiple theme supports
 		) ) );
+		$menus = wp_get_nav_menus();
 
-		// Menu loactions.
-		$this->manager->remove_section( 'nav' ); // Remove old core section. @todo core merge remove corresponding code from WP_Customize_Manager::register_controls().
-		$locations     = get_registered_nav_menus();
-		$menus         = wp_get_nav_menus();
-		$num_locations = count( array_keys( $locations ) );
-		$description   = '<p>' . sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
-		$description  .= '</p><p>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' ) . '</p>';
-
-		$this->manager->add_section( 'menu_locations', array(
-			'title'       => __( 'Menu Locations' ),
-			'panel'       => 'menus',
-			'priority'    => 5,
-			'description' => $description,
-		) );
-
-		// @todo if ( ! $menus ) : make a "default" menu
-		if ( $menus ) {
-			$choices = array( '' => __( '&mdash; Select &mdash;' ) );
-			foreach ( $menus as $menu ) {
-				    $choices[ $menu->term_id ] = wp_html_excerpt( $menu->name, 40, '&hellip;' );
-			}
-
-			foreach ( $locations as $location => $description ) {
-				$menu_setting_id = "nav_menu_locations[{$location}]";
-
-				$this->manager->add_setting( $menu_setting_id, array(
-					'sanitize_callback' => 'absint',
-					'theme_supports'    => 'menus',
-				) );
-
-				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $menu_setting_id, array(
-					'label'       => $description,
-					'location_id' => $location,
-					'section'     => 'menu_locations',
-					'choices'     => $choices,
-				) ) );
-			}
-		}
+		/*
+		 * // Menu loactions.
+		 * $this->manager->remove_section( 'nav' ); // Remove old core section. @todo core merge remove corresponding code from WP_Customize_Manager::register_controls().
+		 * $locations     = get_registered_nav_menus();
+		 * $num_locations = count( array_keys( $locations ) );
+		 * $description   = '<p>' . sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
+		 * $description  .= '</p><p>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' ) . '</p>';
+		 *
+		 * $this->manager->add_section( 'menu_locations', array(
+		 * 	'title'       => __( 'Menu Locations' ),
+		 * 	'panel'       => 'menus',
+		 * 	'priority'    => 5,
+		 * 	'description' => $description,
+		 * ) );
+		 *
+		 * // @todo if ( ! $menus ) : make a "default" menu
+		 * if ( $menus ) {
+		 * 	$choices = array( '' => __( '&mdash; Select &mdash;' ) );
+		 * 	foreach ( $menus as $menu ) {
+		 * 		    $choices[ $menu->term_id ] = wp_html_excerpt( $menu->name, 40, '&hellip;' );
+		 * 	}
+		 *
+		 * 	foreach ( $locations as $location => $description ) {
+		 * 		$menu_setting_id = "nav_menu_locations[{$location}]";
+		 *
+		 * 		$this->manager->add_setting( $menu_setting_id, array(
+		 * 			'sanitize_callback' => 'absint',
+		 * 			'theme_supports'    => 'menus',
+		 * 		) );
+		 *
+		 * 		$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $menu_setting_id, array(
+		 * 			'label'       => $description,
+		 * 			'location_id' => $location,
+		 * 			'section'     => 'menu_locations',
+		 * 			'choices'     => $choices,
+		 * 		) ) );
+		 * 	}
+		 * }
+		 */
 
 		// Register each menu as a Customizer section, and add each menu item to each menu.
 		foreach ( $menus as $menu ) {
 			$menu_id = $menu->term_id;
 
 			// Create a section for each menu.
-			$section_id = 'nav_menus[' . $menu_id . ']';
-			$this->manager->add_section( new WP_Customize_Menu_Section( $this->manager, $section_id, array(
+			$section_id = 'nav_menu[' . $menu_id . ']';
+			$this->manager->add_section( new WP_Customize_Nav_Menu_Section( $this->manager, $section_id, array(
 				'title'     => $menu->name,
 				'priority'  => 10,
 				'panel'     => 'menus',
 			) ) );
 
-			// Add a setting & control for the menu name.
-			$menu_name_setting_id = $section_id . '[name]';
-			$this->manager->add_setting( $menu_name_setting_id, array(
-				'default'   => $menu->name,
-				'type'      => 'menu_name',
-				'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
-			) );
+			$nav_menu_setting_id = 'nav_menu[' . $menu_id . ']';
+			$this->manager->add_setting( new WP_Customize_Nav_Menu_Setting( $this->manager, $nav_menu_setting_id ) );
 
-			$this->manager->add_control( $menu_name_setting_id, array(
+			// Add a control for the menu name.
+			$control_id = $nav_menu_setting_id . '[name]';
+			$this->manager->add_control( new WP_Customize_Nav_Menu_Name_Control( $this->manager, $control_id, array(
 				'label'        => '',
 				'section'      => $section_id,
-				'type'         => 'text',
 				'priority'     => 0,
-				'input_attrs'  => array(
-					'class'  => 'menu-name-field live-update-section-title',
-				),
-			) );
+				'settings'     => $nav_menu_setting_id,
+			) ) );
 
 			// Add the menu contents.
 			$menu_items = array();
 
-			foreach ( wp_get_nav_menu_items( $menu_id ) as $menu_item ) {
-				$menu_items[ $menu_item->ID ] = $menu_item;
+			$menu_items = wp_get_nav_menu_items( $menu_id );
+			if ( false === $menu_items ) {
+				$menu_items = array();
 			}
 
-			$item_ids = array();
 			foreach ( array_values( $menu_items ) as $i => $item ) {
-				$item_ids[] = $item->ID;
 
 				// Create a setting for each menu item (which doesn't actually manage data, currently).
-				$menu_item_setting_id = $section_id . '[' . $item->ID . ']';
-				$this->manager->add_setting( $menu_item_setting_id, array(
-					'type'     => 'option',
-					'default'  => array(),
-				) );
+				$menu_item_setting_id = 'nav_menu_item[' . $item->ID . ']';
+				$this->manager->add_setting( new WP_Customize_Nav_Menu_Item_Setting( $this->manager, $menu_item_setting_id ) );
 
 				// Create a control for each menu item.
-				$this->manager->add_control( new WP_Customize_Menu_Item_Control( $this->manager, $menu_item_setting_id, array(
+				$this->manager->add_control( new WP_Customize_Nav_Menu_Item_Control( $this->manager, $menu_item_setting_id, array(
 					'label'       => $item->title,
 					'section'     => $section_id,
 					'priority'    => 10 + $i,
-					'menu_id'     => $menu_id,
-					'item'        => $item,
 				) ) );
 			}
 
-			// Add the menu control, which handles adding and ordering.
-			$nav_menu_setting_id = 'nav_menu_' . $menu_id;
-			$this->manager->add_setting( $nav_menu_setting_id, array(
-				'type'      => 'nav_menu',
-				'default'   => $item_ids,
-				'transport' => 'postMessage',
-			) );
-
+			// Add the menu control, which handles adding, ordering, auto-add, and location assignment. Note that the name control is split out above.
 			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $this->manager, $nav_menu_setting_id, array(
 				'section'   => $section_id,
-				'menu_id'   => $menu_id,
-				'priority'  => 998,
-			) ) );
-
-			// Add the auto-add new pages option.
-			$auto_add = get_option( 'nav_menu_options' );
-			if ( ! isset( $auto_add['auto_add'] ) ) {
-				$auto_add = false;
-			} elseif ( false !== array_search( $menu_id, $auto_add['auto_add'] ) ) {
-				$auto_add = true;
-			} else {
-				$auto_add = false;
-			}
-
-			$menu_autoadd_setting_id = $section_id . '[auto_add]';
-			$this->manager->add_setting( $menu_autoadd_setting_id, array(
-				'type'      => 'menu_autoadd',
-				'default'   => $auto_add,
-				'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
-			) );
-
-			$this->manager->add_control( $menu_autoadd_setting_id, array(
-				'label'     => __( 'Automatically add new top-level pages to this menu.' ),
-				'section'   => $section_id,
-				'type'      => 'checkbox',
 				'priority'  => 999,
-			) );
+			) ) );
 		}
 
-		// Add the add-new-menu section and controls.
-		$this->manager->add_section( new WP_Customize_New_Menu_Section( $this->manager, 'add_menu', array(
-			'title'     => __( 'Add a Menu' ),
-			'panel'     => 'menus',
-			'priority'  => 999,
-		) ) );
-
-		$this->manager->add_setting( 'new_menu_name', array(
-			'type'      => 'new_menu',
-			'default'   => '',
-			'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
-		) );
-
-		$this->manager->add_control( 'new_menu_name', array(
-			'label'        => '',
-			'section'      => 'add_menu',
-			'type'         => 'text',
-			'input_attrs'  => array(
-				'class'        => 'menu-name-field',
-				'placeholder'  => __( 'New menu name' ),
-			),
-		) );
-
-		$this->manager->add_setting( 'create_new_menu', array(
-			'type' => 'new_menu',
-		) );
-
-		$this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
-			'section'  => 'add_menu',
-		) ) );
-	}
-
-	/**
-	 * Save the Menu Name when it's changed.
-	 *
-	 * Menu Name is not previewed because it's designed primarily for admin uses.
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @param mixed                $value   Value of the setting.
-	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
-	 */
-	public function update_menu_name( $value, $setting ) {
-		if ( ! $value || ! $setting ) {
-			return;
-		}
-
-		// Get the menu id from the setting id.
-		$id = str_replace( 'nav_menus[', '', $setting->id );
-		$id = str_replace( '][name]', '', $id );
-
-		if ( 0 == $id ) {
-			return;
-		}
-
-		// Update the menu name with the new $value.
-		wp_update_nav_menu_object( $id, array( 'menu-name' => trim( esc_html( $value ) ) ) );
+		/*
+		 * // Add the add-new-menu section and controls.
+		 * $this->manager->add_section( new WP_Customize_New_Menu_Section( $this->manager, 'add_menu', array(
+		 * 	'title'     => __( 'Add a Menu' ),
+		 * 	'panel'     => 'menus',
+		 * 	'priority'  => 999,
+		 * ) ) );
+		 *
+		 * $this->manager->add_setting( 'new_menu_name', array(
+		 * 	'type'      => 'new_menu',
+		 * 	'default'   => '',
+		 * 	'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
+		 * ) );
+		 *
+		 * $this->manager->add_control( 'new_menu_name', array(
+		 * 	'label'        => '',
+		 * 	'section'      => 'add_menu',
+		 * 	'type'         => 'text',
+		 * 	'input_attrs'  => array(
+		 * 		'class'        => 'menu-name-field',
+		 * 		'placeholder'  => __( 'New menu name' ),
+		 * 	),
+		 * ) );
+		 *
+		 * $this->manager->add_setting( 'create_new_menu', array(
+		 * 	'type' => 'new_menu',
+		 * ) );
+		 *
+		 * $this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
+		 * 	'section'  => 'add_menu',
+		 * ) ) );
+		 */
 	}
 
 	/**
 	 * Update the `auto_add` nav menus option.
-	 *
-	 * Auto-add is not previewed because it is administration-specific.
-	 *
-	 * @since Menu Customizer 0.0
-	 *
-	 * @param mixed                $value   Value of the setting.
-	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
 	 */
 	public function update_menu_autoadd( $value, $setting ) {
-		if ( ! $setting ) {
-			return;
-		}
-
-		// Get the menu id from the setting id.
-		$id = str_replace( 'nav-menus[', '', $setting->id );
-		$id = absint( str_replace( '][auto_add]', '', $id ) );
-
-		if ( ! $id ) {
-			return;
-		}
-
-		$nav_menu_option = (array) get_option( 'nav_menu_options' );
-		if ( ! isset( $nav_menu_option['auto_add'] ) ) {
-			$nav_menu_option['auto_add'] = array();
-		}
-		if ( $value ) {
-			if ( ! in_array( $id, $nav_menu_option['auto_add'] ) ) {
-				$nav_menu_option['auto_add'][] = $id;
-			}
-		} else {
-			if ( false !== ( $key = array_search( $id, $nav_menu_option['auto_add'] ) ) ) {
-				unset( $nav_menu_option['auto_add'][ $key ] );
-			}
-		}
-
-		// Remove nonexistent/deleted menus.
-		$nav_menu_option['auto_add'] = array_intersect( $nav_menu_option['auto_add'], wp_get_nav_menus( array( 'fields' => 'ids' ) ) );
-		update_option( 'nav_menu_options', $nav_menu_option );
-	}
-
-	/**
-	 * Preview changes made to a nav menu.
-	 *
-	 * Filters nav menu display to show customized items in the customized order.
-	 *
-	 * @since Menu Customizer 0.0
-	 *
-	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
-	 * @return WP_Nav_Menu_Object|WP_Error The nav_menu term that corresponds to a setting, or a WP_Error if it doesn't exist.
-	 */
-	public function preview_nav_menu( $setting ) {
-		$menu_id = str_replace( 'nav_menu_', '', $setting->id );
-
-		// Ensure that $menu_id is valid.
-		$menu_id = (int) $menu_id;
-		$menu = wp_get_nav_menu_object( $menu_id );
-		if ( ! $menu || ! $menu_id ) {
-			return new WP_Error( 'invalid_menu_id', __( 'Invalid menu ID.' ) );
-		}
-		if ( is_wp_error( $menu ) ) {
-			return $menu;
-		}
-
-		$this->previewed_menus[ $menu->term_id ] = $setting;
-		return $menu;
-	}
-
-	/**
-	 * Filter for wp_get_nav_menu_items to apply the previewed changes for a setting.
-	 *
-	 * @param array    $items The current menu items.
-	 * @param stdClass $menu  aka WP_Term.
-	 * @return array
-	 */
-	public function filter_nav_menu_items_for_preview( $items, $menu ) {
-		if ( ! isset( $this->previewed_menus[ $menu->term_id ] ) ) {
-			return $items;
-		}
-		$setting = $this->previewed_menus[ $menu->term_id ];
-
-		// Note that setting value is only posted if it's changed.
-		if ( is_array( $setting->post_value() ) ) {
-			$new_ids = $setting->post_value();
-			$new_items = array();
-			$i = 0;
-
-			// For each item, get object and update menu order property.
-			foreach ( $new_ids as $item_id ) {
-				$item = get_post( $item_id );
-				$item = wp_setup_nav_menu_item( $item );
-				$item->menu_order = $i;
-				$new_items[] = $item;
-				$i++;
-			}
-
-			$items = $new_items;
-		}
-		return $items;
-	}
-
-	/**
-	 * Save changes made to a nav menu.
-	 *
-	 * Assigns cloned & modified items to this menu, publishing them.
-	 * Updates the order of all items in the menu.
-	 *
-	 * @since Menu Customizer 0.0
-	 *
-	 * @param array                $value   Ordered array of the new menu item ids.
-	 * @param WP_Customize_Setting $setting WP_Customize_Setting instance.
-	 */
-	public function update_nav_menu( $value, $setting ) {
-		$menu_id = str_replace( 'nav_menu_', '', $setting->id );
-
-		// Ensure that $menu_id is valid.
-		$menu_id = (int) $menu_id;
-		$menu = wp_get_nav_menu_object( $menu_id );
-		if ( ! $menu || ! $menu_id ) {
-			return new WP_Error( 'invalid_menu_id', __( 'Invalid menu ID.' ) );
-		}
-		if ( is_wp_error( $menu ) ) {
-			return $menu;
-		}
-
-		// Get original items in this menu. Any that aren't there anymore need to be deleted.
-		$originals = wp_get_nav_menu_items( $menu_id );
-		// Convert to just an array of ids.
-		$original_ids = array();
-		foreach ( $originals as $item ) {
-			$original_ids[] = $item->ID;
-		}
-
-		$items = $value; // Ordered array of item ids.
-
-		if ( $original_ids === $items ) {
-			// This menu is completely unchanged - don't need to do anything else.
-			return $value;
-		}
-
-		// Are there removed items that need to be deleted?
-		// This will also include any items that have been cleared.
-		$old_items = array_diff( $original_ids, $items );
-
-		$i = 1;
-		foreach ( $items as $item_id ) {
-			// Assign the existing item to this menu, in case it's orphaned. Update the order, regardless.
-			$this->update_menu_item_order( $menu_id, $item_id, $i );
-			$i++;
-		}
-
-		foreach ( $old_items as $item_id ) {
-			if ( is_nav_menu_item( $item_id ) ) {
-				wp_delete_post( $item_id, true );
-			}
-		}
+		throw new Exception( 'eliminated' );
 	}
 
 	/**
 	 * Updates the order for and publishes an existing menu item.
-	 *
-	 * Skips the mess that is wp_update_nav_menu_item() and avoids
-	 * handling menu item fields that are not changed.
-	 *
-	 * Based on the parts of wp_update_nav_menu_item() that are needed here. $menu_id must already be
-	 * validated before running this function (to avoid re-validating for each item in the menu).
-	 *
-	 * @since Menu Customizer 0.0
-	 *
-	 * @param int $menu_id The valid ID of the menu.
-	 * @param int $item_id The ID of the (existing) menu item.
-	 * @param int $order   The menu item's new order/position.
-	 * @return int|WP_Error The menu item's database ID or WP_Error object on failure.
 	 */
-	public function update_menu_item_order( $menu_id, $item_id, $order ) {
-		$item_id = (int) $item_id;
-
-		// Make sure that we don't convert non-nav_menu objects into nav_menu_item_objects.
-		if ( ! is_nav_menu_item( $item_id ) ) {
-			return new WP_Error( 'update_nav_menu_item_failed', __( 'The given object ID is not that of a menu item.' ) );
-		}
-
-		// Associate the menu item with the menu term.
-		// Only set the menu term if it isn't set to avoid unnecessary wp_get_object_terms().
-		if ( $menu_id && ! is_object_in_term( $item_id, 'nav_menu', (int) $menu_id ) ) {
-			wp_set_object_terms( $item_id, array( $menu_id ), 'nav_menu' );
-		}
-
-		// Populate the potentially-changing fields of the menu item object.
-		$post = array(
-			'ID'           => $item_id,
-			'menu_order'   => $order,
-			'post_status'  => 'publish',
-		);
-
-		// Update the menu item object.
-		wp_update_post( $post );
-
-		return $item_id;
+	public function update_menu_item_order() {
+		throw new Exception( 'eliminated' );
 	}
 
 	/**
 	 * Update properties of a nav menu item, with the option to create a clone of the item.
-	 *
-	 * Wrapper for wp_update_nav_menu_item() that only requires passing changed properties.
-	 *
-	 * @link https://core.trac.wordpress.org/ticket/28138
-	 *
-	 * @since Menu Customizer 0.0
-	 *
-	 * @param int   $menu_id The ID of the menu. If "0", makes the menu a draft orphan.
-	 * @param int   $item_id The ID of the menu item. If "0", creates a new menu item.
-	 * @param array $data    The new data for the menu item.
-	 * @param bool  $clone   Whether or not to create a clone of the item.
 	 */
-	public function update_item( $menu_id, $item_id, $data, $clone = false ) {
-		$item = get_post( $item_id );
-		$item = wp_setup_nav_menu_item( $item );
-		$defaults = array(
-			'menu-item-db-id'        => $item_id,
-			'menu-item-object-id'    => $item->object_id,
-			'menu-item-object'       => $item->object,
-			'menu-item-parent-id'    => $item->menu_item_parent,
-			'menu-item-position'     => $item->menu_order,
-			'menu-item-type'         => $item->type,
-			'menu-item-title'        => $item->title,
-			'menu-item-url'          => $item->url,
-			'menu-item-description'  => $item->description,
-			'menu-item-attr-title'   => $item->attr_title,
-			'menu-item-target'       => $item->target,
-			'menu-item-classes'      => implode( ' ', $item->classes ),
-			'menu-item-xfn'          => $item->xfn,
-			'menu-item-status'       => $item->publish,
-		);
-
-		$args = wp_parse_args( $data, $defaults );
-
-		if ( $clone ) {
-			$item_id = 0;
-		}
-
-		return wp_update_nav_menu_item( $menu_id, $item_id, $args );
+	public function update_item() {
+		throw new Exception( 'eliminated' );
 	}
 
 	/**

@@ -42,7 +42,6 @@ function menu_customizer_init( $wp_customize ) {
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-setting.php';
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-item-setting.php';
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-menus-panel.php';
-	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-menus-panel.php';
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-control.php';
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-item-control.php';
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-name-control.php';
