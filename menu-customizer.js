@@ -5,7 +5,7 @@
 	wpNavMenu.originalInit = wpNavMenu.init;
 
 	wpNavMenu.options.menuItemDepthPerLevel = 24;
-	wpNavMenu.options.sortableItems         = '> .customize-control-menu_item';
+	wpNavMenu.options.sortableItems         = '.customize-control-menu_item';
 
 	wpNavMenu.init = function() {
 		this.jQueryExtensions();
@@ -1660,12 +1660,17 @@
 			menuList.on( 'sortupdate', function() {
 					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
 
+					/**
+					 * Extract the menu item ids from the containers.
+					 */
 					menuItemIds = $.map( menuItemContainerIds, function( menuItemContainerId ) {
 						return parseInt( menuItemContainerId.replace( 'customize-control-nav_menus-' + self.params.menu_id + '-', '' ), 10 );
 					} );
+					self.setting( menuItemIds );
 				} );
 
 			menuList.on( 'sortstop', function ( event, ui ) {
+
 				var id, menuItemControl;
 
 				id = ui.item.find( '.menu-item-data-db-id' ).val();
