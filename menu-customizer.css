@@ -252,7 +252,7 @@
 	white-space: nowrap;
 }
 
-.customize-control-menu_item a.item-edit:focus {
+.customize-control-nav_menu_item a.item-edit:focus {
 	color: #0073aa;
 }
 
@@ -864,7 +864,7 @@ li.assigned-to-menu-location .add-new-menu-item {
 	border-bottom: none;
 }
 
-.customize-control-menu_item {
+.customize-control-nav_menu_item {
 	margin-bottom: 0;
 }
 
