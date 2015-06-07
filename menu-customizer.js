@@ -4,7 +4,7 @@
 
 	wpNavMenu.originalInit = wpNavMenu.init;
 
-	wpNavMenu.options.menuItemDepthPerLevel = 24;
+	wpNavMenu.options.menuItemDepthPerLevel = 15;
 	wpNavMenu.options.sortableItems         = '.customize-control-menu_item';
 
 	wpNavMenu.init = function() {
