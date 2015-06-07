@@ -1,5 +1,5 @@
 /* global _wpCustomizeMenusSettings, confirm, alert, wpNavMenu */
-(function( api, wp, $ ){
+(function( api, wp, $ ) {
 	'use strict';
 
 	wpNavMenu.originalInit = wpNavMenu.init;
@@ -119,11 +119,11 @@
 			'input #menu-items-search': 'debounceSearch',
 			'change #menu-items-search': 'debounceSearch',
 			'click #menu-items-search': 'debounceSearch',
-			'focus .menu-item-tpl' : 'focus',
-			'click .menu-item-tpl' : '_submit',
-			'keypress .menu-item-tpl' : '_submit',
-			'click #custom-menu-item-submit' : '_submitLink',
-			'keypress #custom-menu-item-name' : '_submitLink',
+			'focus .menu-item-tpl': 'focus',
+			'click .menu-item-tpl': '_submit',
+			'keypress .menu-item-tpl': '_submit',
+			'click #custom-menu-item-submit': '_submitLink',
+			'keypress #custom-menu-item-name': '_submitLink',
 			'keydown' : 'keyboardAccessible'
 		},
 
@@ -175,7 +175,7 @@
 
 			// Load more items.
 			this.sectionContent.scroll( function() {
-				var totalHeight = self.$el.find( '.accordion-section.open .accordion-section-content' ).prop('scrollHeight'),
+				var totalHeight = self.$el.find( '.accordion-section.open .accordion-section-content' ).prop( 'scrollHeight' ),
 				    visibleHeight = self.$el.find( '.accordion-section.open' ).height();
 				if ( ! self.loading && $( this ).scrollTop() > 3 / 4 * totalHeight - visibleHeight ) {
 					var type = $( this ).data( 'type' ),
@@ -226,7 +226,7 @@
 			} else if ( 1 < page ) {
 				$( '#available-menu-items-search' ).addClass( 'loading-more' );
 			} else if ( '' === this.searchTerm ) {
-				typeInner.html('');
+				typeInner.html( '' );
 				return;
 			}
 			$( '#available-menu-items-search' ).addClass( 'loading' );
@@ -250,7 +250,7 @@
 				}
 				if ( 1 === page ) {
 					// Clear previous results as it's a new search.
-					typeInner.html('');
+					typeInner.html( '' );
 				}
 				if ( response.data && response.data.message ) {
 					if ( 0 === typeInner.children().length ) {
@@ -360,7 +360,7 @@
 		// Submit handler for keypress and click on menu item.
 		_submit: function( event ) {
 			// Only proceed with keypress if it is Enter or Spacebar
-			if ( event.type === 'keypress' && ( event.which !== 13 && event.which !== 32 ) ) {
+			if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
 				return;
 			}
 
@@ -392,11 +392,10 @@
 			$( menuitemTpl ).find( '.menu-item-handle' ).addClass( 'item-added' );
 		},
 
-
 		// Submit handler for keypress and click on custom menu item.
 		_submitLink: function( event ) {
 			// Only proceed with keypress if it is Enter.
-			if ( event.type === 'keypress' && ( event.which !== 13 ) ) {
+			if ( 'keypress' === event.type && ( 13 !== event.which ) ) {
 				return;
 			}
 
@@ -487,11 +486,11 @@
 
 		// Add keyboard accessiblity to the panel
 		keyboardAccessible: function( event ) {
-			var isEnter = ( event.which === 13 ),
-				isEsc = ( event.which === 27 ),
-				isDown = ( event.which === 40 ),
-				isUp = ( event.which === 38 ),
-				isBackTab = ( event.which === 9  && event.shiftKey ),
+			var isEnter = ( 13 === event.which ),
+				isEsc = ( 27 === event.which ),
+				isDown = ( 40 === event.which ),
+				isUp = ( 38 === event.which ),
+				isBackTab = ( 9 === event.which && event.shiftKey ),
 				selected = null,
 				firstVisible = this.$el.find( '> .menu-item-tpl:visible:first' ),
 				lastVisible = this.$el.find( '> .menu-item-tpl:visible:last' ),
@@ -501,13 +500,13 @@
 				if ( isDown ) {
 					if ( isSearchFocused ) {
 						selected = firstVisible;
-					} else if ( this.selected && this.selected.nextAll( '.menu-item-tpl:visible' ).length !== 0 ) {
+					} else if ( this.selected && 0 !== this.selected.nextAll( '.menu-item-tpl:visible' ).length ) {
 						selected = this.selected.nextAll( '.menu-item-tpl:visible:first' );
 					}
 				} else if ( isUp ) {
 					if ( isSearchFocused ) {
 						selected = lastVisible;
-					} else if ( this.selected && this.selected.prevAll( '.menu-item-tpl:visible' ).length !== 0 ) {
+					} else if ( this.selected && 0 !== this.selected.prevAll( '.menu-item-tpl:visible' ).length ) {
 						selected = this.selected.prevAll( '.menu-item-tpl:visible:first' );
 					}
 				}
@@ -568,7 +567,7 @@
 					help.attr( 'aria-expanded', 'false' );
 				}
 
-				if ( button.attr( 'aria-expanded' ) === 'true' ) {
+				if ( 'true' === button.attr( 'aria-expanded' ) ) {
 					button.attr( 'aria-expanded', 'false' );
 					panelMeta.removeClass( 'open' );
 					panelMeta.removeClass( 'active-menu-screen-options' );
@@ -589,7 +588,7 @@
 					return;
 				}
 
-				if ( button.attr( 'aria-expanded' ) === 'true' ) {
+				if ( 'true' === button.attr( 'aria-expanded' ) ) {
 					button.attr( 'aria-expanded', 'false' );
 					help.attr( 'aria-expanded', 'true' );
 					panelMeta.addClass( 'open' );
@@ -603,7 +602,7 @@
 		/**
 		 * Show/hide/save screen options (columns). From common.js.
 		 */
-		ready : function() {
+		ready: function() {
 			var panel = this;
 			this.container.find( '.hide-column-tog' ).click( function() {
 				var $t = $( this ), column = $t.val();
@@ -625,30 +624,30 @@
 			});
 		},
 
-		saveManageColumnsState : function() {
+		saveManageColumnsState: function() {
 			var hidden = this.hidden();
 			$.post( wp.ajax.settings.url, {
 				action: 'hidden-columns',
 				hidden: hidden,
-				screenoptionnonce: $('#screenoptionnonce').val(),
+				screenoptionnonce: $( '#screenoptionnonce' ).val(),
 				page: 'nav-menus'
 			});
 		},
 
-		checked : function(column) {
+		checked: function( column ) {
 			this.container.addClass( 'field-' + column + '-active' );
 		},
 
-		unchecked : function(column) {
+		unchecked: function( column ) {
 			this.container.removeClass( 'field-' + column + '-active' );
 		},
 
-		hidden : function() {
-			this.hidden = function(){
-				return $('.hide-column-tog').not(':checked').map(function() {
+		hidden: function() {
+			this.hidden = function() {
+				return $( '.hide-column-tog' ).not( ':checked' ).map(function() {
 					var id = this.id;
 					return id.substring( id, id.length - 5 );
-				}).get().join(',');
+				}).get().join( ',' );
 			};
 		}
 	});
@@ -670,7 +669,7 @@
 		 * @param {String} id
 		 * @param {Object} options
 		 */
-		initialize: function ( id, options ) {
+		initialize: function( id, options ) {
 			var section = this;
 			section.contentEmbedded = false;
 			api.Section.prototype.initialize.call( this, id, options );
@@ -728,7 +727,7 @@
 		 *
 		 * @since Menu Customizer 0.3
 		 */
-		attachEvents: function () {
+		attachEvents: function() {
 			var section = this;
 			this.container.on( 'click keydown', '.add-menu-toggle', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
@@ -751,7 +750,7 @@
 		 *
 		 * @param {Boolean} expanded
 		 */
-		onChangeExpanded: function ( expanded ) {
+		onChangeExpanded: function( expanded ) {
 			var section = this,
 			    button = section.container.find( '.add-menu-toggle' ),
 				content = section.container.find( '.new-menu-section-content' ),
@@ -828,11 +827,11 @@
 			var $title = $section.find( '.accordion-section-title' ),
 				$location = $section.find( '.menu-in-location' );
 
-			if ( $location.length < 1 ) {
+			if ( 1 > $location.length ) {
 				$section.removeClass( 'assigned-to-menu-location' );
 			}
 
-			if ( $location.length <= 1 ) {
+			if ( 1 >= $location.length ) {
 				$section.find( '.menu-in-locations' ).remove();
 				$section.find( '.menu-in-location' ).show();
 			} else {
@@ -873,7 +872,7 @@
 			} else if ( ! to ) {
 				setTo.hide();
 			} else {
- 				menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
+				menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
 				setTo.show();
 				locationNames.text( menuName );
 				oldBox.prop( 'checked', false );
@@ -966,7 +965,7 @@
 			 */
 			$reorderNav = this.container.find( '.menu-item-reorder-nav' );
 			$reorderNav.find( '.menus-move-up, .menus-move-down, .menus-move-left, .menus-move-right' ).on( 'click keypress', function( event ) {
-				if ( event.type === 'keypress' && ( event.which !== 13 && event.which !== 32 ) ) {
+				if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
 					return;
 				}
 				$( this ).focus();
@@ -977,7 +976,7 @@
 					isMoveRight = $( this ).is( '.menus-move-right' ),
 					i = self.getMenuItemPosition();
 
-				if ( ( isMoveUp && i === 0 ) || ( isMoveDown && i === self.getMenuControl().setting().length - 1 ) ) {
+				if ( ( isMoveUp && 0 === i ) || ( isMoveDown && i === self.getMenuControl().setting().length - 1 ) ) {
 					return;
 				}
 
@@ -1103,12 +1102,12 @@
 		 * Override the embed() method to do nothing,
 		 * so that the control isn't embedded on load.
 		 */
-		embed: function () {},
+		embed: function() {},
 
 		/**
 		 * @since Menu Customizer 0.3
 		 */
-		actuallyEmbed: function () {
+		actuallyEmbed: function() {
 			var control = this;
 
 			control.container.data( 'item-depth', control.params.depth );
@@ -1176,7 +1175,7 @@
 			params = {
 				'action': 'update-menu-item-customizer',
 				'wp_customize': 'on',
-				'clone' : clone,
+				'clone': clone,
 				'item_id': self.params.menu_item_id,
 				'menu-item': item,
 				'customize-menu-item-nonce': api.Menus.data.nonce
@@ -1211,7 +1210,7 @@
 
 						// Update parent id for direct children items.
 						api.control.each( function( control ) {
-							if ( control.params.type === 'menu_item' && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
+							if ( 'menu_item' === control.params.type && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
 								control.params.menu_item_parent_id = id;
 								control.container.find( '.menu-item-data-parent-id' ).val( id );
 								control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
@@ -1268,7 +1267,7 @@
 
 			$menuitem = this.container;
 			$inside = $menuitem.find( '.menu-item-settings:first' );
-			if ( typeof showOrHide === 'undefined' ) {
+			if ( 'undefined' === typeof showOrHide ) {
 				showOrHide = ! $inside.is( ':visible' );
 			}
 
@@ -1322,8 +1321,7 @@
 
 			if ( top ) {
 				handle.append( button );
-			}
-			else {
+			} else {
 				actions.append( button );
 			}
 		},
@@ -1521,7 +1519,7 @@
 				.addClass( 'menu-item-depth-' + ( depth + offset ) );
 
 			// Does this item have any children?
-			if ( i + 1 === menuItemIds.length ){
+			if ( i + 1 === menuItemIds.length ) {
 				// Last item.
 				return;
 			}
@@ -1656,7 +1654,7 @@
 				throw new Error( 'Unexpected menuList.' );
 			}
 
-			menuList.on( 'sortstart', function () {
+			menuList.on( 'sortstart', function() {
 				self.isSorting = true;
 			});
 
@@ -1672,7 +1670,7 @@
 					self.setting( menuItemIds );
 				} );
 
-			menuList.on( 'sortstop', function ( event, ui ) {
+			menuList.on( 'sortstop', function( event, ui ) {
 
 				var id, menuItemControl;
 
@@ -1684,7 +1682,7 @@
 				menuItemControl = api.Menus.getMenuItemControl( id );
 				if ( ! menuItemControl ) {
 					api.control.each( function( control ) {
-						if ( control.params.type === 'menu_item' && control.params.original_id === id ) {
+						if ( 'menu_item' === control.params.type && control.params.original_id === id ) {
 							menuItemControl = control;
 						}
 					} );
@@ -1692,7 +1690,7 @@
 
 				if ( menuItemControl ) {
 					// Ensure that the sortable's own stop() callback has fully fired.
-					setTimeout( function () {
+					setTimeout( function() {
 						menuItemControl.updateMenuItem();
 					} );
 				}
@@ -1708,10 +1706,9 @@
 			 * Keyboard-accessible reordering.
 			 */
 			this.container.find( '.reorder-toggle' ).on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
+				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
 					return;
 				}
-
 
 				self.toggleReordering( ! self.isReordering );
 			} );
@@ -1724,7 +1721,7 @@
 			var self = this;
 
 			this.container.find( '.add-new-menu-item' ).on( 'click keydown', function( event ) {
-				if ( event.type === 'keydown' && ! ( event.which === 13 || event.which === 32 ) ) { // Enter or Spacebar
+				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
 					return;
 				}
 
@@ -1845,7 +1842,7 @@
 
 			placeholderContainer = menuControl.prev( '.nav-menu-inserted-item-loading' );
 
-			callback = callback || function(){};
+			callback = callback || function() {};
 
 			// Trigger customizer processing state.
 			processing = wp.customize.state( 'processing' );
@@ -1944,7 +1941,7 @@
 				name = $( '#customize-control-new_menu_name input' ),
 				submit = $( '#create-new-menu-submit' );
 			name.on( 'keydown', function( event ) {
-				if ( event.which === 13 ) { // Enter.
+				if ( 13 === event.which ) { // Enter.
 					self.submit();
 				}
 			} );
@@ -2063,7 +2060,7 @@
 					spinner.css( 'visibility', 'hidden' );
 
 					// Clear name field.
-					name.val('');
+					name.val( '' );
 
 					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
 
@@ -2203,7 +2200,7 @@
 		var foundControl = null;
 
 		api.control.each( function( control ) {
-			if ( control.params.type === 'menu' && -1 !== _.indexOf( control.setting(), menuItemId ) ) {
+			if ( 'menu' === control.params.type && -1 !== _.indexOf( control.setting(), menuItemId ) ) {
 				foundControl = control;
 			}
 		} );
@@ -2221,7 +2218,7 @@
 		var foundControl = null;
 
 		api.control.each( function( control ) {
-			if ( control.params.type === 'menu_item' && control.params.menu_item_id === menuItemId ) {
+			if ( 'menu_item' === control.params.type && control.params.menu_item_id === menuItemId ) {
 				foundControl = control;
 			}
 		} );
@@ -2241,7 +2238,7 @@
 	 * Update Section Title as menu name is changed and item handle title when label is changed.
 	 */
 	function setupUIPreviewing() {
-		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function(e) {
+		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function( e ) {
 			var el = $( e.currentTarget ),
 				name = el.val(),
 				title = el.closest( '.accordion-section' ).find( '.accordion-section-title' ),
@@ -2264,7 +2261,7 @@
 				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
 			}
 		} );
-		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function(e) {
+		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e ) {
 			var input = $( e.currentTarget ), title, titleEl;
 			title = input.val();
 			titleEl = input.closest( '.menu-item' ).find( '.menu-item-title' );
