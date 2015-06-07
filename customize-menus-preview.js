@@ -36,23 +36,73 @@ wp.customize.menusPreview = ( function( $ ) {
 		}
 
 		self.previewReady.done( function() {
+			wp.customize.each( function ( setting, id ) {
+				setting.id = id;
+				self.bindListener( setting );
+			} );
+
 			wp.customize.preview.bind( 'setting', function( args ) {
-				var id, value, matches;
+				var id, value;
 				args = args.slice();
 				id = args.shift();
 				value = args.shift();
 				if ( ! wp.customize.has( id ) ) {
 					// Currently customize-preview.js is not creating settings for dynamically-created settings in the pane; so we have to do it
 					wp.customize.create( id, value ); // @todo This should be in core
-				}
-
-				// Note we can't do wp.customize.bind( 'change', function( setting ) {...} ) because setting.id is undefined in the preview
-				matches = id.match( /^nav_menu_(\d+)$/ ) || id.match( /^nav_menus\[(\d+)]/ );
-				if ( matches ) {
-					self.refreshMenu( parseInt( matches[1], 10 ) );
+					wp.customize( id ).id = id;
+					self.bindListener( wp.customize( id ) );
 				}
 			} );
 		} );
+	};
+
+	self.bindListener = function ( setting ) {
+		var matches;
+
+		matches = setting.id.match( /^nav_menu\[(\d+)]$/ );
+		if ( matches ) {
+			setting.navMenuId = parseInt( matches[1], 10 );
+			setting.bind( self.onChangeNavMenuSetting );
+			return;
+		}
+
+		matches = setting.id.match( /^nav_menu_item\[(\d+)]$/ );
+		if ( matches ) {
+			setting.navMenuItemId = parseInt( matches[1], 10 );
+			setting.bind( self.onChangeNavMenuItemSetting );
+		}
+	};
+
+	/**
+	 * Handle changing of a nav_menu setting.
+	 *
+	 * @this {wp.customize.Setting}
+	 * @param {object} to
+	 */
+	self.onChangeNavMenuSetting = function( to ) {
+		var setting = this;
+		if ( ! setting.navMenuId ) {
+			throw new Error( 'Expected navMenuId property to be set.' );
+		}
+		if ( to ) {
+			self.refreshMenu( setting.navMenuId );
+		}
+	};
+
+	/**
+	 * Handle changing of a nav_menu_item setting.
+	 *
+	 * @this {wp.customize.Setting}
+	 * @param {object} to
+	 * @param {object} from
+	 */
+	self.onChangeNavMenuItemSetting = function( to, from ) {
+		if ( from && from.nav_menu_term_id && ( ! to || from.nav_menu_term_id !== to.nav_menu_term_id ) ) {
+			self.refreshMenu( from.nav_menu_term_id );
+		}
+		if ( to && to.nav_menu_term_id ) {
+			self.refreshMenu( to.nav_menu_term_id );
+		}
 	};
 
 	/**
