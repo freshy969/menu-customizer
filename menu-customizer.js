@@ -1572,8 +1572,7 @@
 		 * Set up the control.
 		 */
 		ready: function() {
-			//this.$controlSection = this.container.closest( '.control-section' );
-			this.$sectionContent = this.container.closest( '.accordion-section-content' );
+			var control = this;
 
 			control.$controlSection = control.container.closest( '.control-section' );
 			control.$sectionContent = control.container.closest( '.accordion-section-content' );
