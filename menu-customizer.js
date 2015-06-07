@@ -5,7 +5,7 @@
 	if ( ! wp || ! wp.customize ) { return; }
 
 	// Set up our namespace.
-	var OldPreviewer, api = wp.customize;
+	var OldPreviewer;
 
 	/**
 	 * Set up wpNavMenu for drag and drop.
