@@ -539,7 +539,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 							<?php _e( 'Original:' ); ?> <a class="original-link" href="{{ data.url }}">{{{ data.original_title }}}</a>
 						</p>
 					<# } #>
-					<a class="item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}" href="#"><?php _e( 'Remove' ); ?></a>
+					<button type="button" class="not-a-button item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}"><?php _e( 'Remove' ); ?></button>
 					<span class="spinner"></span>
 				</div>
 
