@@ -124,7 +124,7 @@
 			'keypress .menu-item-tpl': '_submit',
 			'click #custom-menu-item-submit': '_submitLink',
 			'keypress #custom-menu-item-name': '_submitLink',
-			'keydown' : 'keyboardAccessible'
+			'keydown': 'keyboardAccessible'
 		},
 
 		// Cache current selected menu item.
