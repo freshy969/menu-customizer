@@ -480,7 +480,6 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 					<span class="item-title">
 						<span class="spinner"></span>
 						<span class="menu-item-title">{{{ data.title }}}</span>
-						<span class="is-submenu"><?php _e( 'sub item' ); ?></span>
 					</span>
 					<span class="item-controls">
 						<a class="item-edit" id="edit-{{ data.menu_item_id }}" title="<?php esc_attr_e( 'Edit Menu Item' ); ?>" href="#"><?php _e( 'Edit Menu Item' ); ?></a>
@@ -541,7 +540,7 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 							<?php _e( 'Original:' ); ?> <a class="original-link" href="{{ data.url }}">{{{ data.original_title }}}</a>
 						</p>
 					<# } #>
-					<a class="item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}" href="#"><?php _e( 'Remove' ); ?></a>
+					<button type="button" class="not-a-button item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}"><?php _e( 'Remove' ); ?></button>
 					<span class="spinner"></span>
 				</div>
 				<input type="hidden" name="menu-item-parent-id" class="menu-item-parent-id" id="edit-menu-item-parent-id-{{ data.menu_item_id }}" value="{{ data.parent }}" />

@@ -1027,7 +1027,8 @@ class WP_Customize_Menus {
 					<dt class="menu-item-handle">
 						<span class="item-type">{{ data.type_label }}</span>
 						<span class="item-title">{{{ data.name }}}</span>
-						<a class="item-add" href="#">Add Menu Item</a>
+						<span class="item-added"><?php _e( 'Added' ); ?></span>
+						<button type="button" class="not-a-button item-add">Add Menu Item</button>
 					</dt>
 				</dl>
 			</div>
@@ -1058,7 +1059,7 @@ class WP_Customize_Menus {
 			<div class="menu-item-reorder-nav">
 				<?php
 				printf(
-					'<span class="menus-move-up" tabindex="0">%1$s</span><span class="menus-move-down" tabindex="0">%2$s</span><span class="menus-move-left" tabindex="0">%3$s</span><span class="menus-move-right" tabindex="0">%4$s</span>',
+					'<button type="button" class="menus-move-up">%1$s</button><button type="button" class="menus-move-down">%2$s</button><button type="button" class="menus-move-left">%3$s</button><button type="button" class="menus-move-right">%4$s</button>',
 					esc_html__( 'Move up' ),
 					esc_html__( 'Move down' ),
 					esc_html__( 'Move one level up' ),
