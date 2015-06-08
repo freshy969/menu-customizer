@@ -781,7 +781,10 @@ class WP_Customize_Menus {
 
 		if ( $nav_menu ) {
 			$exported_args = get_object_vars( $args );
-			unset( $exported_args['fallback_cb'] ); // This could be a closure which would blow serialization, so remove.
+			if ( ! is_string( $exported_args['fallback_cb'] ) ) {
+				// This could be a closure or object method which would blow serialization, so override.
+				$exported_args['fallback_cb'] = '__return_empty_string';
+			}
 			unset( $exported_args['echo'] ); // We'll be forcing echo in the Ajax request handler anyway.
 			$exported_args['menu'] = $nav_menu->term_id; // Eliminate location-based and slug-based calls; always use menu ID.
 			ksort( $exported_args );
