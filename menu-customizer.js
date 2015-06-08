@@ -999,18 +999,13 @@
 		 * Set up event handlers for menu item deletion.
 		 */
 		_setupRemoveUI: function() {
-			var control = this, $removeBtn, spinner;
+			var control = this, $removeBtn;
 
 			// Configure delete button.
 			$removeBtn = this.container.find( '.item-delete' );
-			spinner = this.container.find( '.item-title .spinner' );
 
 			$removeBtn.on( 'click', function( e ) {
 				e.preventDefault();
-
-				// Show spinner.
-				spinner.show();
-				spinner.css( 'visibility', 'visible' );
 
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
@@ -1509,18 +1504,25 @@
 				control.elements.auto_add.set( object.auto_add );
 			});
 
-
-			control.setting.bind( function ( from, to ) {
+			control.setting.bind( function ( to, from ) {
 				if ( false === to ) {
-					control.container.remove();
-					api.control.remove( control.id );
-					return;
-				}
-				if ( to.position !== from.position ) {
-					// @todo now we need to update the priorities of all the menu item controls to reflect the new positions
-					// @todo self._applyCardinalOrderClassNames();
+					control._handleDeletion();
+				} else {
+					if ( ! from || to.position !== from.position ) {
+						// @todo now we need to update the priorities of all the menu item controls to reflect the new positions
+						// @todo self._applyCardinalOrderClassNames();
+					}
 				}
 			} );
+
+			control.container.find( '.menu-delete' ).on( 'click keydown', function ( event ) {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+					return;
+				}
+				event.stopPropagation();
+				event.preventDefault();
+				control.confirmDelete();
+			});
 		},
 
 		/**
@@ -1705,6 +1707,32 @@
 			} );
 		},
 
+		_handleDeletion: function() {
+			var control = this,
+				section,
+				removeSection;
+			section = api.section( control.section() );
+			removeSection = function() {
+				section.container.remove();
+				api.section.remove( section.id );
+				// @todo Remove the option from the theme location dropdowns. Should be automatic based on the setting being deleted.
+				// dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
+				// dropdowns.find( 'option[value=' + menuId + ']' ).remove();
+			};
+
+			if ( section && section.expanded() ) {
+				section.collapse({
+					completeCallback: function() {
+						removeSection();
+						wp.a11y.speak( api.Menus.data.l10n.menuDeleted );
+						api.panel( 'menus' ).focus();
+					}
+				});
+			} else {
+				removeSection();
+			}
+		},
+
 		/**
 		 * Add classes to the menu item controls to assist with styling.
 		 */
@@ -1743,6 +1771,13 @@
 		/***********************************************************************
 		 * Begin public API methods
 		 **********************************************************************/
+
+		confirmDelete: function () {
+			var control = this;
+			if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
+				control.setting.set( false );
+			}
+		},
 
 		/**
 		 * Enable/disable the reordering UI
@@ -1948,44 +1983,6 @@
 			});
 
 			return false;
-		},
-
-		// Deletes a menu.
-		submitDelete: function( el ) {
-			var params, dropdowns,
-				menuId = $( el ).attr( 'id' ).replace( 'delete-menu-', '' ),
-				section = $( el ).closest( '.accordion-section' ),
-				spinner = section.find( '.add-menu-item-loading.spinner' ),
-				control = this;
-
-			if ( menuId ) {
-				// Show spinner.
-				spinner.css( 'visibility', 'visible' );
-
-				// Prompt user with an AYS.
-				if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
-					section.addClass( 'deleting' );
-					control.setting.set( false );
-
-					api.section( 'nav_menu[' + menuId + ']' ).collapse();
-					section.remove(); // @todo core there should be API methods for deleting sections.
-
-					// Focus the menu panel.
-					api.panel( 'menus' ).focus();
-
-					// Remove the option from the theme location dropdowns.
-					dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
-					dropdowns.find( 'option[value=' + menuId + ']' ).remove();
-
-					wp.a11y.speak( api.Menus.data.l10n.menuDeleted );
-
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-				} else {
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-				}
-			}
 		}
 	});
 

@@ -84,9 +84,7 @@ wp.customize.menusPreview = ( function( $ ) {
 		if ( ! setting.navMenuId ) {
 			throw new Error( 'Expected navMenuId property to be set.' );
 		}
-		if ( to ) {
-			self.refreshMenu( setting.navMenuId );
-		}
+		self.refreshMenu( setting.navMenuId );
 	};
 
 	/**
