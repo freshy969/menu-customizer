@@ -57,7 +57,7 @@ wp.customize.menusPreview = ( function( $ ) {
 	};
 
 	self.bindListener = function ( setting ) {
-		var matches;
+		var matches, themeLocation;
 
 		matches = setting.id.match( /^nav_menu\[(\d+)]$/ );
 		if ( matches ) {
@@ -70,6 +70,15 @@ wp.customize.menusPreview = ( function( $ ) {
 		if ( matches ) {
 			setting.navMenuItemId = parseInt( matches[1], 10 );
 			setting.bind( self.onChangeNavMenuItemSetting );
+			return;
+		}
+
+		matches = setting.id.match( /^nav_menu_locations\[(.+?)]/ );
+		if ( matches ) {
+			themeLocation = matches[1];
+			setting.bind( function() {
+				self.refreshMenuLocation( themeLocation );
+			} );
 		}
 	};
 
@@ -118,6 +127,14 @@ wp.customize.menusPreview = ( function( $ ) {
 		} );
 	};
 
+	self.refreshMenuLocation = function( location ) {
+		_.each( self.navMenuInstanceArgs, function( navMenuArgs, instanceNumber ) {
+			if ( location === navMenuArgs.theme_location ) {
+				self.refreshMenuInstance( instanceNumber );
+			}
+		} );
+	};
+
 	/**
 	 * Update a specific instance of a given menu on the page.
 	 *
@@ -142,7 +159,7 @@ wp.customize.menusPreview = ( function( $ ) {
 		data[ self.renderQueryVar ] = '1';
 		customized = {};
 		wp.customize.each( function( setting, id ) {
-			if ( /^nav_menu/.test( id ) ) {
+			if ( /^(nav_menu|nav_menu_locations)/.test( id ) ) {
 				customized[ id ] = setting.get();
 			}
 		} );

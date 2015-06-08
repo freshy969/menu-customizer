@@ -50,7 +50,8 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 				<li class="customize-control">
 					<span class="customize-control-title"><?php _e( 'Menu locations' ); ?></span>
 				</li>
-				<?php $locations = get_registered_nav_menus(); ?>
+				<?php
+				$locations = get_registered_nav_menus(); ?>
 				<?php foreach ( $locations as $location => $description ) : ?>
 
 					<li class="customize-control customize-control-checkbox">

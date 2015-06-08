@@ -1867,14 +1867,6 @@
 				event.stopPropagation();
 				event.preventDefault();
 			} );
-			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
-				self.submitDelete( event.target );
-				event.stopPropagation();
-				event.preventDefault();
-			} );
 		},
 
 		submit: function() {
@@ -1991,7 +1983,7 @@
 	 * menu_location, menu_item, nav_menu, and new_menu.
 	 */
 	$.extend( api.controlConstructor, {
-		//@todo menu_location: api.Menus.MenuLocationControl,
+		menu_location: api.Menus.MenuLocationControl,
 		nav_menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
 		nav_menu_name: api.Menus.MenuNameControl

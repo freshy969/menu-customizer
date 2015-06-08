@@ -409,45 +409,45 @@ class WP_Customize_Menus {
 		) ) );
 		$menus = wp_get_nav_menus();
 
-		/*
-		 * // Menu loactions.
-		 * $this->manager->remove_section( 'nav' ); // Remove old core section. @todo core merge remove corresponding code from WP_Customize_Manager::register_controls().
-		 * $locations     = get_registered_nav_menus();
-		 * $num_locations = count( array_keys( $locations ) );
-		 * $description   = '<p>' . sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
-		 * $description  .= '</p><p>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' ) . '</p>';
-		 *
-		 * $this->manager->add_section( 'menu_locations', array(
-		 * 	'title'       => __( 'Menu Locations' ),
-		 * 	'panel'       => 'menus',
-		 * 	'priority'    => 5,
-		 * 	'description' => $description,
-		 * ) );
-		 *
-		 * // @todo if ( ! $menus ) : make a "default" menu
-		 * if ( $menus ) {
-		 * 	$choices = array( '' => __( '&mdash; Select &mdash;' ) );
-		 * 	foreach ( $menus as $menu ) {
-		 * 		    $choices[ $menu->term_id ] = wp_html_excerpt( $menu->name, 40, '&hellip;' );
-		 * 	}
-		 *
-		 * 	foreach ( $locations as $location => $description ) {
-		 * 		$menu_setting_id = "nav_menu_locations[{$location}]";
-		 *
-		 * 		$this->manager->add_setting( $menu_setting_id, array(
-		 * 			'sanitize_callback' => 'absint',
-		 * 			'theme_supports'    => 'menus',
-		 * 		) );
-		 *
-		 * 		$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $menu_setting_id, array(
-		 * 			'label'       => $description,
-		 * 			'location_id' => $location,
-		 * 			'section'     => 'menu_locations',
-		 * 			'choices'     => $choices,
-		 * 		) ) );
-		 * 	}
-		 * }
-		 */
+		// Menu loactions.
+		$this->manager->remove_section( 'nav' ); // Remove old core section. @todo core merge remove corresponding code from WP_Customize_Manager::register_controls().
+		$locations     = get_registered_nav_menus();
+		$num_locations = count( array_keys( $locations ) );
+		$description   = '<p>' . sprintf( _n( 'Your theme contains %s menu location. Select which menu you would like to use.', 'Your theme contains %s menu locations. Select which menu appears in each location.', $num_locations ), number_format_i18n( $num_locations ) );
+		$description  .= '</p><p>' . __( 'You can also place menus in widget areas with the Custom Menu widget.' ) . '</p>';
+
+		$this->manager->add_section( 'menu_locations', array(
+			'title'       => __( 'Menu Locations' ),
+			'panel'       => 'menus',
+			'priority'    => 5,
+			'description' => $description,
+		) );
+
+		// @todo if ( ! $menus ) : make a "default" menu
+		if ( $menus ) {
+			$choices = array( '' => __( '&mdash; Select &mdash;' ) );
+			foreach ( $menus as $menu ) {
+				$choices[ $menu->term_id ] = wp_html_excerpt( $menu->name, 40, '&hellip;' );
+			}
+
+			foreach ( $locations as $location => $description ) {
+				$menu_setting_id = "nav_menu_locations[{$location}]";
+
+				$this->manager->add_setting( $menu_setting_id, array(
+					'sanitize_callback' => 'absint',
+					'theme_supports'    => 'menus',
+					'type'              => 'theme_mod',
+					'transport'         => 'postMessage',
+				) );
+
+				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $menu_setting_id, array(
+					'label'       => $description,
+					'location_id' => $location,
+					'section'     => 'menu_locations',
+					'choices'     => $choices,
+				) ) );
+			}
+		}
 
 		// Register each menu as a Customizer section, and add each menu item to each menu.
 		foreach ( $menus as $menu ) {
@@ -786,7 +786,6 @@ class WP_Customize_Menus {
 				$exported_args['fallback_cb'] = '__return_empty_string';
 			}
 			unset( $exported_args['echo'] ); // We'll be forcing echo in the Ajax request handler anyway.
-			$exported_args['menu'] = $nav_menu->term_id; // Eliminate location-based and slug-based calls; always use menu ID.
 			ksort( $exported_args );
 			$exported_args['args_hash'] = $this->hash_nav_menu_args( $exported_args );
 			$this->preview_nav_menu_instance_args[ $this->preview_nav_menu_instance_number ] = $exported_args;
