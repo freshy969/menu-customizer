@@ -162,6 +162,12 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 				$term = wp_get_nav_menu_object( $this->term_id );
 				if ( $term ) {
 					$value = wp_array_slice_assoc( (array) $term, array_keys( $this->default ) );
+
+					$nav_menu_options = (array) get_option( 'nav_menu_options', array() );
+					$value['auto_add'] = false;
+					if ( isset( $nav_menu_options['auto_add'] ) && is_array( $nav_menu_options['auto_add'] ) ) {
+						$value['auto_add'] = in_array( $term->term_id, $nav_menu_options['auto_add'] );
+					}
 				}
 			}
 

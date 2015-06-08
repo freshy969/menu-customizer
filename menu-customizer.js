@@ -967,7 +967,7 @@
 			_.each( control.elements, function ( element, property ) {
 				element.bind(function ( value ) {
 					var settingValue = control.setting();
-					if ( settingValue[ property ] !== value ) {
+					if ( settingValue && settingValue[ property ] !== value ) {
 						settingValue = _.clone( settingValue );
 						settingValue[ property ] = value;
 						control.setting.set( settingValue );
@@ -991,7 +991,7 @@
 
 			// When saving, update original_id to menu_item_id, initiating new clones as needed.
 			api.bind( 'save', function() {
-				throw new Error( 'Need to process customize_save_response.' );
+				console.warn( 'Need to process customize_save_response.' );
 			} );
 		},
 
@@ -1489,6 +1489,26 @@
 		 */
 		_setupModel: function() {
 			var control = this;
+
+			control.elements = {};
+			control.elements.auto_add = new api.Element( control.container.find( 'input[type=checkbox].auto_add' ) );
+
+			control.elements.auto_add.bind(function ( auto_add ) {
+				var settingValue = control.setting();
+				if ( settingValue && settingValue.auto_add !== auto_add ) {
+					settingValue = _.clone( settingValue );
+					settingValue.auto_add = auto_add;
+					control.setting.set( settingValue );
+				}
+			});
+			control.elements.auto_add.set( control.setting().auto_add );
+			control.setting.bind(function ( object ) {
+				if ( ! object ) {
+					return;
+				}
+				control.elements.auto_add.set( object.auto_add );
+			});
+
 
 			control.setting.bind( function ( from, to ) {
 				if ( false === to ) {
