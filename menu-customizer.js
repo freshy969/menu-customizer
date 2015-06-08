@@ -953,7 +953,8 @@
 		 * Set up event handlers for menu item updating.
 		 */
 		_setupUpdateUI: function() {
-			var control = this;
+			var control = this,
+				settingValue = control.setting();
 
 			control.elements = {};
 			control.elements.url = new api.Element( control.container.find( '.edit-menu-item-url' ) );
@@ -961,6 +962,7 @@
 			control.elements.attr_title = new api.Element( control.container.find( '.edit-menu-item-attr-title' ) );
 			// @todo add more elements
 			// @todo instead of applying control.params to the content template, we can apply them to the built DOM as the changes happen?
+
 
 			_.each( control.elements, function ( element, property ) {
 				element.bind(function ( value ) {
@@ -971,9 +973,15 @@
 						control.setting.set( settingValue );
 					}
 				});
+				if ( settingValue ) {
+					element.set( settingValue[ property ] );
+				}
 			});
 
 			control.setting.bind(function ( object ) {
+				if ( ! object ) {
+					return;
+				}
 				_.each( object, function ( value, key ) {
 					if ( control.elements[ key ] ) {
 						control.elements[ key ].set( object[ key ] );
@@ -1427,23 +1435,27 @@
 
 		ready: function () {
 			var control = this,
-				input = control.container.find( '.menu-name-field' );
+				settingValue = control.setting();
 
-			input.val( control.setting().name );
+			control.nameElement = new api.Element( control.container.find( '.menu-name-field' ) );
 
-			control.setting.bind(function ( to ) {
-				input.val( to.name );
-			});
-
-			input.on( 'keyup', function () {
-				var setting = control.setting();
-				if ( setting.name !== input.val() ) {
-					setting = _.clone( control.setting() );
-					setting.name = input.val();
-					control.setting.set( setting );
+			control.nameElement.bind(function ( value ) {
+				var settingValue = control.setting();
+				if ( settingValue && settingValue.name !== value ) {
+					settingValue = _.clone( settingValue );
+					settingValue.name = value;
+					control.setting.set( settingValue );
 				}
 			});
+			if ( settingValue ) {
+				control.nameElement.set( settingValue.name );
+			}
 
+			control.setting.bind(function ( object ) {
+				if ( object ) {
+					control.nameElement.set( object.name );
+				}
+			});
 		}
 
 	});

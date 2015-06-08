@@ -94,10 +94,10 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 		<div id="menu-item-{{ data.menu_item_id }}" class="menu-item {{ data.el_classes }}" data-item-depth="{{ data.depth }}">
 			<dl class="menu-item-bar">
 				<dt class="menu-item-handle">
-					<span class="item-type">{{{ data.item_type_label }}}</span>
+					<span class="item-type">{{ data.item_type_label }}</span>
 					<span class="item-title">
 						<span class="spinner"></span>
-						<span class="menu-item-title">{{{ data.title }}}</span>
+						<span class="menu-item-title">{{ data.title }}</span>
 						<span class="is-submenu"><?php _e( 'sub item' ); ?></span>
 					</span>
 					<span class="item-controls">
@@ -111,38 +111,38 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 					<p class="field-url description description-thin">
 						<label for="edit-menu-item-url-{{ data.menu_item_id }}">
 							<?php _e( 'URL' ); ?><br />
-							<input class="widefat code edit-menu-item-url" type="text" value="{{ data.url }}" id="edit-menu-item-url-{{ data.menu_item_id }}" name="menu-item-url" />
+							<input class="widefat code edit-menu-item-url" type="text" id="edit-menu-item-url-{{ data.menu_item_id }}" name="menu-item-url" />
 						</label>
 					</p>
 				<# } #>
 				<p class="description description-thin">
 					<label for="edit-menu-item-title-{{ data.menu_item_id }}">
 						<?php _e( 'Navigation Label' ); ?><br />
-						<input type="text" id="edit-menu-item-title-{{ data.menu_item_id }}" class="widefat edit-menu-item-title" name="menu-item-title" value="{{ data.title }}" />
+						<input type="text" id="edit-menu-item-title-{{ data.menu_item_id }}" class="widefat edit-menu-item-title" name="menu-item-title" />
 					</label>
 				</p>
 				<p class="field-link-target description description-thin">
 					<label for="edit-menu-item-target-{{ data.menu_item_id }}">
-						<input type="checkbox" id="edit-menu-item-target-{{ data.menu_item_id }}" value="_blank" name="menu-item-target" <# if ( '_blank' == data.target ) { #> checked="checked" <# } #> />
+						<input type="checkbox" id="edit-menu-item-target-{{ data.menu_item_id }}" value="_blank" name="menu-item-target" />
 								<?php _e( 'Open link in a new tab' ); ?>
 					</label>
 				</p>
 				<p class="field-attr-title description description-thin">
 					<label for="edit-menu-item-attr-title-{{ data.menu_item_id }}">
 						<?php _e( 'Title Attribute' ); ?><br />
-						<input type="text" id="edit-menu-item-attr-title-{{ data.menu_item_id }}" class="widefat edit-menu-item-attr-title" name="menu-item-attr-title" value="{{ data.attr_title }}" />
+						<input type="text" id="edit-menu-item-attr-title-{{ data.menu_item_id }}" class="widefat edit-menu-item-attr-title" name="menu-item-attr-title" />
 					</label>
 				</p>
 				<p class="field-css-classes description description-thin">
 					<label for="edit-menu-item-classes-{{ data.menu_item_id }}">
 						<?php _e( 'CSS Classes' ); ?><br />
-						<input type="text" id="edit-menu-item-classes-{{ data.menu_item_id }}" class="widefat code edit-menu-item-classes" name="menu-item-classes" value="{{ data.classes }}" />
+						<input type="text" id="edit-menu-item-classes-{{ data.menu_item_id }}" class="widefat code edit-menu-item-classes" name="menu-item-classes" />
 					</label>
 				</p>
 				<p class="field-xfn description description-thin">
 					<label for="edit-menu-item-xfn-{{ data.menu_item_id }}">
 						<?php _e( 'Link Relationship (XFN)' ); ?><br />
-						<input type="text" id="edit-menu-item-xfn-{{ data.menu_item_id }}" class="widefat code edit-menu-item-xfn" name="menu-item-xfn" value="{{ data.xfn }}" />
+						<input type="text" id="edit-menu-item-xfn-{{ data.menu_item_id }}" class="widefat code edit-menu-item-xfn" name="menu-item-xfn" />
 					</label>
 				</p>
 				<p class="field-description description description-thin">
@@ -162,7 +162,7 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 					<a class="item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}" href="#"><?php _e( 'Remove' ); ?></a>
 					<span class="spinner"></span>
 				</div>
-				<input type="hidden" name="menu-item-parent-id" class="menu-item-parent-id" id="edit-menu-item-parent-id-{{ data.menu_item_id }}" value="{{ data.parent }}" />
+				<input type="hidden" name="menu-item-parent-id" class="menu-item-parent-id" id="edit-menu-item-parent-id-{{ data.menu_item_id }}" />
 			</div><!-- .menu-item-settings-->
 			<ul class="menu-item-transport"></ul>
 		</div>

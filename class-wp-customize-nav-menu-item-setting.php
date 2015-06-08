@@ -40,8 +40,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	 * @var array
 	 */
 	public $default = array(
-		// The $menu_item_data for wp_update_nav_menu_item()
-		// 'db_id' => -1, // @todo this is $this->post_id, we probably shouldn't store here.
+		// The $menu_item_data for wp_update_nav_menu_item().
 		'object_id' => 0,
 		'object' => '', // Taxonomy name.
 		'menu_item_parent' => 0, // A.K.A. menu-item-parent-id; note that post_parent is different, and not included.
