@@ -1875,18 +1875,17 @@
 		 * @return {wp.customize.controlConstructor.menu_item[]}
 		 */
 		getMenuItemControls: function() {
-			var self = this, formControls = [];
+			var menuControl = this,
+				menuItemControls = [],
+				menuTermId = menuControl.getMenuTermId();
 
-			_( this.setting() ).each( function( menuItemId ) {
-				var settingId = menuItemIdToSettingId( menuItemId, self.params.menu_id ),
-					formControl = api.control( settingId );
-
-				if ( formControl ) {
-					formControls.push( formControl );
+			api.control.each(function ( control ) {
+				if ( /^nav_menu_item\[/.test( control.id ) && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
+					menuItemControls.push( control );
 				}
-			} );
+			});
 
-			return formControls;
+			return menuItemControls;
 		},
 
 		/**
