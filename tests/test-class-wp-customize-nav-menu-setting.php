@@ -181,7 +181,11 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertEquals( 0, $value['parent'] );
 
 		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
-		$this->assertEqualSets( $value, wp_array_slice_assoc( $term, array_keys( $value ) ) );
+
+		$this->assertEqualSets(
+			wp_array_slice_assoc( $value, array( 'name', 'description', 'parent' ) ),
+			wp_array_slice_assoc( $term, array( 'name', 'description', 'parent' ) )
+		);
 
 		$setting->preview();
 		$value = $setting->value();
@@ -331,8 +335,10 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		foreach ( array( 'name', 'description', 'parent' ) as $key ) {
 			$this->assertEquals( $new_value[ $key ], $menu_object->$key );
 		}
-		unset( $new_value['auto_add'] );
-		$this->assertEqualSets( $new_value, wp_array_slice_assoc( (array) $menu_object, array_keys( $new_value ) ) );
+		$this->assertEqualSets(
+			wp_array_slice_assoc( $new_value, array( 'name', 'description', 'parent' ) ),
+			wp_array_slice_assoc( (array) $menu_object, array( 'name', 'description', 'parent' ) )
+		);
 		$this->assertEquals( $new_value, $setting->value() );
 
 		$save_response = apply_filters( 'customize_save_response', array() );

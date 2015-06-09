@@ -202,8 +202,10 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 				$value = $this->default;
 			}
 		}
-		foreach ( array( 'object_id', 'menu_item_parent', 'nav_menu_term_id' ) as $key ) {
-			$value[ $key ] = intval( $value[ $key ] );
+		if ( is_array( $value ) ) {
+			foreach ( array( 'object_id', 'menu_item_parent', 'nav_menu_term_id' ) as $key ) {
+				$value[ $key ] = intval( $value[ $key ] );
+			}
 		}
 		return $value;
 	}
