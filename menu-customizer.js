@@ -23,25 +23,6 @@
 	api.Menus.data = _wpCustomizeMenusSettings || {};
 
 	/**
-	 * wp.customize.Menus.MenuItemModel
-	 *
-	 * A single menu item model.
-	 *
-	 * @constructor
-	 * @augments Backbone.Model
-	 */
-	api.Menus.MenuItemModel = Backbone.Model.extend({
-		transport: api.Menus.data.menuItemTransport,
-		params: [],
-		menu_item_id: null,
-		original_id: 0,
-		menu_id: 0,
-		depth: 0,
-		menu_item_parent_id: 0,
-		type: 'menu_item'
-	});
-
-	/**
 	 * wp.customize.Menus.AvailableItemModel
 	 *
 	 * A single available menu item model.
