@@ -2,8 +2,6 @@
 ( function( api, wp, $ ) {
 	'use strict';
 
-	if ( ! wp || ! wp.customize ) { return; }
-
 	// Set up our namespace.
 	var OldPreviewer;
 
