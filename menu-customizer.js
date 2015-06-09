@@ -1657,59 +1657,49 @@
 		 * @param {object} menuList - The element that has sortable().
 		 */
 		_setupSortable: function( menuList ) {
-			var self = this;
+			var control = this;
 
-			if ( ! menuList.is( self.$sectionContent ) ) {
+			if ( ! menuList.is( control.$sectionContent ) ) {
 				throw new Error( 'Unexpected menuList.' );
 			}
 
 			menuList.on( 'sortstart', function() {
-				self.isSorting = true;
+				control.isSorting = true;
 			});
 
 			menuList.on( 'sortupdate', function() {
-					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
+				var menuItemContainerIds = control.$sectionContent.sortable( 'toArray' ), menuItemControls = [], position = 0;
 
-					/**
-					 * Extract the menu item ids from the containers.
-					 */
-					menuItemIds = $.map( menuItemContainerIds, function( menuItemContainerId ) {
-						return parseInt( menuItemContainerId.replace( 'customize-control-nav_menus-' + self.params.menu_id + '-', '' ), 10 );
-					} );
-					self.setting( menuItemIds );
+				_.each( menuItemContainerIds, function( menuItemContainerId ) {
+					var menuItemId, menuItemControl;
+					menuItemId = parseInt( menuItemContainerId.replace( /^customize-control-nav_menu_item-/, '' ), 10 );
+					if ( ! menuItemId ) {
+						return;
+					}
+					menuItemControl = api.control( 'nav_menu_item[' + String( menuItemId ) + ']' );
+					if ( menuItemControl ) {
+						menuItemControls.push( menuItemControl );
+					}
 				} );
 
+				_.each( menuItemControls, function ( menuItemControl ) {
+					var setting = _.clone( menuItemControl.setting() );
+					position += 1;
+					setting.position = position;
+					menuItemControl.setting.set( setting );
+					console.info( setting ) ;
+				});
+
+			} );
+
 			menuList.on( 'sortstop', function( event, ui ) {
-
-				var id, menuItemControl;
-
-				id = ui.item.find( '.menu-item-data-db-id' ).val();
-				if ( ! id ) {
-					return;
-					}
-				id = parseInt( id, 10 );
-				menuItemControl = api.Menus.getMenuItemControl( id );
-				if ( ! menuItemControl ) {
-					api.control.each( function( control ) {
-						if ( 'menu_item' === control.params.type && control.params.original_id === id ) {
-							menuItemControl = control;
-					}
-					} );
-				}
-
-				if ( menuItemControl ) {
-					// Ensure that the sortable's own stop() callback has fully fired.
-					setTimeout( function() {
-						menuItemControl.updateMenuItem();
-					} );
-					}
-
+				// @todo Do we need this anymore?
 				setTimeout( function() {
-					self.isSorting = false;
+					control.isSorting = false;
 				}, 300 );
 			} );
 
-			self.isReordering = false;
+			control.isReordering = false;
 
 			/**
 			 * Keyboard-accessible reordering.
@@ -1719,7 +1709,7 @@
 					return;
 				}
 
-				self.toggleReordering( ! self.isReordering );
+				control.toggleReordering( ! control.isReordering );
 			} );
 		},
 

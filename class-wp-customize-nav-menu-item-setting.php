@@ -180,10 +180,13 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 			if ( $this->post_id > 0 ) {
 				$post = get_post( $this->post_id );
 				if ( $post && self::POST_TYPE === $post->post_type ) {
+					$item = wp_setup_nav_menu_item( $post );
 					$value = wp_array_slice_assoc(
-						(array) wp_setup_nav_menu_item( $post ),
+						(array) $item,
 						array_keys( $this->default )
 					);
+					$value['position'] = $item->menu_order;
+					$value['status'] = $item->post_status;
 					$menus = wp_get_post_terms( $post->ID, WP_Customize_Nav_Menu_Setting::TAXONOMY, array(
 						'fields' => 'ids',
 					) );
@@ -273,7 +276,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		if ( $should_update ) {
 			foreach ( $items as $item ) {
 				if ( $item->db_id === $this->post_id ) {
-					foreach ( $this_item as $key => $value ) {
+					foreach ( get_object_vars( $this->value_as_wp_post_nav_menu_item() ) as $key => $value ) {
 						$item->$key = $value;
 					}
 					$mutated = true;
