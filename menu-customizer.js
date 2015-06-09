@@ -1820,7 +1820,7 @@
 		 * @returns {object|false} menu_item control instance, or false on error.
 		 */
 		addItemToMenu: function( item, callback ) {
-			throw new Error( 'No ajax should ne needed now.' );
+			throw new Error( 'No ajax should be needed now.' );
 		}
 	} );
 
@@ -1861,6 +1861,8 @@
 		},
 
 		submit: function() {
+			throw new Error( 'This needs to be updated for the new settings.' );
+
 			var self = this,
 				processing,
 				params,
