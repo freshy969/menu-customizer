@@ -113,43 +113,54 @@ class WP_Customize_Menus {
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
+		if ( empty( $_POST['obj_type'] ) || empty( $_POST['type'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Missing obj_type or type param.' ) ) );
+		}
+		$obj_type = sanitize_key( $_POST['obj_type'] );
+		if ( ! in_array( $obj_type, array( 'post_type', 'taxonomy' ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid obj_type param.' ) ) );
+		}
+		$taxonomy_or_post_type = sanitize_key( $_POST['type'] );
+		$page = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 0;
 
-		$page = absint( $_POST['page'] );
-		$type = esc_html( $_POST['type'] );
-		$obj_type = esc_html( $_POST['obj_type'] );
 		$items = array();
-		$posts = $terms = false;
 
 		if ( 'post_type' === $obj_type ) {
-			if ( 0 === $page && 'page' === $type ) {
+			if ( ! get_post_type_object( $taxonomy_or_post_type ) ) {
+				wp_send_json_error( array( 'message' => __( 'Unknown post type.' ) ) );
+			}
+
+			if ( 0 === $page && 'page' === $taxonomy_or_post_type ) {
 				// Add "Home" link. Treat as a page, but switch to custom on add.
 				$home = array(
-					'id'          => 0,
-					'name'        => _x( 'Home', 'nav menu home label' ),
-					'type'        => 'page',
-					'type_label'  => __( 'Custom Link' ),
-					'obj_type'    => 'custom',
+					'id'          => 'home',
+					'title'       => _x( 'Home', 'nav menu home label' ),
+					'type'        => 'custom',
+					'type_label'  => __( 'Custom Link' ), // @todo This is already exported in JS.
+					'object'      => '',
+					'url'         => home_url(),
 				);
 				$items[] = $home;
 			}
 			$args = array(
-				'numberposts' => 10,
-				'offset'        => 10 * $page,
+				'numberposts'    => 10,
+				'offset'         => 10 * $page,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
-				'post_type'      => $type,
+				'post_type'      => $taxonomy_or_post_type,
 			);
 			$posts = get_posts( $args );
 			foreach ( $posts as $post ) {
 				$items[] = array(
-					'id'         => 'post-' . $post->ID,
-					'name'       => $post->post_title,
-					'type'       => $type,
-					'type_label' => get_post_type_object( $type )->labels->singular_name,
-					'obj_type'   => 'post_type',
+					'id'         => "post-{$post->ID}",
+					'title'      => $post->post_title,
+					'type'       => 'post_type',
+					'type_label' => get_post_type_object( $taxonomy_or_post_type )->labels->singular_name, // @todo this needs to already be exported in JS.
+					'object'     => $post->post_type,
+					'object_id'  => (int) $post->ID,
 				);
 			}
-		} else {
+		} else if ( 'taxonomy' === $obj_type ) {
 			$args = array(
 				'child_of'      => 0,
 				'exclude'       => '',
@@ -162,26 +173,24 @@ class WP_Customize_Menus {
 				'orderby'       => 'count',
 				'pad_counts'    => false,
 			);
-			$terms = get_terms( $type, $args );
+			$terms = get_terms( $taxonomy_or_post_type, $args );
+			if ( is_wp_error( $terms ) ) {
+				wp_send_json_error( array( 'message' => wp_strip_all_tags( $terms->get_error_message(), true ) ) );
+			}
 
 			foreach ( $terms as $term ) {
 				$items[] = array(
-					'id'         => 'term-' . $term->term_id,
-					'name'       => $term->name,
-					'type'       => $type,
-					'type_label' => get_taxonomy( $type )->labels->singular_name,
-					'obj_type'   => 'taxonomy',
+					'id'         => "term-{$term->term_id}",
+					'title'      => $term->name,
+					'type'       => 'taxonomy',
+					'type_label' => get_taxonomy( $taxonomy_or_post_type )->labels->singular_name, // @todo this needs to already be exported in JS.
+					'object'     => $term->taxonomy,
+					'object_id'  => $term->term_id,
 				);
 			}
 		}
 
-		if ( $terms && is_wp_error( $terms ) ) {
-			wp_send_json_error( array( 'message' => wp_strip_all_tags( $terms->get_error_message(), true ) ) );
-		} elseif ( $posts && is_wp_error( $posts ) ) {
-			wp_send_json_error( array( 'message' => wp_strip_all_tags( $posts->get_error_message(), true ) ) );
-		} else {
-			wp_send_json_success( array( 'items' => $items ) );
-		}
+		wp_send_json_success( array( 'items' => $items ) );
 	}
 
 	/**
@@ -580,6 +589,8 @@ class WP_Customize_Menus {
 	/**
 	 * Return an array of all the available item types.
 	 *
+	 * @todo This needs to export the names as well.
+	 *
 	 * @since Menu Customizer 0.0
 	 */
 	public function available_item_types() {
@@ -609,9 +620,9 @@ class WP_Customize_Menus {
 				<dl class="menu-item-bar">
 					<dt class="menu-item-handle">
 						<span class="item-type">{{ data.type_label }}</span>
-						<span class="item-title">{{{ data.name }}}</span>
+						<span class="item-title">{{ data.title }}</span>
 						<span class="item-added"><?php _e( 'Added' ); ?></span>
-						<button type="button" class="not-a-button item-add">Add Menu Item</button>
+						<button type="button" class="not-a-button item-add"><?php _e( 'Add Menu Item' ) ?></button>
 					</dt>
 				</dl>
 			</div>
@@ -625,17 +636,6 @@ class WP_Customize_Menus {
 			</div>
 		</script>
 
-		<script type="text/html" id="tmpl-loading-menu-item">
-			<li class="nav-menu-inserted-item-loading added-menu-item added-dbid-{{ data.id }} customize-control customize-control-menu_item nav-menu-item-wrap">
-				<dl class="menu-item-bar">
-					<dt class="menu-item-handle">
-						<span class="spinner" style="visibility: visible;"></span>
-						<span class="item-type">{{ data.type_label }}</span>
-						<span class="item-title menu-item-title">{{{ data.name }}}</span>
-					</dt>
-				</dl>
-			</li>
-		</script>
 		<script type="text/html" id="tmpl-menu-item-reorder-nav">
 			<div class="menu-item-reorder-nav">
 				<?php

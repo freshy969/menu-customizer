@@ -1,4 +1,4 @@
-/* global _wpCustomizeMenusSettings, confirm, alert, wpNavMenu */
+/* global _wpCustomizeMenusSettings, confirm, alert, wpNavMenu, console */
 ( function( api, wp, $ ) {
 	'use strict';
 
@@ -32,11 +32,10 @@
 	 */
 	api.Menus.AvailableItemModel = Backbone.Model.extend({
 		id: null,
-		name: null,
+		title: null,
 		type: null,
 		type_label: null,
-		obj_type: null,
-		date: null
+		object: null
 	});
 
 	/**
@@ -199,6 +198,7 @@
 				'search': thisTerm,
 				'page': page
 			};
+			// @todo replace this with wp.ajax.post() as done in loadItems
 			$.post( wp.ajax.settings.url, params, function( response ) {
 				var items;
 				if ( self.searchTerm !== thisTerm ) {
@@ -225,7 +225,7 @@
 					items = response.data.items;
 					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
 					self.loading = false;
-					items = new api.Menus.AvailableItemCollection( items );
+					items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
 					self.collection.add( items.models );
 					items.each( function( menuItem ) {
 						typeInner.append( itemTemplate( menuItem.attributes ) );
@@ -252,8 +252,8 @@
 
 		// Load available menu items.
 		loadItems: function( type, obj_type ) {
-			var self = this, params,
-			    itemTemplate = wp.template( 'available-menu-item' );
+			var self = this, params, request, itemTemplate;
+			itemTemplate = wp.template( 'available-menu-item' );
 
 			if ( 0 > self.pages[type] ) {
 				return;
@@ -261,34 +261,37 @@
 			$( '#available-menu-items-' + type + ' .accordion-section-title' ).addClass( 'loading' );
 			self.loading = true;
 			params = {
-				'action': 'load-available-menu-items-customizer',
 				'customize-menus-nonce': api.Menus.data.nonce,
 				'wp_customize': 'on',
 				'type': type,
 				'obj_type': obj_type,
-				'page': self.pages[type]
+				'page': self.pages[ type ]
 			};
-			$.post( wp.ajax.settings.url, params, function( response ) {
+			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
+
+			request.done(function ( data ) {
 				var items, typeInner;
-				if ( response.data && response.data.message ) {
-					// Display error message
-					alert( response.data.message );
-				} else if ( response.success && response.data ) {
-					items = response.data.items;
-					$( '#available-menu-items-' + type + ' .accordion-section-title' ).removeClass( 'loading' );
-					self.loading = false;
-					if ( 0 === items.length ) {
-						self.pages[type] = -1;
-						return;
-					}
-					items = new api.Menus.AvailableItemCollection( items );
-					self.collection.add( items.models );
-					typeInner = $( '#available-menu-items-' + type + ' .accordion-section-content' );
-					items.each( function( menu_item ) {
-						typeInner.append( itemTemplate( menu_item.attributes ) );
-					} );
-					self.pages[type] = self.pages[type] + 1;
+				items = data.items;
+				if ( 0 === items.length ) {
+					self.pages[ type ] = -1;
+					return;
 				}
+				items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
+				self.collection.add( items.models );
+				typeInner = $( '#available-menu-items-' + type + ' .accordion-section-content' );
+				items.each(function( menu_item ) {
+					typeInner.append( itemTemplate( menu_item.attributes ) );
+				});
+				self.pages[ type ] = self.pages[ type ] + 1;
+			});
+			request.fail(function ( data ) {
+				if ( typeof console !== 'undefined' && console.error ) {
+					console.error( data );
+				}
+			});
+			request.always(function () {
+				$( '#available-menu-items-' + type + ' .accordion-section-title' ).removeClass( 'loading' );
+				self.loading = false;
 			});
 		},
 
@@ -382,12 +385,11 @@
 			}
 
 			menuItem = {
-				'id': 0,
-				'name': itemName.val(),
+				'title': itemName.val(),
 				'url': itemUrl.val(),
 				'type': 'custom',
 				'type_label': api.Menus.data.l10n.custom_label,
-				'obj_type': 'custom'
+				'object': ''
 			};
 
 			this.currentMenuControl.addItemToMenu( menuItem );
@@ -1863,12 +1865,12 @@
 		/**
 		 * Add a new item to this menu.
 		 *
-		 * @param {number}   item - Object ID.
-		 * @param {function} [callback] - Callback to fire when item is added.
+		 * @param {object}   item - Value for the nav_menu_item setting to be created.
 		 * @returns {object|false} menu_item control instance, or false on error.
 		 */
-		addItemToMenu: function( item, callback ) {
-			throw new Error( 'No ajax should be needed now.' );
+		addItemToMenu: function( item ) {
+			console.info( 'ADDING', item );
+			// @todo create a new Customizer setting and control to go with it; then add the control to the list.
 		}
 	} );
 
