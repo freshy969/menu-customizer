@@ -43,35 +43,42 @@ wp.customize.menusPreview = ( function( $ ) {
 			} );
 
 			wp.customize.preview.bind( 'setting', function( args ) {
-				var id, value;
+				var id, value, setting;
 				args = args.slice();
 				id = args.shift();
 				value = args.shift();
 				if ( ! wp.customize.has( id ) ) {
 					// Currently customize-preview.js is not creating settings for dynamically-created settings in the pane; so we have to do it
-					wp.customize.create( id, value ); // @todo This should be in core
-					wp.customize( id ).id = id;
-					self.bindListener( wp.customize( id ) );
+					setting = wp.customize.create( id, value ); // @todo This should be in core
+					setting.id = id;
+					if ( self.bindListener( setting ) ) {
+						setting.callbacks.fireWith( setting, [ setting(), setting() ] );
+					}
 				}
 			} );
 		} );
 	};
 
+	/**
+	 *
+	 * @param {wp.customize.Value} setting
+	 * @returns {boolean} Whether the setting was bound.
+	 */
 	self.bindListener = function ( setting ) {
 		var matches, themeLocation;
 
-		matches = setting.id.match( /^nav_menu\[(\d+)]$/ );
+		matches = setting.id.match( /^nav_menu\[(-?\d+)]$/ );
 		if ( matches ) {
 			setting.navMenuId = parseInt( matches[1], 10 );
 			setting.bind( self.onChangeNavMenuSetting );
-			return;
+			return true;
 		}
 
-		matches = setting.id.match( /^nav_menu_item\[(\d+)]$/ );
+		matches = setting.id.match( /^nav_menu_item\[(-?\d+)]$/ );
 		if ( matches ) {
 			setting.navMenuItemId = parseInt( matches[1], 10 );
 			setting.bind( self.onChangeNavMenuItemSetting );
-			return;
+			return true;
 		}
 
 		matches = setting.id.match( /^nav_menu_locations\[(.+?)]/ );
@@ -80,8 +87,12 @@ wp.customize.menusPreview = ( function( $ ) {
 			setting.bind( function() {
 				self.refreshMenuLocation( themeLocation );
 			} );
+			return true;
 		}
+
+		return false;
 	};
+
 
 	/**
 	 * Handle changing of a nav_menu setting.
