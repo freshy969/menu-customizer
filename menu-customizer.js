@@ -665,32 +665,82 @@
 		 * @param {Object} options
 		 */
 		initialize: function( id, options ) {
-			var container = this;
-			container.contentEmbedded = false;
-
-			api.Section.prototype.initialize.call( this, id, options );
+			var section = this;
+			api.Section.prototype.initialize.call( section, id, options );
 		},
 
 		/**
-		 * Update UI to reflect expanded state.
 		 *
-		 * @since Menu Customizer 0.3
-		 *
-		 * @param {Boolean} expanded
-		 * @param {Object}  args
 		 */
-		onChangeExpanded: function( expanded, args ) {
+		ready: function () {
 			var section = this;
-			if ( expanded && ! section.contentEmbedded ) {
-				_.each( wp.customize.section( section.id ).controls(), function( control ) {
-					if ( 'menu_item' === control.params.type ) {
-						control.actuallyEmbed();
-					}
-				} );
-				section.contentEmbedded = true;
-			}
-			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
+			section.navMenuLocationSettings = {};
+			section.assignedLocations = new api.Value( [] );
+
+			api.each(function( setting, id ) {
+				var matches = id.match( /^nav_menu_locations\[(.+?)]/ );
+				if ( matches ) {
+					section.navMenuLocationSettings[ matches[1] ] = setting;
+					setting.bind( function (){
+						section.refreshAssignedLocations();
+					});
+				}
+			});
+
+			section.assignedLocations.bind(function ( to ) {
+				section.updateAssignedLocationsInSectionTitle( to );
+			});
+
+			section.refreshAssignedLocations();
+		},
+
+		/**
+		 *
+		 */
+		refreshAssignedLocations: function() {
+			var section = this,
+				menuTermId = section.getMenuTermId(),
+				currentAssignedLocations = [];
+			_.each( section.navMenuLocationSettings, function( setting, themeLocation ) {
+				if ( setting() === menuTermId ) {
+					currentAssignedLocations.push( themeLocation );
+				}
+			});
+			section.assignedLocations.set( currentAssignedLocations );
+		},
+
+		/**
+		 * 
+		 *
+		 * @param {array} themeLocations
+		 */
+		updateAssignedLocationsInSectionTitle: function ( themeLocations ) {
+			var section = this,
+				$title;
+
+			$title = section.container.find( '.accordion-section-title:first' );
+			$title.find( '.menu-in-location' ).remove();
+			_.each( themeLocations, function ( themeLocation ){
+				var $label = $( '<span class="menu-in-location"></span>' );
+				$label.text( api.Menus.data.l10n.menuLocation.replace( '%s', themeLocation ) );
+				$title.append( $label );
+			});
+
+			section.container.toggleClass( 'assigned-to-menu-location', 0 !== themeLocations.length );
+
+		},
+
+		/**
+		 *
+		 * @returns {Number}
+		 */
+		getMenuTermId: function () {
+			var matches = this.id.match( /^nav_menu\[(.+?)]/ ),
+				menuTermId = parseInt( matches[1], 10 );
+			return menuTermId;
 		}
+
+		// @todo Restore onChangeExpanded to actuallyEmbed the nav_menu_items
 	});
 
 	/**
@@ -759,108 +809,19 @@
 	 * @augments wp.customize.Control
 	 */
 	api.Menus.MenuLocationControl = api.Control.extend({
+		initialize: function ( id, options ) {
+			var control = this,
+				matches = id.match( /^nav_menu_locations\[(.+?)]/ );
+			control.themeLocation = matches[1];
+			api.Control.prototype.initialize.call( control, id, options );
+		},
+
 		ready: function() {
-			var self = this;
-
-			// Update sections when value changes.
-			this.setting.bind( function( to, from ) {
-				if ( ! _( from ).isEqual( to ) ) {
-					self.updateLocationInMenu( to, from );
-					self.updateMenuLocationCheckboxes( to, from );
-				}
-			} );
-			api.panel( 'menus' ).container.bind( 'expanded', function() {
-				if ( ! self.loaded ) {
-					self.updateLocationInMenu( self.setting.get(), '' );
-					self.updateMenuLocationCheckboxes( self.setting.get(), '' );
-					self.loaded = true;
-				}
-			});
-		},
-
-		// Add the menu location name to the menu title.
-		updateLocationInMenu: function( to, from ) {
-			if ( ! to ) {
-				if ( from ) {
-					this.updateLocationsInMenu( api.section( 'nav_menus[' + from + ']' ).container );
-				}
-				return;
-			}
-
-			var $section = api.section( 'nav_menus[' + to + ']' ).container,
-				$title = $section.find( '.accordion-section-title' ),
-				$location = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + api.Menus.data.l10n.menuLocation.replace( '%s', this.params.label ) + '</span>' );
-
-			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
-			$location.appendTo( $title );
-
-			// Toggle active section class
-			$section.addClass( 'assigned-to-menu-location' );
-
-			// Multiple menu location
-			this.updateLocationsInMenu( $section );
-			if ( from ) {
-				this.updateLocationsInMenu( api.section( 'nav_menus[' + from + ']' ).container );
-			}
-		},
-
-		// Handles menus that are set to multiple menu locations. @todo handle removal when theme location is set to blank.
-		updateLocationsInMenu: function( $section ) {
-			var $title = $section.find( '.accordion-section-title' ),
-				$location = $section.find( '.menu-in-location' );
-
-			if ( 1 > $location.length ) {
-				$section.removeClass( 'assigned-to-menu-location' );
-			}
-
-			if ( 1 >= $location.length ) {
-				$section.find( '.menu-in-locations' ).remove();
-				$section.find( '.menu-in-location' ).show();
-			} else {
-				var $locations = $section.find( '.menu-in-locations' ),
-					locations = [], tmpString, tmpPos, string;
-
-				$location.each( function() {
-					tmpString = api.Menus.data.l10n.menuLocation.replace( /\(|\)|%(s)/g, '' );
-					string = $( this ).text().replace( /\(|\)/g, '' ).replace( tmpString, '' );
-					locations.push( string );
-				} );
-
-				tmpString = locations.join( ', ' );
-				tmpPos = tmpString.lastIndexOf( ',' );
-				string = tmpString.substring( 0, tmpPos + 1 ) + ' &' + tmpString.substring( tmpPos + 1 );
-				string = api.Menus.data.l10n.menuLocation.replace( '%s', string );
-
-				if ( $locations.length ) {
-					$locations.text( string );
-				} else {
-					$( '<span class="menu-in-locations">' + string + '</span>' ).appendTo( $title );
-				}
-
-				$section.find( '.menu-in-location' ).hide();
-			}
-		},
-
-		// Update theme location checkboxes.
-		updateMenuLocationCheckboxes: function( to, from ) {
-			var locationNames = $( '.current-menu-location-name-' + this.params.locationId ),
-				setTo = locationNames.parent(),
-				oldBox = $( '#menu-locations-' + from + '-' + this.params.locationId ),
-				newBox = $( '#menu-locations-' + to + '-' + this.params.locationId ),
-				menuName;
-			if ( 0 === to ) {
-				setTo.hide();
-				oldBox.prop( 'checked', false );
-			} else if ( ! to ) {
-				setTo.hide();
-			} else {
-				menuName = api.section( 'nav_menus[' + to + ']' ).container.find( '.live-update-section-title' ).val();
-				setTo.show();
-				locationNames.text( menuName );
-				oldBox.prop( 'checked', false );
-				newBox.prop( 'checked', true );
-				newBox.parent().find( '.theme-location-set' ).hide();
-			}
+			var control = this;
+			// @todo It would be better if this was added directly on the setting itself, as opposed to the control.
+			control.setting.validate = function ( value ) {
+				return parseInt( value, 10 );
+			};
 		}
 	});
 
@@ -1753,24 +1714,54 @@
 
 		// Setup theme location checkboxes.
 		_setupLocations: function() {
-			var boxes = this.container.find( '.customize-control-checkbox input' );
-			boxes.on( 'change', function() {
-				var $this = $( this ), locationId, menuId, locationControl;
-				locationId = $this.data( 'location-id' );
-				menuId = $this.data( 'menu-id' );
-				locationControl = api.control( 'nav_menu_locations[' + locationId + ']' );
-				if ( $this.prop( 'checked' ) ) {
-					locationControl.setting( menuId );
-				} else {
-					locationControl.setting( 0 );
-				}
-				// Note: the setting change binding on the location control handle UI updates.
+			var control = this;
+
+			control.container.find( '.assigned-menu-location' ).each(function () {
+				var container = $( this ),
+					checkbox = container.find( 'input[type=checkbox]' ),
+					element,
+					updateSelectedMenuLabel,
+					navMenuLocationSetting = api( 'nav_menu_locations[' + checkbox.data( 'location-id' ) + ']' );
+
+				updateSelectedMenuLabel = function ( selectedMenuId ) {
+					var menuSetting = api( 'nav_menu[' + String( selectedMenuId ) + ']' );
+					if ( ! selectedMenuId || ! menuSetting || ! menuSetting() ) {
+						container.find( '.theme-location-set' ).hide();
+					} else {
+						container.find( '.theme-location-set' ).show().find( 'span' ).text( menuSetting().name );
+					}
+				};
+
+				element = new api.Element( checkbox );
+				element.set( navMenuLocationSetting.get() === control.getMenuTermId() );
+
+				checkbox.on( 'change', function () {
+					// Note: We can't use element.bind( function( checked ){ ... } ) here because it will trigger a change as well.
+					navMenuLocationSetting.set( this.checked ? control.getMenuTermId() : 0 );
+				} );
+
+				navMenuLocationSetting.bind(function( selectedMenuId ) {
+					element.set( selectedMenuId === control.getMenuTermId() );
+					updateSelectedMenuLabel( selectedMenuId );
+				});
+				updateSelectedMenuLabel( navMenuLocationSetting.get() );
+
 			});
 		},
 
 		/***********************************************************************
 		 * Begin public API methods
 		 **********************************************************************/
+
+		/**
+		 *
+		 * @returns {Number}
+		 */
+		getMenuTermId: function () {
+			var matches = this.setting.id.match( /^nav_menu\[(.+?)]/ ),
+				menuTermId = parseInt( matches[1], 10 );
+			return menuTermId;
+		},
 
 		confirmDelete: function () {
 			var control = this;
@@ -2001,8 +1992,8 @@
 	 * Extends wp.customize.sectionConstructor with section constructor for menu.
 	 */
 	$.extend( api.sectionConstructor, {
-		menu: api.Menus.MenuSection,
-		new_menu: api.Menus.NewMenuSection
+		nav_menu: api.Menus.MenuSection
+		//new_menu: api.Menus.NewMenuSection
 	});
 
 	/**
@@ -2078,6 +2069,10 @@
 	 * Update Section Title as menu name is changed and item handle title when label is changed.
 	 */
 	function setupUIPreviewing() {
+		// @todo This is wrong. We need to bind on menuControl.setting.bind( function ( menu ) { /* ... */ } )
+
+		return;
+
 		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function( e ) {
 			var input = $( e.currentTarget ),
 				section = input.closest( '.accordion-section' ),
@@ -2089,7 +2084,7 @@
 				action = title2.find( '.customize-action' );
 			// Empty names are not allowed (will not be saved), don't update to one.
 			if ( name ) {
-				title.html( name );
+				title.text( name );
 				if ( location.length ) {
 					location.appendTo( title );
 				}

@@ -41,7 +41,7 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 		</button>
 		<span class="add-menu-item-loading spinner"></span>
 		<span class="menu-delete-item">
-			<button type="button" class="not-a-button menu-delete" id="delete-menu-{{ data.menu_id }}">
+			<button type="button" class="not-a-button menu-delete">
 				<?php _e( 'Delete menu' ); ?> <span class="screen-reader-text">{{ data.menu_name }}</span>
 			</button>
 		</span>
@@ -54,9 +54,11 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 				$locations = get_registered_nav_menus(); ?>
 				<?php foreach ( $locations as $location => $description ) : ?>
 
-					<li class="customize-control customize-control-checkbox">
-						<input type="checkbox" data-menu-id="{{ data.menu_id }}" data-location-id="<?php echo esc_attr( $location ); ?>" id="menu-locations-{{ data.menu_id }}-<?php echo esc_attr( $location ); ?>" /> <label for="menu-locations-{{ data.menu_id }}-<?php echo esc_attr( $location ); ?>"><?php echo $description; ?></label>
-						<span class="theme-location-set"> <?php printf( _x( '(Current: %s)', 'Current menu location' ), '<span class="current-menu-location-name-' . $location . '"></span>' ); ?> </span>
+					<li class="customize-control customize-control-checkbox assigned-menu-location">
+						<label>
+							<input type="checkbox" data-menu-id="{{ data.menu_id }}" data-location-id="<?php echo esc_attr( $location ); ?>" class="menu-location" /> <?php echo $description; ?>
+							<span class="theme-location-set"> <?php printf( _x( '(Current: %s)', 'Current menu location' ), '<span class="current-menu-location-name-' . $location . '"></span>' ); ?> </span>
+						</label>
 					</li>
 
 				<?php endforeach; ?>

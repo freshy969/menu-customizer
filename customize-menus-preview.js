@@ -118,10 +118,17 @@ wp.customize.menusPreview = ( function( $ ) {
 	 * @param {int} menuId
 	 */
 	self.refreshMenu = function( menuId ) {
-		var self = this;
+		var self = this, assignedLocations = [];
+
+		wp.customize.each(function ( setting, id ) {
+			var matches = id.match( /^nav_menu_locations\[(.+?)]/ );
+			if ( matches && menuId === setting() ) {
+				assignedLocations.push( matches[1] );
+			}
+		});
 
 		_.each( self.navMenuInstanceArgs, function( navMenuArgs, instanceNumber ) {
-			if ( menuId === navMenuArgs.menu ) {
+			if ( menuId === navMenuArgs.menu || -1 !== _.indexOf( assignedLocations, navMenuArgs.theme_location ) ) {
 				self.refreshMenuInstance( instanceNumber );
 			}
 		} );
