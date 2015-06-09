@@ -1268,7 +1268,7 @@
 		toggleForm: function( showOrHide ) {
 			var self = this, $menuitem, $inside, complete;
 
-			$menuitem = this.container.find( 'div.menu-item:first' );
+			$menuitem = this.container;
 			$inside = $menuitem.find( '.menu-item-settings:first' );
 			if ( 'undefined' === typeof showOrHide ) {
 				showOrHide = ! $inside.is( ':visible' );
