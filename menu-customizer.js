@@ -1675,7 +1675,8 @@
 				setTimeout( function () { // Next tick.
 					var menuItemContainerIds = control.$sectionContent.sortable( 'toArray' ),
 						menuItemControls = [],
-						position = 0;
+						position = 0,
+						priority = 10;
 
 					control.isSorting = false;
 
@@ -1694,12 +1695,14 @@
 					_.each( menuItemControls, function ( menuItemControl ) {
 						var setting = _.clone( menuItemControl.setting() );
 						position += 1;
+						priority += 1;
 						setting.position = position;
 						setting.menu_item_parent = parseInt( menuItemControl.container.find( '.menu-item-data-parent-id' ).val(), 10 );
 						if ( ! setting.menu_item_parent ) {
 							setting.menu_item_parent = 0;
 						}
 						menuItemControl.setting.set( setting );
+						menuItemControl.priority( priority );
 					});
 				});
 			});
