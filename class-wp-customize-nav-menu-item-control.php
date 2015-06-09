@@ -29,16 +29,6 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 	public $setting;
 
 	/**
-	 * Depth
-	 *
-	 * @todo Eliminate in favor of JS.
-	 *
-	 * @access public
-	 * @var int
-	 */
-	public $depth = 0;
-
-	/**
 	 * Constructor.
 	 *
 	 * @uses WP_Customize_Control::__construct()
@@ -49,32 +39,6 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 	 */
 	public function __construct( $manager, $id, $args = array() ) {
 		parent::__construct( $manager, $id, $args );
-	}
-
-	/**
-	 * Determine the depth of a menu item by recursion.
-	 *
-	 * @todo This needs to be done entirely in JS.
-	 *
-	 * @param int $parent_id The id of the parent menu item.
-	 * @param int $depth Inverse current item depth.
-	 * @return int Depth of the original menu item.
-	 */
-	public function depth( $parent_id, $depth = 0 ) {
-		if ( 0 == $parent_id ) {
-			// This is a top-level item, so the current depth is the maximum.
-			return $depth;
-		} else {
-			// Increase depth.
-			$depth = $depth + 1;
-
-			// Find menu item parent's parent menu item id (the grandparent id).
-			$parent = get_post( $parent_id ); // WP_Post object.
-			$parent = wp_setup_nav_menu_item( $parent ); // Adds menu item properties.
-			$parent_parent_id = $parent->menu_item_parent;
-
-			return $this->depth( $parent_parent_id, $depth );
-		}
 	}
 
 	/**

@@ -1073,6 +1073,26 @@
 		},
 
 		/**
+		 *
+		 * @returns {number}
+		 */
+		getDepth: function () {
+			var control = this, setting = control.setting(), depth = 0;
+			if ( ! setting ) {
+				return 0;
+			}
+			while ( setting && setting.menu_item_parent ) {
+				depth += 1;
+				control = api.control( 'nav_menu_item[' + setting.menu_item_parent + ']' );
+				if ( ! control ) {
+					break;
+				}
+				setting = control.setting();
+			}
+			return depth;
+		},
+
+		/**
 		 * Amend the control's params with the data necessary for the JS template just in time.
 		 */
 		renderContent: function () {
@@ -1082,9 +1102,10 @@
 				containerClasses;
 
 			control.params.title = settingValue.title || '';
+			control.params.depth = control.getDepth();
 			containerClasses = [
 				'menu-item',
-				'menu-item-depth-0', // @todo Need to determine depth client-side
+				'menu-item-depth-' + String( control.params.depth ),
 				'menu-item-' + settingValue.object,
 				'menu-item-edit-inactive'
 			];
@@ -1108,11 +1129,9 @@
 			control.params.attr_title = settingValue.attr_title;
 			control.params.xfn = settingValue.xfn;
 			control.params.description = settingValue.description;
-			control.params.parent = settingValue.parent;
+			control.params.parent = settingValue.menu_item_parent;
 			control.params.menu_item_id = control.getMenuItemPostId(); // @todo When the control.id changes, this needs to be updated.
-
 			control.params.original_title = false; // @todo This is going to require Ajax.
-			control.params.depth = 0; // @todo Need to calculate this client-side.
 
 			control.container.data( 'item-depth', control.params.depth );
 			control.container.addClass( control.params.el_classes );
