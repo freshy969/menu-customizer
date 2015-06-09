@@ -1109,6 +1109,7 @@
 			control.params.xfn = settingValue.xfn;
 			control.params.description = settingValue.description;
 			control.params.parent = settingValue.parent;
+			control.params.menu_item_id = control.getMenuItemPostId(); // @todo When the control.id changes, this needs to be updated.
 
 			control.params.original_title = false; // @todo This is going to require Ajax.
 			control.params.depth = 0; // @todo Need to calculate this client-side.
@@ -1133,6 +1134,11 @@
 			} else {
 				return null;
 			}
+		},
+
+		getMenuItemPostId: function () {
+			var matches = this.id.match( /^nav_menu_item\[(.+?)]/ );
+			return parseInt( matches[1], 10 );
 		},
 
 		/**
@@ -1667,37 +1673,38 @@
 				control.isSorting = true;
 			});
 
-			menuList.on( 'sortupdate', function() {
-				var menuItemContainerIds = control.$sectionContent.sortable( 'toArray' ), menuItemControls = [], position = 0;
+			menuList.on( 'sortstop', function() {
+				setTimeout( function () { // Next tick.
+					var menuItemContainerIds = control.$sectionContent.sortable( 'toArray' ),
+						menuItemControls = [],
+						position = 0;
 
-				_.each( menuItemContainerIds, function( menuItemContainerId ) {
-					var menuItemId, menuItemControl;
-					menuItemId = parseInt( menuItemContainerId.replace( /^customize-control-nav_menu_item-/, '' ), 10 );
-					if ( ! menuItemId ) {
-						return;
-					}
-					menuItemControl = api.control( 'nav_menu_item[' + String( menuItemId ) + ']' );
-					if ( menuItemControl ) {
-						menuItemControls.push( menuItemControl );
-					}
-				} );
-
-				_.each( menuItemControls, function ( menuItemControl ) {
-					var setting = _.clone( menuItemControl.setting() );
-					position += 1;
-					setting.position = position;
-					menuItemControl.setting.set( setting );
-					console.info( setting ) ;
-				});
-
-			} );
-
-			menuList.on( 'sortstop', function( event, ui ) {
-				// @todo Do we need this anymore?
-				setTimeout( function() {
 					control.isSorting = false;
-				}, 300 );
-			} );
+
+					_.each( menuItemContainerIds, function ( menuItemContainerId ) {
+						var menuItemId, menuItemControl;
+						menuItemId = parseInt( menuItemContainerId.replace( /^customize-control-nav_menu_item-/, '' ), 10 );
+						if ( !menuItemId ) {
+							return;
+						}
+						menuItemControl = api.control( 'nav_menu_item[' + String( menuItemId ) + ']' );
+						if ( menuItemControl ) {
+							menuItemControls.push( menuItemControl );
+						}
+					} );
+
+					_.each( menuItemControls, function ( menuItemControl ) {
+						var setting = _.clone( menuItemControl.setting() );
+						position += 1;
+						setting.position = position;
+						setting.menu_item_parent = parseInt( menuItemControl.container.find( '.menu-item-data-parent-id' ).val(), 10 );
+						if ( ! setting.menu_item_parent ) {
+							setting.menu_item_parent = 0;
+						}
+						menuItemControl.setting.set( setting );
+					});
+				});
+			});
 
 			control.isReordering = false;
 
