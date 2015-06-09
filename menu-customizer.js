@@ -64,31 +64,6 @@
 	api.Menus.availableMenuItems = new api.Menus.AvailableItemCollection( api.Menus.data.availableMenuItems );
 
 	/**
-	 * wp.customize.Menus.MenuModel
-	 *
-	 * A single menu model.
-	 *
-	 * @constructor
-	 * @augments Backbone.Model
-	 */
-	api.Menus.MenuModel = Backbone.Model.extend({
-		id: null
-	});
-
-	/**
-	 * wp.customize.Menus.MenuCollection
-	 *
-	 * Collection for menu models.
-	 *
-	 * @constructor
-	 * @augments Backbone.Collection
-	 */
-	api.Menus.MenuCollection = Backbone.Collection.extend({
-		model: api.Menus.MenuModel
-	});
-	api.Menus.allMenus = new api.Menus.MenuCollection( api.Menus.data.allMenus );
-
-	/**
 	 * wp.customize.Menus.AvailableMenuItemsPanelView
 	 *
 	 * View class for the available menu items panel.
