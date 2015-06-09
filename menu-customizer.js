@@ -2,9 +2,6 @@
 ( function( api, wp, $ ) {
 	'use strict';
 
-	// Set up our namespace.
-	var OldPreviewer;
-
 	/**
 	 * Set up wpNavMenu for drag and drop.
 	 */
@@ -149,7 +146,7 @@
 			});
 
 			// Close the panel if the URL in the preview changes
-			api.Menus.Previewer.bind( 'url', this.close );
+			api.previewer.bind( 'url', this.close );
 		},
 
 		// Search input change handler.
@@ -2045,18 +2042,6 @@
 		nav_menu: api.Menus.MenuSection
 		//new_menu: api.Menus.NewMenuSection
 	});
-
-	/**
-	 * Capture the instance of the Previewer since it is private.
-	 */
-	OldPreviewer = api.Previewer;
-	api.Previewer = OldPreviewer.extend( {
-		initialize: function( params, options ) {
-			api.Menus.Previewer = this;
-			OldPreviewer.prototype.initialize.call( this, params, options );
-			this.bind( 'refresh', this.refresh );
-		}
-	} );
 
 	/**
 	 * Init Customizer for menus.
