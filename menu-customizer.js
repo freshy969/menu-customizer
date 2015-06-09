@@ -20,7 +20,11 @@
 		itemTypes: [],
 		l10n: {},
 		menuItemTransport: 'postMessage',
-		phpIntMax: 0
+		phpIntMax: 0,
+		defaultSettingValues: {
+			nav_menu: {},
+			nav_menu_item: {}
+		}
 	};
 	if ( typeof _wpCustomizeMenusSettings !== 'undefined' ) {
 		$.extend( api.Menus.data, _wpCustomizeMenusSettings );
@@ -44,13 +48,13 @@
 	 * @constructor
 	 * @augments Backbone.Model
 	 */
-	api.Menus.AvailableItemModel = Backbone.Model.extend({
-		id: null,
-		title: null,
-		type: null,
-		type_label: null,
-		object: null
-	});
+	api.Menus.AvailableItemModel = Backbone.Model.extend( $.extend(
+		{
+			id: null, // This is only used by Backbone.
+			type_label: null // @todo Eliminate this because the labels should be exported from PHP once up front.
+		},
+		api.Menus.data.defaultSettingValues.nav_menu_item
+	) );
 
 	/**
 	 * wp.customize.Menus.AvailableItemCollection

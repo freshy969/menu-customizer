@@ -324,6 +324,9 @@ class WP_Customize_Menus {
 		wp_enqueue_style( 'menu-customizer' );
 		wp_enqueue_script( 'menu-customizer' );
 
+		$temp_nav_menu_setting = new WP_Customize_Nav_Menu_Setting( $this->manager, 'nav_menu[-1]' );
+		$temp_nav_menu_item_setting = new WP_Customize_Nav_Menu_Item_Setting( $this->manager, 'nav_menu_item[-1]' );
+
 		// Pass data to JS.
 		$settings = array(
 			'nonce'                => wp_create_nonce( 'customize-menus' ),
@@ -348,6 +351,10 @@ class WP_Customize_Menus {
 			),
 			'menuItemTransport'    => 'postMessage',
 			'phpIntMax' => PHP_INT_MAX,
+			'defaultSettingValues' => array(
+				'nav_menu' => $temp_nav_menu_setting->default,
+				'nav_menu_item' => $temp_nav_menu_item_setting->default,
+			),
 		);
 
 		$data = sprintf( 'var _wpCustomizeMenusSettings = %s;', json_encode( $settings ) );
