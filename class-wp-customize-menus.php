@@ -409,9 +409,9 @@ class WP_Customize_Menus {
 	 */
 	public function filter_dynamic_setting_class( $setting_class, $setting_id, $setting_args ) {
 		unset( $setting_id );
-		if ( ! empty( $setting_arg['type'] ) && WP_Customize_Nav_Menu_Setting::TYPE === $setting_arg['type'] ) {
+		if ( ! empty( $setting_args['type'] ) && WP_Customize_Nav_Menu_Setting::TYPE === $setting_args['type'] ) {
 			$setting_class = 'WP_Customize_Nav_Menu_Setting';
-		} else if ( ! empty( $setting_arg['type'] ) && WP_Customize_Nav_Menu_Item_Setting::TYPE === $setting_arg['type'] ) {
+		} else if ( ! empty( $setting_args['type'] ) && WP_Customize_Nav_Menu_Item_Setting::TYPE === $setting_args['type'] ) {
 			$setting_class = 'WP_Customize_Nav_Menu_Item_Setting';
 		}
 		return $setting_class;
