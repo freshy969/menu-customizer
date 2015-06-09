@@ -473,7 +473,6 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 	 */
 	public function content_template() {
 		?>
-		<div id="menu-item-{{ data.menu_item_id }}" class="{{ data.el_classes }}" data-item-depth="{{ data.depth }}">
 			<dl class="menu-item-bar">
 				<dt class="menu-item-handle">
 					<span class="item-type">{{{ data.item_type_label }}}</span>
@@ -543,10 +542,11 @@ class WP_Customize_Menu_Item_Control extends WP_Customize_Control {
 					<button type="button" class="not-a-button item-delete submitdelete deletion" id="delete-menu-item-{{ data.menu_item_id }}"><?php _e( 'Remove' ); ?></button>
 					<span class="spinner"></span>
 				</div>
-				<input type="hidden" name="menu-item-parent-id" class="menu-item-parent-id" id="edit-menu-item-parent-id-{{ data.menu_item_id }}" value="{{ data.parent }}" />
+
+				<input type="hidden" name="menu-item-db-id[{{ data.menu_item_id }}]" class="menu-item-data-db-id" value="{{ data.menu_item_id }}" />
+				<input type="hidden" name="menu-item-parent-id[{{ data.menu_item_id }}]" class="menu-item-data-parent-id" value="{{ data.parent }}" />
 			</div><!-- .menu-item-settings-->
 			<ul class="menu-item-transport"></ul>
-		</div>
 		<?php
 	}
 }

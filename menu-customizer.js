@@ -1,11 +1,21 @@
-/* global _wpCustomizeMenusSettings, confirm, alert */
-( function( wp, $ ) {
+/* global _wpCustomizeMenusSettings, confirm, alert, wpNavMenu */
+( function( api, wp, $ ) {
 	'use strict';
 
 	if ( ! wp || ! wp.customize ) { return; }
 
 	// Set up our namespace.
-	var OldPreviewer, api = wp.customize;
+	var OldPreviewer;
+
+	/**
+	 * Set up wpNavMenu for drag and drop.
+	 */
+	wpNavMenu.originalInit = wpNavMenu.init;
+	wpNavMenu.options.menuItemDepthPerLevel = 15;
+	wpNavMenu.options.sortableItems         = '.customize-control-nav_menu_item';
+	wpNavMenu.init = function() {
+		this.jQueryExtensions();
+	};
 
 	api.Menus = api.Menus || {};
 
@@ -667,6 +677,7 @@
 		initialize: function( id, options ) {
 			var section = this;
 			api.Section.prototype.initialize.call( section, id, options );
+			section.deferred.initSortables = $.Deferred();
 		},
 
 		/**
@@ -738,6 +749,32 @@
 			var matches = this.id.match( /^nav_menu\[(.+?)]/ ),
 				menuTermId = parseInt( matches[1], 10 );
 			return menuTermId;
+		},
+
+		onChangeExpanded: function( expanded, args ) {
+			var section = this;
+
+			if ( expanded ) {
+				wpNavMenu.menuList = section.container.find( '.accordion-section-content:first' );
+				wpNavMenu.targetList = wpNavMenu.menuList;
+
+				// Add attributes needed by wpNavMenu
+				$( '#menu-to-edit' ).removeAttr( 'id' );
+				wpNavMenu.menuList.attr( 'id', 'menu-to-edit' ).addClass( 'menu' );
+			}
+
+			if ( expanded && ! section.contentEmbedded ) {
+				_.each( wp.customize.section( section.id ).controls(), function( control ) {
+					if ( 'menu_item' === control.params.type ) {
+						control.actuallyEmbed();
+					}
+				} );
+				section.contentEmbedded = true;
+
+				wpNavMenu.initSortables(); // Depends on menu-to-edit ID being set above.
+				section.deferred.initSortables.resolve( wpNavMenu.menuList ); // Now MenuControl can extend the sortable.
+			}
+			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
 		}
 
 		// @todo Restore onChangeExpanded to actuallyEmbed the nav_menu_items
@@ -823,6 +860,30 @@
 				return parseInt( value, 10 );
 			};
 		}
+
+		//// Update theme location checkboxes.
+		//updateMenuLocationCheckboxes: function( to, from ) {
+		//
+		//	var locationNames = $( '.current-menu-location-name-' + this.params.locationId ),
+		//		setTo = locationNames.parent(),
+		//		oldBox = $( '#menu-locations-' + from + '-' + this.params.locationId ),
+		//		newBox = $( '#menu-locations-' + to + '-' + this.params.locationId ),
+		//		menuName;
+		//	if ( 0 === to ) {
+		//		setTo.hide();
+		//		oldBox.prop( 'checked', false );
+		//	} else if ( ! to ) {
+		//		setTo.hide();
+		//	} else {
+		//		//menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
+		//		menuName = api.section( 'nav_menus[' + to + ']' ).container.find( '.live-update-section-title' ).val();
+		//		setTo.show();
+		//		locationNames.text( menuName );
+		//		oldBox.prop( 'checked', false );
+		//		newBox.prop( 'checked', true );
+		//		newBox.parent().find( '.theme-location-set' ).hide();
+		//	}
+		//}
 	});
 
 	/**
@@ -856,7 +917,7 @@
 				e.preventDefault();
 				e.stopPropagation();
 				var menuControl = self.getMenuControl();
-				if ( menuControl.isReordering ) {
+				if ( menuControl.isReordering || menuControl.isSorting ) {
 					return;
 				}
 				self.toggleForm();
@@ -1052,6 +1113,9 @@
 			control.params.original_title = false; // @todo This is going to require Ajax.
 			control.params.depth = 0; // @todo Need to calculate this client-side.
 
+			control.container.data( 'item-depth', control.params.depth );
+			control.container.addClass( control.params.el_classes );
+
 			api.Control.prototype.renderContent.call( control );
 		},
 
@@ -1078,7 +1142,97 @@
 		 * @param {object} [args]
 		 */
 		updateMenuItem: function( args ) {
+
 			throw new Error( 'Obsolete.' );
+
+			var self = this, clone = 0, processing, inputs, item, params, spinner;
+			// Check whether this menu item is cloned already; if not, let's clone it.
+			if ( this.params.original_id === this.params.menu_item_id ) {
+				clone = 1;
+			}
+
+			spinner = $( self.container ).find( '.menu-item-actions .spinner' );
+
+			// Show spinner.
+			spinner.css( 'visibility', 'visible' );
+
+			// Trigger processing states.
+			self.container.addClass( 'saving' );
+			processing = api.state( 'processing' );
+			processing( processing() + 1 );
+
+			// Get item.
+			item = {};
+			if ( 'undefined' === typeof args ) {
+				inputs = $( self.container ).find( ':input[name]' );
+				inputs.each( function() {
+					var name = this.name;
+					name = name.replace( /\[\d+]/, '' ); // Remove the ID-part of the name which is used by nav-menus.php.
+					item[name] = $( this ).val();
+				} );
+			} else {
+				item = args;
+			}
+
+			params = {
+				'action': 'update-menu-item-customizer',
+				'wp_customize': 'on',
+				'clone': clone,
+				'item_id': self.params.menu_item_id,
+				'menu-item': item,
+				'customize-menu-item-nonce': api.Menus.data.nonce
+			};
+
+			// @todo replace this with wp.ajax.post()
+			$.post( wp.ajax.settings.url, params, function( response ) {
+				var id, menuControl, menuItemIds, i;
+				if ( response.data && response.data.message ) {
+					// Display error message
+					alert( response.data.message );
+				} else if ( response.success && response.data ) {
+					id = response.data;
+
+					// Update item control accordingly with new id.
+					// Note that the id is only updated where necessary - the original id
+					// is still maintained for the setting and in the UI.
+					id = parseInt( id, 10 );
+					self.params.menu_item_id = id;
+					self.id = 'nav_menus[' + self.params.menu_id + '][' + id + ']';
+
+					// Replace original id of this item with cloned id in the menu setting.
+					menuControl = api.Menus.getMenuControl( self.params.menu_id );
+
+					if ( clone ) {
+
+						menuItemIds = menuControl.setting().slice();
+						i = _.indexOf( menuItemIds, self.params.original_id );
+
+						menuItemIds[i] = id;
+						menuControl.setting( menuItemIds );
+
+						// Update parent id for direct children items.
+						api.control.each( function( control ) {
+							if ( 'menu_item' === control.params.type && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
+								control.params.menu_item_parent_id = id;
+								//control.container.find( '.menu-item-data-parent-id' ).val( id );
+								control.container.find( '.menu-item-parent-id' ).val( id );
+								control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
+							}
+						} );
+					} else {
+						// There would be no change to the value, so just re-trigger a preview
+						// @todo There should really be Customizer settings that contain all of the menu item fields
+						menuControl.setting.preview();
+					}
+				}
+
+				// Remove processing states.
+				self.container.removeClass( 'saving' );
+				processing( processing() - 1 );
+
+				// Hide spinner.
+				spinner.css( 'visibility', 'hidden' );
+			} );
 		},
 
 		/**
@@ -1430,11 +1584,19 @@
 		 * Set up the control.
 		 */
 		ready: function() {
-			this.$controlSection = this.container.closest( '.control-section' );
-			this.$sectionContent = this.container.closest( '.accordion-section-content' );
+			var control = this;
+
+			control.$controlSection = control.container.closest( '.control-section' );
+			control.$sectionContent = control.container.closest( '.accordion-section-content' );
 
 			this._setupModel();
-			this._setupSortable();
+
+			api.section( control.section(), function( section ) {
+				section.deferred.initSortables.done(function( menuList ) {
+					control._setupSortable( menuList );
+				});
+			} );
+
 			this._setupAddition();
 			this._applyCardinalOrderClassNames();
 			this._setupLocations();
@@ -1488,149 +1650,66 @@
 
 		/**
 		 * Allow items in each menu to be re-ordered, and for the order to be previewed.
+		 *
+		 * Notice that the UI aspects here are handled by wpNavMenu.initSortables()
+		 * which is called in MenuSection.onChangeExpanded()
+		 *
+		 * @param {object} menuList - The element that has sortable().
 		 */
-		_setupSortable: function() {
+		_setupSortable: function( menuList ) {
 			var self = this;
 
-			this.isReordering = false;
+			if ( ! menuList.is( self.$sectionContent ) ) {
+				throw new Error( 'Unexpected menuList.' );
+			}
 
-			/**
-			 * Update menu item order setting when controls are re-ordered.
-			 */
-			this.$sectionContent.sortable( {
-				items: '> .customize-control-nav_menu_item',
-				handle: '.menu-item-handle',
-				placeholder: 'sortable-placeholder',
-				connectWith: '.accordion-section-content:has(.customize-control-nav_menu_item)',
-				update: function() {
+			menuList.on( 'sortstart', function() {
+				self.isSorting = true;
+			});
+
+			menuList.on( 'sortupdate', function() {
 					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
 
+					/**
+					 * Extract the menu item ids from the containers.
+					 */
 					menuItemIds = $.map( menuItemContainerIds, function( menuItemContainerId ) {
 						return parseInt( menuItemContainerId.replace( 'customize-control-nav_menus-' + self.params.menu_id + '-', '' ), 10 );
 					} );
-
 					self.setting( menuItemIds );
+				} );
+
+			menuList.on( 'sortstop', function( event, ui ) {
+
+				var id, menuItemControl;
+
+				id = ui.item.find( '.menu-item-data-db-id' ).val();
+				if ( ! id ) {
+					return;
+					}
+				id = parseInt( id, 10 );
+				menuItemControl = api.Menus.getMenuItemControl( id );
+				if ( ! menuItemControl ) {
+					api.control.each( function( control ) {
+						if ( 'menu_item' === control.params.type && control.params.original_id === id ) {
+							menuItemControl = control;
+					}
+					} );
 				}
-/*
 
-			@TODO: logic from nav-menu.js for sub-menu depths, etc. Needs to be adapted to work here.
-				start: function( e, ui ) {
-					var height, width, parent, children, tempHolder;
-
-					// handle placement for rtl orientation
-					if ( api.isRTL ) { // @todo Customizer RTL.
-						ui.item[0].style.right = 'auto';
+				if ( menuItemControl ) {
+					// Ensure that the sortable's own stop() callback has fully fired.
+					setTimeout( function() {
+						menuItemControl.updateMenuItem();
+					} );
 					}
 
-					transport = ui.item.children('.menu-item-transport');
-
-					// Set depths. currentDepth must be set before children are located.
-					originalDepth = ui.item.find( '.menu-item' ).data( 'item-depth' );
-					currentDepth = originalDepth;
-
-					// Attach child elements to parent
-					// Skip the placeholder
-					parent = ( ui.item.next()[0] == ui.placeholder[0] ) ? ui.item.next() : ui.item;
-					children = parent.getItemChildMenuItems();
-					transport.append( children );
-
-					// Update the height of the placeholder to match the moving item.
-					height = transport.outerHeight();
-					// If there are children, account for distance between top of children and parent
-					height += ( height > 0 ) ? (ui.placeholder.css('margin-top').slice(0, -2) * 1) : 0;
-					height += ui.helper.outerHeight();
-					helperHeight = height;
-					height -= 2; // Subtract 2 for borders
-					ui.placeholder.height(height);
-
-					// Update the width of the placeholder to match the moving item.
-					maxChildDepth = originalDepth;
-					children.each(function(){
-						var depth = $(this).menuItemDepth();
-						maxChildDepth = (depth > maxChildDepth) ? depth : maxChildDepth;
-					});
-					width = ui.helper.find('.menu-item-handle').outerWidth(); // Get original width
-					width += api.depthToPx(maxChildDepth - originalDepth); // Account for children
-					width -= 2; // Subtract 2 for borders
-					ui.placeholder.width(width);
-
-					// Update the list of menu items.
-					tempHolder = ui.placeholder.next();
-					tempHolder.css( 'margin-top', helperHeight + 'px' ); // Set the margin to absorb the placeholder
-					ui.placeholder.detach(); // detach or jQuery UI will think the placeholder is a menu item
-					$(this).sortable( 'refresh' ); // The children aren't sortable. We should let jQ UI know.
-					ui.item.after( ui.placeholder ); // reattach the placeholder.
-					tempHolder.css('margin-top', 0); // reset the margin
-
-					// Now that the element is complete, we can update...
-					updateSharedVars(ui);
-				},
-				stop: function(e, ui) {
-					var children, subMenuTitle,
-						depthChange = currentDepth - originalDepth;
-
-					// Return child elements to the list
-					children = transport.children().insertAfter(ui.item);
-
-					// Add "sub menu" description
-					subMenuTitle = ui.item.find( '.item-title .is-submenu' );
-					if ( 0 < currentDepth )
-						subMenuTitle.show();
-					else
-						subMenuTitle.hide();
-
-					// Update depth classes
-					if ( 0 !== depthChange ) {
-						ui.item.updateDepthClass( currentDepth );
-						children.shiftDepthClass( depthChange );
-						updateMenuMaxDepth( depthChange );
-					}
-					// Register a change
-					api.registerChange();
-					// Update the item data.
-					ui.item.updateParentMenuItemDBId();
-
-					// address sortable's incorrectly-calculated top in opera
-					ui.item[0].style.top = 0;
-
-					// handle drop placement for rtl orientation
-					if ( api.isRTL ) {
-						ui.item[0].style.left = 'auto';
-						ui.item[0].style.right = 0;
-					}
-
-					api.refreshKeyboardAccessibility();
-					api.refreshAdvancedAccessibility();
-				},
-				change: function(e, ui) {
-					// Make sure the placeholder is inside the menu.
-					// Otherwise fix it, or we're in trouble.
-					if( ! ui.placeholder.parent().hasClass('menu') )
-						(prev.length) ? prev.after( ui.placeholder ) : api.menuList.prepend( ui.placeholder );
-
-					updateSharedVars(ui);
-				},
-				sort: function(e, ui) {
-					var offset = ui.helper.offset(),
-						edge = api.isRTL ? offset.left + ui.helper.width() : offset.left,
-						depth = api.negateIfRTL * api.pxToDepth( edge - menuEdge );
-					// Check and correct if depth is not within range.
-					// Also, if the dragged element is dragged upwards over
-					// an item, shift the placeholder to a child position.
-					if ( depth > maxDepth || offset.top < prevBottom ) depth = maxDepth;
-					else if ( depth < minDepth ) depth = minDepth;
-
-					if( depth != currentDepth )
-						updateCurrentDepth(ui, depth);
-
-					// If we overlap the next element, manually shift downwards
-					if( nextThreshold && offset.top + helperHeight > nextThreshold ) {
-						next.after( ui.placeholder );
-						updateSharedVars( ui );
-						$( this ).sortable( 'refreshPositions' );
-					}
-				}*/
+				setTimeout( function() {
+					self.isSorting = false;
+				}, 300 );
 			} );
+
+			self.isReordering = false;
 
 			/**
 			 * Keyboard-accessible reordering.
@@ -1796,17 +1875,15 @@
 		 * @return {wp.customize.controlConstructor.menu_item[]}
 		 */
 		getMenuItemControls: function() {
-			var self = this, formControls;
+			var self = this, formControls = [];
 
-			formControls = _( this.setting() ).map( function( menuItemId ) {
-				var settingId = menuItemIdToSettingId( menuItemId ),
+			_( this.setting() ).each( function( menuItemId ) {
+				var settingId = menuItemIdToSettingId( menuItemId, self.params.menu_id ),
 					formControl = api.control( settingId );
 
-				if ( ! formControl ) {
-					return;
+				if ( formControl ) {
+					formControls.push( formControl );
 				}
-
-				return formControl;
 			} );
 
 			return formControls;
@@ -2128,4 +2205,4 @@
 		setupUIPreviewing();
 	} );
 
-} )( window.wp, jQuery );
+})( wp.customize, wp, jQuery );

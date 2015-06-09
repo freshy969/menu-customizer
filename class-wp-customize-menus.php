@@ -279,7 +279,7 @@ class WP_Customize_Menus {
 	public function register_scripts( $wp_scripts ) {
 		$handle = 'menu-customizer';
 		$src = plugin_dir_url( __FILE__ ) . 'menu-customizer.js';
-		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'wp-a11y' );
+		$deps = array( 'jquery', 'wp-backbone', 'customize-controls', 'accordion', 'nav-menu', 'wp-a11y' );
 		$wp_scripts->add( $handle, $src, $deps );
 
 		$handle = 'customize-menus-preview';
@@ -343,6 +343,26 @@ class WP_Customize_Menus {
 		$data = sprintf( 'var _wpCustomizeMenusSettings = %s;', json_encode( $settings ) );
 		wp_scripts()->add_data( 'menu-customizer', 'data', $data );
 
+		// This is copied from nav-menus.php, and it has an unfortunate object name of `menus`.
+		$nav_menus_l10n = array(
+			'oneThemeLocationNoMenus' => null,
+			'moveUp'       => __( 'Move up one' ),
+			'moveDown'     => __( 'Move down one' ),
+			'moveToTop'    => __( 'Move to the top' ),
+			/* translators: %s: previous item name */
+			'moveUnder'    => __( 'Move under %s' ),
+			/* translators: %s: previous item name */
+			'moveOutFrom'  => __( 'Move out from under %s' ),
+			/* translators: %s: previous item name */
+			'under'        => __( 'Under %s' ),
+			/* translators: %s: previous item name */
+			'outFrom'      => __( 'Out from under %s' ),
+			/* translators: 1: item name, 2: item position, 3: total number of items */
+			'menuFocus'    => __( '%1$s. Menu item %2$d of %3$d.' ),
+			/* translators: 1: item name, 2: item position, 3: parent item name */
+			'subMenuFocus' => __( '%1$s. Sub item number %2$d under %3$s.' ),
+		);
+		wp_localize_script( 'nav-menu', 'menus', $nav_menus_l10n );
 	}
 
 	/**
@@ -607,15 +627,13 @@ class WP_Customize_Menus {
 
 		<script type="text/html" id="tmpl-loading-menu-item">
 			<li class="nav-menu-inserted-item-loading added-menu-item added-dbid-{{ data.id }} customize-control customize-control-menu_item nav-menu-item-wrap">
-				<div class="menu-item menu-item-depth-0 menu-item-edit-inactive">
-					<dl class="menu-item-bar">
-						<dt class="menu-item-handle">
-							<span class="spinner" style="visibility: visible;"></span>
-							<span class="item-type">{{ data.type_label }}</span>
-							<span class="item-title menu-item-title">{{{ data.name }}}</span>
-						</dt>
-					</dl>
-				</div>
+				<dl class="menu-item-bar">
+					<dt class="menu-item-handle">
+						<span class="spinner" style="visibility: visible;"></span>
+						<span class="item-type">{{ data.type_label }}</span>
+						<span class="item-title menu-item-title">{{{ data.name }}}</span>
+					</dt>
+				</dl>
 			</li>
 		</script>
 		<script type="text/html" id="tmpl-menu-item-reorder-nav">
