@@ -1889,12 +1889,64 @@
 		/**
 		 * Add a new item to this menu.
 		 *
-		 * @param {object}   item - Value for the nav_menu_item setting to be created.
-		 * @returns {object|false} menu_item control instance, or false on error.
+		 * @param {object} item - Value for the nav_menu_item setting to be created.
+		 * @returns {wp.customize.Menus.controlConstructor.nav_menu_item} The newly-created nav_menu_item control instance.
 		 */
 		addItemToMenu: function( item ) {
-			console.info( 'ADDING', item );
-			// @todo create a new Customizer setting and control to go with it; then add the control to the list.
+			var menuControl = this, customizeId, settingArgs, setting, menuItemControl, placeholderId, position = 0, priority = 10;
+
+			_.each( menuControl.getMenuItemControls(), function ( control ) {
+				if ( control.setting() ) {
+					position = Math.max( position, control.setting().position );
+					priority = Math.max( priority, control.priority() );
+				}
+			});
+			position += 1;
+			priority += 1;
+
+			item = $.extend(
+				{},
+				api.Menus.data.defaultSettingValues.nav_menu_item,
+				item,
+				{
+					nav_menu_term_id: menuControl.getMenuTermId(),
+					position: position
+				}
+			);
+			delete item.id; // only used by Backbone
+
+			placeholderId = api.Menus.generatePlaceholderAutoIncrementId();
+			customizeId = 'nav_menu_item[' + String( placeholderId ) + ']';
+			settingArgs = {
+				type: 'nav_menu_item',
+				transport: 'postMessage',
+				previewer: api.previewer
+			};
+			setting = api.create( customizeId, customizeId, {}, settingArgs );
+			setting.set( item ); // Change from initial empty object to actual item to mark as dirty.
+
+			// Add the menu control.
+			menuItemControl = new api.controlConstructor.nav_menu_item( customizeId, {
+				params: {
+					type: 'nav_menu_item',
+					content: '<li id="customize-control-nav_menu_item-' + String( placeholderId ) + '" class="customize-control customize-control-nav_menu_item"></li>',
+					menu_id: placeholderId,
+					section: menuControl.id,
+					priority: priority,
+					active: true,
+					settings: {
+						'default': customizeId
+					}
+				},
+				previewer: api.previewer
+			} );
+
+			menuItemControl.toggleDeletePosition( true );
+
+			api.control.add( customizeId, menuItemControl );
+			setting.preview();
+
+			return menuItemControl;
 		}
 	} );
 
