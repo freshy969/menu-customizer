@@ -15,12 +15,31 @@
 	api.Menus = api.Menus || {};
 
 	// Link settings.
-	api.Menus.data = _wpCustomizeMenusSettings || {};
+	api.Menus.data = {
+		nonce: '',
+		itemTypes: [],
+		l10n: {},
+		menuItemTransport: 'postMessage',
+		phpIntMax: 0
+	};
+	if ( typeof _wpCustomizeMenusSettings !== 'undefined' ) {
+		$.extend( api.Menus.data, _wpCustomizeMenusSettings );
+	}
+
+	/**
+	 * Newly-created Nav Menus and Nav Menu Items have negative integer IDs which
+	 * serve as placeholders until Save & Publish happens.
+	 *
+	 * @return {number}
+	 */
+	api.Menus.generatePlaceholderAutoIncrementId = function() {
+		return -Math.ceil( api.Menus.data.phpIntMax * Math.random() );
+	};
 
 	/**
 	 * wp.customize.Menus.AvailableItemModel
 	 *
-	 * A single available menu item model.
+	 * A single available menu item model. See PHP's WP_Customize_Nav_Menu_Item_Setting class.
 	 *
 	 * @constructor
 	 * @augments Backbone.Model

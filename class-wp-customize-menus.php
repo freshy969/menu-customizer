@@ -347,6 +347,7 @@ class WP_Customize_Menus {
 				'pendingTitleTpl' => __( '%s (Pending)' ),
 			),
 			'menuItemTransport'    => 'postMessage',
+			'phpIntMax' => PHP_INT_MAX,
 		);
 
 		$data = sprintf( 'var _wpCustomizeMenusSettings = %s;', json_encode( $settings ) );
