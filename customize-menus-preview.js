@@ -15,7 +15,8 @@ wp.customize.menusPreview = ( function( $ ) {
 			active: false,
 			stylesheet: ''
 		},
-		navMenuInstanceArgs: {}
+		navMenuInstanceArgs: {},
+		refreshDebounceDelay: 200
 	};
 
 	wp.customize.bind( 'preview-ready', function() {
@@ -129,7 +130,7 @@ wp.customize.menusPreview = ( function( $ ) {
 
 		_.each( self.navMenuInstanceArgs, function( navMenuArgs, instanceNumber ) {
 			if ( menuId === navMenuArgs.menu || -1 !== _.indexOf( assignedLocations, navMenuArgs.theme_location ) ) {
-				self.refreshMenuInstance( instanceNumber );
+				self.refreshMenuInstanceDebounced( instanceNumber );
 			}
 		} );
 	};
@@ -137,7 +138,7 @@ wp.customize.menusPreview = ( function( $ ) {
 	self.refreshMenuLocation = function( location ) {
 		_.each( self.navMenuInstanceArgs, function( navMenuArgs, instanceNumber ) {
 			if ( location === navMenuArgs.theme_location ) {
-				self.refreshMenuInstance( instanceNumber );
+				self.refreshMenuInstanceDebounced( instanceNumber );
 			}
 		} );
 	};
@@ -201,6 +202,20 @@ wp.customize.menusPreview = ( function( $ ) {
 		request.always( function() {
 			container.removeClass( 'customize-partial-refreshing' );
 		} );
+	};
+
+	self.currentRefreshMenuInstanceDebouncedCalls = {};
+
+	self.refreshMenuInstanceDebounced = function ( instanceNumber ) {
+		if ( self.currentRefreshMenuInstanceDebouncedCalls[ instanceNumber ] ) {
+			clearTimeout( self.currentRefreshMenuInstanceDebouncedCalls[ instanceNumber ] );
+		}
+		self.currentRefreshMenuInstanceDebouncedCalls[ instanceNumber ] = setTimeout(
+			function () {
+				self.refreshMenuInstance( instanceNumber );
+			},
+			self.refreshDebounceDelay
+		);
 	};
 
 	return self;
