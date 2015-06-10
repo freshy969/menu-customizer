@@ -2169,7 +2169,7 @@
 		} );
 
 		_( data.nav_menu_item_updates ).each(function ( update ) {
-			var oldCustomizeId, newCustomizeId, newSetting, settingValue, newControl;
+			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, newControl;
 			if ( update.status === 'inserted' ) {
 				if ( ! update.previous_post_id ) {
 					throw new Error( 'Expected previous_post_id' );
@@ -2184,11 +2184,12 @@
 				if ( ! api.has( oldCustomizeId ) ) {
 					throw new Error( 'Expected setting to exist: ' + oldCustomizeId );
 				}
+				oldSetting = api( oldCustomizeId );
 				if ( ! api.control.has( oldCustomizeId ) ) {
 					throw new Error( 'Expected control to exist: ' + oldCustomizeId );
 				}
 
-				settingValue = wp.customize( oldCustomizeId ).get();
+				settingValue = oldSetting.get();
 				if ( ! settingValue ) {
 					throw new Error( 'Did not expect setting to be empty (deleted).' );
 				}
@@ -2230,7 +2231,9 @@
 				api.control.add( newCustomizeId, newControl );
 
 				// Delete the placeholder and preview the new setting.
-				api( oldCustomizeId ).set( false );
+				oldSetting.callbacks.disable(); // Prevent setting from being marked as dirty when it is set to false.
+				oldSetting.set( false );
+				oldSetting.preview();
 				newSetting.preview();
 			}
 		});
