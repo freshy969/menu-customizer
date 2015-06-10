@@ -310,6 +310,7 @@
 	line-height: 1;
 }
 
+/* @todo update selector or potentially remove */
 .menu-settings .customize-control.customize-control-checkbox {
 	margin-bottom: 8px; /* Override collapsing at smaller viewports. */
 }
@@ -819,6 +820,8 @@ body.adding-menu-items #customize-preview {
 }
 
 /* Add/delete Menus */
+
+/* @todo update selector */
 #accordion-section-add_menu {
 	margin: 15px 12px;
 }
@@ -830,10 +833,12 @@ body.adding-menu-items #customize-preview {
 	clear: both;
 }
 
+/* @todo update selector */
 #accordion-section-add_menu .accordion-section-title {
 	padding-left: 45px;
 }
 
+/* @todo update selector */
 #accordion-section-add_menu .accordion-section-title:before {
 	font: normal 20px/1 dashicons;
 	position: absolute;
