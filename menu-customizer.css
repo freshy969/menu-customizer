@@ -228,11 +228,6 @@
 	display: block;
 }
 
-/* Targets the menu name inputs. */
-.wp-customizer li[id*="nav_menu"].control-section li[id*="nav_menu"].customize-control:first-child .customize-control-title {
-	display: none;
-}
-
 .customize-control input.menu-name-field {
 	width: 100%; /* Override the 98% default for customizer inputs, to align with the size of menu items. */
 	margin: 12px 0;
