@@ -17,7 +17,10 @@
 	// Link settings.
 	api.Menus.data = {
 		nonce: '',
-		itemTypes: [],
+		itemTypes: {
+			taxonomies: {},
+			postTypes: {}
+		},
 		l10n: {},
 		menuItemTransport: 'postMessage',
 		phpIntMax: 0,
@@ -262,9 +265,16 @@
 			var self = this;
 
 			// Render the template for each item by type.
-			$.each( api.Menus.data.itemTypes, function( index, type ) {
-				self.pages[type.type] = 0;
-				self.loadItems( type.type, type.obj_type );
+			_.each( api.Menus.data.itemTypes, function( typeObjects, type ) {
+				_.each( typeObjects, function( typeObject, slug ) {
+					if ( 'postTypes' === type ) {
+						type = 'post_type';
+					} else if ( 'taxonomies' === type ) {
+						type = 'taxonomy';
+					}
+					self.pages[ slug ] = 0; // @todo should prefix with type
+					self.loadItems( slug, type );
+				} );
 			} );
 		},
 

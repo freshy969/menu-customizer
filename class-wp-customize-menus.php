@@ -118,7 +118,7 @@ class WP_Customize_Menus {
 		}
 		$obj_type = sanitize_key( $_POST['obj_type'] );
 		if ( ! in_array( $obj_type, array( 'post_type', 'taxonomy' ) ) ) {
-			wp_send_json_error( array( 'message' => __( 'Invalid obj_type param.' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Invalid obj_type param: ' . $obj_type ) ) );
 		}
 		$taxonomy_or_post_type = sanitize_key( $_POST['type'] );
 		$page = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 0;
@@ -348,6 +348,8 @@ class WP_Customize_Menus {
 				'customizingMenus' => _x( 'Customizing &#9656; Menus', '&#9656 is the unicode right-pointing triangle' ),
 				'invalidTitleTpl' => __( '%s (Invalid)' ),
 				'pendingTitleTpl' => __( '%s (Pending)' ),
+				'taxonomyTermLabel' => __( 'Taxonomy' ),
+				'postTypeLabel'     => __( 'Post Type' ),
 			),
 			'menuItemTransport'    => 'postMessage',
 			'phpIntMax' => PHP_INT_MAX,
@@ -602,14 +604,21 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.0
 	 */
 	public function available_item_types() {
-		$items = array();
-		$types = get_post_types( array( 'show_in_nav_menus' => true ), 'names' );
-		foreach ( $types as $type ) {
-			$items[] = array( 'type' => $type, 'obj_type' => 'post_type' );
+		$items = array(
+			'postTypes' => array(),
+			'taxonomies' => array(),
+		);
+		$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'objects' );
+		foreach ( $post_types as $slug => $post_type ) {
+			$items['postTypes'][ $slug ] = array(
+				'label' => $post_type->labels->singular_name,
+			);
 		}
-		$taxes = get_taxonomies( array( 'show_in_nav_menus' => true ), 'names' );
-		foreach ( $taxes as $tax ) {
-			$items[] = array( 'type' => $tax, 'obj_type' => 'taxonomy' );
+		$taxonomies = get_taxonomies( array( 'show_in_nav_menus' => true ), 'objects' );
+		foreach ( $taxonomies as $slug => $taxonomy ) {
+			$items['taxonomies'][ $slug ] = array(
+				'label' => $taxonomy->labels->singular_name,
+			);
 		}
 		return $items;
 	}
