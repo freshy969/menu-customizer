@@ -198,65 +198,63 @@
 		// Get search results.
 		doSearch: function( page ) {
 			var self = this, params,
-				thisTerm = self.searchTerm,
 			    typeInner = $( '#available-menu-items-search .accordion-section-content' ),
 			    itemTemplate = wp.template( 'available-menu-item' );
 
-			if ( 0 > page ) {
+			if ( self.currentRequest ) {
+				self.currentRequest.abort();
+			}
+
+			if ( page < 0 ) {
 				return;
-			} else if ( 1 < page ) {
+			} else if ( page > 1 ) {
 				$( '#available-menu-items-search' ).addClass( 'loading-more' );
-			} else if ( '' === this.searchTerm ) {
+			} else if ( '' === self.searchTerm ) {
 				typeInner.html( '' );
 				return;
 			}
+
 			$( '#available-menu-items-search' ).addClass( 'loading' );
 			self.loading = true;
 			params = {
-				'action': 'search-available-menu-items-customizer',
 				'customize-menus-nonce': api.Menus.data.nonce,
 				'wp_customize': 'on',
-				'search': thisTerm,
+				'search': self.searchTerm,
 				'page': page
 			};
-			// @todo replace this with wp.ajax.post() as done in loadItems
-			$.post( wp.ajax.settings.url, params, function( response ) {
+
+			self.currentRequest = wp.ajax.post( 'search-available-menu-items-customizer', params );
+
+			self.currentRequest.done(function( data ) {
 				var items;
-				if ( self.searchTerm !== thisTerm ) {
-					// Term changed since ajax call was fired, wait for the next one.
-					if ( ! self.searchTerm ) {
-						$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
-						self.loading = false;
-					}
-					return;
-				}
 				if ( 1 === page ) {
 					// Clear previous results as it's a new search.
-					typeInner.html( '' );
+					typeInner.empty();
 				}
-				if ( response.data && response.data.message ) {
-					if ( 0 === typeInner.children().length ) {
-						// No results were found.
-						typeInner.html( '<p class="nothing-found">' + response.data.message + '</p>' );
-					}
-					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
-					self.loading = false;
-					self.pages.search = -1;
-				} else if ( response.success && response.data ) {
-					items = response.data.items;
-					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
-					self.loading = false;
-					items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
-					self.collection.add( items.models );
-					items.each( function( menuItem ) {
-						typeInner.append( itemTemplate( menuItem.attributes ) );
-					} );
-					if ( 20 > items.length ) {
-						self.pages.search = -1; // Up to 20 posts and 20 terms in results, if <20, no more results for either.
-					} else {
-						self.pages.search = self.pages.search + 1;
-					}
+				$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
+				self.loading = false;
+				items = new api.Menus.AvailableItemCollection( data.items );
+				self.collection.add( items.models );
+				items.each( function( menuItem ) {
+					typeInner.append( itemTemplate( menuItem.attributes ) );
+				} );
+				if ( 20 > items.length ) {
+					self.pages.search = -1; // Up to 20 posts and 20 terms in results, if <20, no more results for either.
+				} else {
+					self.pages.search = self.pages.search + 1;
 				}
+			});
+
+			self.currentRequest.fail(function( data ) {
+				typeInner.empty().append( $( '<p class="nothing-found"></p>' ).text( data.message ) );
+				wp.a11y.speak( data.message );
+				self.pages.search = -1;
+			});
+
+			self.currentRequest.always(function() {
+				$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
+				self.loading = false;
+				self.currentRequest = null;
 			});
 		},
 

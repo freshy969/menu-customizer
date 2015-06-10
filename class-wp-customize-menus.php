@@ -205,11 +205,19 @@ class WP_Customize_Menus {
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Error: invalid user capabilities.' ) ) );
 		}
+		if ( empty( $_POST['search'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Error: missing search parameter.' ) ) );
+		}
 
-		$p = absint( $_POST['page'] );
-		$s = esc_html( $_POST['search'] );
+		$p = isset( $_POST['page'] ) ? absint( $_POST['page'] ) : 0;
+		if ( $p < 1 ) {
+			$p = 1;
+		}
+
+		$s = sanitize_text_field( wp_unslash( $_POST['search'] ) );
 		$results = $this->search_available_items_query( array( 'pagenum' => $p, 's' => $s ) );
-		if ( ! $results ) {
+
+		if ( empty( $results ) ) {
 			wp_send_json_error( array( 'message' => __( 'No results found.' ) ) );
 		} else {
 			wp_send_json_success( array( 'items' => $results ) );
@@ -223,15 +231,14 @@ class WP_Customize_Menus {
 	 *
 	 * @since Menu Customizer 0.4
 	 *
-	 * @static
 	 * @param array $args Optional. Accepts 'pagenum' and 's' (search) arguments.
-	 * @return false|array Results.
+	 * @return array Results.
 	 */
-	public static function search_available_items_query( $args = array() ) {
-		$pts = get_post_types( array( 'show_in_nav_menus' => true ), 'objects' );
-		$pt_names = array_keys( $pts );
+	public function search_available_items_query( $args = array() ) {
+		$post_type_objects = get_post_types( array( 'show_in_nav_menus' => true ), 'objects' );
+		$post_type_names = array_keys( $post_type_objects );
 		$query = array(
-			'post_type' => $pt_names,
+			'post_type' => $post_type_names,
 			'suppress_filters' => true,
 			'update_post_term_cache' => false,
 			'update_post_meta_cache' => false,
@@ -244,21 +251,21 @@ class WP_Customize_Menus {
 		}
 		$query['offset'] = $args['pagenum'] > 1 ? $query['posts_per_page'] * ( $args['pagenum'] - 1 ) : 0;
 		// Do main query.
-		$get_posts = new WP_Query;
+		$get_posts = new WP_Query();
 		$posts = $get_posts->query( $query );
 		// Check if any posts were found.
 		if ( ! $get_posts->post_count ) {
-			return false;
+			return array();
 		}
 		// Build results.
 		$results = array();
 		foreach ( $posts as $post ) {
 			$results[] = array(
 				'id'         => 'post-' . $post->ID,
-				'name'       => trim( esc_html( strip_tags( get_the_title( $post ) ) ) ),
-				'type'       => $post->post_type,
-				'type_label' => $pts[ $post->post_type ]->labels->singular_name,
-				'obj_type'   => 'post_type',
+				'type'       => 'post_type',
+				'object'     => $post->post_type,
+				'object_id'  => intval( $post->ID ),
+				'title'      => $post->post_title,
 			);
 		}
 		// Query taxonomy terms.
@@ -271,10 +278,10 @@ class WP_Customize_Menus {
 		foreach ( $terms as $term ) {
 			$results[] = array(
 				'id'         => 'term-' . $term->term_id,
-				'name'       => $term->name,
-				'type'       => $term->taxonomy,
-				'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
-				'obj_type'   => 'taxonomy',
+				'type'       => 'taxonomy',
+				'object'     => $term->taxonomy,
+				'object_id'  => intval( $term->term_id ),
+				'title'      => $term->name,
 			);
 		}
 		return $results;
