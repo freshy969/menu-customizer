@@ -1101,10 +1101,23 @@
 				containerClasses.push( 'pending' );
 				control.params.title = api.Menus.data.pendingTitleTpl.replace( '%s', control.params.title );
 			}
-			// @todo control.params.title = ( ! isset( $item->label ) || '' == $item->label ) ? $title : $item->label;
 
 			control.params.el_classes = containerClasses.join( ' ' );
-			control.params.item_type_label = settingValue.type; // @todo lookup label
+			if ( 'post_type' === settingValue.type ) {
+				if ( api.Menus.data.itemTypes.postTypes[ settingValue.object ] ) {
+					control.params.item_type_label = api.Menus.data.itemTypes.postTypes[ settingValue.object ].label;
+				} else {
+					control.params.item_type_label = api.Menus.data.l10n.taxonomyTermLabel;
+				}
+			} else if ( 'taxonomy' === settingValue.type ) {
+				if ( api.Menus.data.itemTypes.taxonomies[ settingValue.object ] ) {
+					control.params.item_type_label = api.Menus.data.itemTypes.taxonomies[ settingValue.object ].label;
+				} else {
+					control.params.item_type_label = api.Menus.data.l10n.postTypeLabel;
+				}
+			} else {
+				control.params.item_type_label = api.Menus.data.l10n.custom_label;
+			}
 			control.params.item_type = settingValue.type;
 			control.params.url = settingValue.url;
 			control.params.target = settingValue.target;
