@@ -596,17 +596,6 @@
 	background: transparent;
 }
 
-#available-menu-items-search .accordion-section-title {
-	padding: 12px 15px;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-}
-
-#available-menu-items-search .accordion-section-title:after {
-	display: none;
-}
-
 button.not-a-button {
 	background: transparent;
 	border: none;
@@ -637,11 +626,6 @@ button.not-a-button {
 	padding: 1px 15px 15px 15px;
 	min-height: 120px;
 	max-height: 290px;
-}
-
-#available-menu-items-search input {
-	padding: 6px 10px;
-	width: 100%;
 }
 
 #custom-menu-item-name.invalid,
@@ -755,6 +739,27 @@ button.not-a-button {
 	top: 18px;
 	margin: 0 !important;
 	right: 20px;
+}
+
+#available-menu-items-search input {
+	padding: 6px 10px;
+	width: 100%;
+}
+
+#available-menu-items-search .accordion-section-title {
+	padding: 12px 15px;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+#available-menu-items-search .accordion-section-title:after {
+	display: none;
+}
+
+#available-menu-items-search .accordion-section-content:empty {
+	min-height: 0;
+	padding: 0;
 }
 
 #available-menu-items-search.loading .accordion-section-content div {
