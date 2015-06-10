@@ -98,9 +98,8 @@ wp.customize.menusPreview = ( function( $ ) {
 	 * Handle changing of a nav_menu setting.
 	 *
 	 * @this {wp.customize.Setting}
-	 * @param {object} to
 	 */
-	self.onChangeNavMenuSetting = function( to ) {
+	self.onChangeNavMenuSetting = function() {
 		var setting = this;
 		if ( ! setting.navMenuId ) {
 			throw new Error( 'Expected navMenuId property to be set.' );

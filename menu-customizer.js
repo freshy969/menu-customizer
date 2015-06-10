@@ -991,11 +991,6 @@
 					}
 				});
 			});
-
-			// When saving, update original_id to menu_item_id, initiating new clones as needed.
-			api.bind( 'save', function() {
-				console.warn( 'Need to process customize_save_response.' );
-			} );
 		},
 
 		/**
@@ -2133,11 +2128,113 @@
 	 * Init Customizer for menus.
 	 */
 	api.bind( 'ready', function() {
+
 		// Set up the menu items panel.
 		api.Menus.availableMenuItemsPanel = new api.Menus.AvailableMenuItemsPanelView({
 			collection: api.Menus.availableMenuItems
 		});
+
+		api.bind( 'saved', function ( data ) {
+			if ( data.nav_menu_updates || data.nav_menu_item_updates ) {
+				api.Menus.applySavedData( data );
+			}
+		} );
 	} );
+
+	/**
+	 * When customize_save comes back with a success, make sure any inserted
+	 * nav menus and items are properly re-added with their newly-assigned IDs.
+	 *
+	 * @param {object} data
+	 * @param {array} data.nav_menu_updates
+	 * @param {array} data.nav_menu_item_updates
+	 */
+	api.Menus.applySavedData = function ( data ) {
+
+		var insertedMenuIdMapping = {};
+
+		_( data.nav_menu_updates ).each(function ( update ) {
+			if ( 'inserted' === update.status ) {
+				if ( ! update.previous_term_id ) {
+					throw new Error( 'Expected previous_term_id' );
+				}
+				if ( ! update.term_id ) {
+					throw new Error( 'Expected term_id' );
+				}
+				insertedMenuIdMapping[ update.previous_term_id ] = update.term_id;
+
+				// @todo Revisit this when menus can be added again.
+				// @todo Now we have to create the new menu section, menu control, and menu setting.
+			}
+		} );
+
+		_( data.nav_menu_item_updates ).each(function ( update ) {
+			var oldCustomizeId, newCustomizeId, newSetting, settingValue, newControl;
+			if ( update.status === 'inserted' ) {
+				if ( ! update.previous_post_id ) {
+					throw new Error( 'Expected previous_post_id' );
+				}
+				if ( ! update.post_id ) {
+					throw new Error( 'Expected previous_post_id' );
+				}
+				if ( ! update.post_id ) {
+					throw new Error( 'Expected previous_post_id' );
+				}
+				oldCustomizeId = 'nav_menu_item[' + String( update.previous_post_id ) + ']';
+				if ( ! api.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected setting to exist: ' + oldCustomizeId );
+				}
+				if ( ! api.control.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected control to exist: ' + oldCustomizeId );
+				}
+
+				settingValue = wp.customize( oldCustomizeId ).get();
+				if ( ! settingValue ) {
+					throw new Error( 'Did not expect setting to be empty (deleted).' );
+				}
+				settingValue = _.clone( settingValue );
+
+				// If the menu was also inserted, then make sure it uses the new menu ID for nav_menu_term_id.
+				if ( insertedMenuIdMapping[ settingValue.nav_menu_term_id ] ) {
+					settingValue.nav_menu_term_id = insertedMenuIdMapping[ settingValue.nav_menu_term_id ];
+				}
+
+				newCustomizeId = 'nav_menu_item[' + String( update.post_id ) + ']';
+				newSetting = api.create( newCustomizeId, newCustomizeId, settingValue, {
+					type: 'nav_menu_item',
+					transport: 'postMessage',
+					previewer: api.previewer
+				} );
+
+				// Add the menu control.
+				newControl = new api.controlConstructor.nav_menu_item( newCustomizeId, {
+					params: {
+						type: 'nav_menu_item',
+						content: '<li id="customize-control-nav_menu_item-' + String( update.post_id ) + '" class="customize-control customize-control-nav_menu_item"></li>',
+						menu_id: update.post_id,
+						section: 'nav_menu[' + String( settingValue.nav_menu_term_id ) + ']',
+						priority: api.control( oldCustomizeId ).priority.get(),
+						active: true,
+						settings: {
+							'default': newCustomizeId
+						}
+					},
+					previewer: api.previewer
+				} );
+
+				// Remove old setting and control.
+				api.control( oldCustomizeId ).container.remove();
+				api.control.remove( oldCustomizeId );
+
+				// Add new control to take its place.
+				api.control.add( newCustomizeId, newControl );
+
+				// Delete the placeholder and preview the new setting.
+				api( oldCustomizeId ).set( false );
+				newSetting.preview();
+			}
+		});
+	};
 
 	/**
 	 * Focus a menu item control.
