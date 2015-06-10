@@ -70,7 +70,7 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 			</dl>
 
 			<div class="menu-item-settings" id="menu-item-settings-{{ data.menu_item_id }}">
-				<# if ( 'custom' == data.item_type ) { #>
+				<# if ( 'custom' === data.item_type ) { #>
 					<p class="field-url description description-thin">
 						<label for="edit-menu-item-url-{{ data.menu_item_id }}">
 							<?php _e( 'URL' ); ?><br />
@@ -86,8 +86,8 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 				</p>
 				<p class="field-link-target description description-thin">
 					<label for="edit-menu-item-target-{{ data.menu_item_id }}">
-						<input type="checkbox" id="edit-menu-item-target-{{ data.menu_item_id }}" value="_blank" name="menu-item-target" />
-								<?php _e( 'Open link in a new tab' ); ?>
+						<input type="checkbox" id="edit-menu-item-target-{{ data.menu_item_id }}" class="edit-menu-item-target" value="_blank" name="menu-item-target" />
+						<?php _e( 'Open link in a new tab' ); ?>
 					</label>
 				</p>
 				<p class="field-attr-title description description-thin">

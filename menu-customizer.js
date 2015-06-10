@@ -958,12 +958,17 @@
 			control.elements.url = new api.Element( control.container.find( '.edit-menu-item-url' ) );
 			control.elements.title = new api.Element( control.container.find( '.edit-menu-item-title' ) );
 			control.elements.attr_title = new api.Element( control.container.find( '.edit-menu-item-attr-title' ) );
-			// @todo add more elements
-			// @todo instead of applying control.params to the content template, we can apply them to the built DOM as the changes happen?
-
+			control.elements.target = new api.Element( control.container.find( '.edit-menu-item-target' ) );
+			control.elements.classes = new api.Element( control.container.find( '.edit-menu-item-classes' ) );
+			control.elements.xfn = new api.Element( control.container.find( '.edit-menu-item-xfn' ) );
+			control.elements.description = new api.Element( control.container.find( '.edit-menu-item-description' ) );
 
 			_.each( control.elements, function ( element, property ) {
 				element.bind(function ( value ) {
+					if ( element.element.is( 'input[type=checkbox]' ) ) {
+						value = ( value ) ? element.element.val() : '';
+					}
+
 					var settingValue = control.setting();
 					if ( settingValue && settingValue[ property ] !== value ) {
 						settingValue = _.clone( settingValue );
