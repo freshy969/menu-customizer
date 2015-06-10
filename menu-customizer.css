@@ -219,8 +219,7 @@
 }
 
 .reordering .menu-item .item-controls,
-.reordering .menu-item .item-type,
-.reordering .menu-item .is-submenu {
+.reordering .menu-item .item-type {
 	display: none;
 }
 
@@ -550,7 +549,6 @@
 	color: #f00;
 }
 
-.adding-menu-items .menu-item-handle .is-submenu,
 .adding-menu-items .menu-item-handle .item-edit {
 	display: none;
 }

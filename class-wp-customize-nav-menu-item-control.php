@@ -61,7 +61,6 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 					<span class="item-title">
 						<span class="spinner"></span>
 						<span class="menu-item-title">{{ data.title }}</span>
-						<span class="is-submenu"><?php _e( 'sub item' ); ?></span>
 					</span>
 					<span class="item-controls">
 						<a class="item-edit" id="edit-{{ data.menu_item_id }}" title="<?php esc_attr_e( 'Edit Menu Item' ); ?>" href="#"><?php _e( 'Edit Menu Item' ); ?></a>
