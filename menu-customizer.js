@@ -187,6 +187,9 @@
 				$( '#available-menu-items .accordion-section.open' ).removeClass( 'open' );
 				$( '#available-menu-items-search' ).addClass( 'open' );
 			}
+			if ( '' === event.target.value ) {
+				$( '#available-menu-items-search' ).removeClass( 'open' );
+			}
 			if ( this.searchTerm === event.target.value ) {
 				return;
 			}
@@ -198,7 +201,8 @@
 		// Get search results.
 		doSearch: function( page ) {
 			var self = this, params,
-			    typeInner = $( '#available-menu-items-search .accordion-section-content' ),
+			    $section = $( '#available-menu-items-search' ),
+			    $content = $section.find( '.accordion-section-content' ),
 			    itemTemplate = wp.template( 'available-menu-item' );
 
 			if ( self.currentRequest ) {
@@ -208,13 +212,13 @@
 			if ( page < 0 ) {
 				return;
 			} else if ( page > 1 ) {
-				$( '#available-menu-items-search' ).addClass( 'loading-more' );
+				$section.addClass( 'loading-more' );
 			} else if ( '' === self.searchTerm ) {
-				typeInner.html( '' );
+				$content.html( '' );
 				return;
 			}
 
-			$( '#available-menu-items-search' ).addClass( 'loading' );
+			$section.addClass( 'loading' );
 			self.loading = true;
 			params = {
 				'customize-menus-nonce': api.Menus.data.nonce,
@@ -229,14 +233,15 @@
 				var items;
 				if ( 1 === page ) {
 					// Clear previous results as it's a new search.
-					typeInner.empty();
+					$content.empty();
 				}
-				$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
+				$section.removeClass( 'loading loading-more' );
+				$section.addClass( 'open' );
 				self.loading = false;
 				items = new api.Menus.AvailableItemCollection( data.items );
 				self.collection.add( items.models );
 				items.each( function( menuItem ) {
-					typeInner.append( itemTemplate( menuItem.attributes ) );
+					$content.append( itemTemplate( menuItem.attributes ) );
 				} );
 				if ( 20 > items.length ) {
 					self.pages.search = -1; // Up to 20 posts and 20 terms in results, if <20, no more results for either.
@@ -246,13 +251,13 @@
 			});
 
 			self.currentRequest.fail(function( data ) {
-				typeInner.empty().append( $( '<p class="nothing-found"></p>' ).text( data.message ) );
+				$content.empty().append( $( '<p class="nothing-found"></p>' ).text( data.message ) );
 				wp.a11y.speak( data.message );
 				self.pages.search = -1;
 			});
 
 			self.currentRequest.always(function() {
-				$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
+				$section.removeClass( 'loading loading-more' );
 				self.loading = false;
 				self.currentRequest = null;
 			});
