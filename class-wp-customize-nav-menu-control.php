@@ -33,7 +33,7 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 	public function content_template() {
 		?>
 		<button type="button" class="button-secondary add-new-menu-item">
-			<?php _e( 'Add Links' ); ?>
+			<?php _e( 'Add Items' ); ?>
 		</button>
 		<button type="button" class="not-a-button reorder-toggle">
 			<span class="reorder"><?php _ex( 'Reorder', 'Reorder menu items in Customizer' ); ?></span>
