@@ -991,15 +991,21 @@
 				}
 			});
 
-			control.setting.bind(function ( object ) {
-				if ( ! object ) {
-					return;
-				}
-				_.each( object, function ( value, key ) {
-					if ( control.elements[ key ] ) {
-						control.elements[ key ].set( object[ key ] );
+			control.setting.bind(function ( to, from ) {
+				if ( false === to ) {
+					control.container.remove();
+				} else {
+					_.each( to, function ( value, key ) {
+						if ( control.elements[key] ) {
+							control.elements[key].set( to[key] );
+						}
+					} );
+
+					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
+						// @todo now we need to update the priorities of all the menu item controls to reflect the new positions
+						// @todo self._applyCardinalOrderClassNames();
 					}
-				});
+				}
 			});
 		},
 
