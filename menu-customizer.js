@@ -1003,7 +1003,7 @@
 					} );
 
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
-						// @todo now we need to update the priorities of all the menu item controls to reflect the new positions
+						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
 						// @todo self._applyCardinalOrderClassNames();
 					}
 				}
@@ -1379,6 +1379,8 @@
 				nextMenuItemId, nextMenuItem, nextItemDepth, childControl, childDepth,
 				control = this, menuItemSetting;
 
+			throw new Error( '_moveMenuItemDepthByOne needs to be updated to only look at the nav_menu_item settings and their position and menu_item_parent properties' );
+
 			depth = this.getDepth();
 			i = this.getMenuItemPosition();
 
@@ -1387,64 +1389,75 @@
 				return;
 			}
 
-			menuSetting = this.getMenuControl().setting;
-			menuItemIds = Array.prototype.slice.call( menuSetting() );
-			previousMenuItemId = menuItemIds[i - 1];
-			previousMenuItem = api.Menus.getMenuItemControl( previousMenuItemId );
-			previousItemDepth = previousMenuItem.params.depth;
-
-			// Can we move this item in this direction?
-			if ( 1 === offset && previousItemDepth < depth ) {
-				// Already a sub-item of previous item.
-				return;
-			} else if ( -1 === offset && 0 === depth ) {
-				// Already at the top level.
-				return;
-			}
-
-			// Get new menu item parent id.
-			if ( 1 === offset ) {
-				// Parent will be previous item if they have the same depth.
-				if ( previousItemDepth === depth ) {
-					parentId = previousMenuItemId;
-				} else {
-					// Find closest previous item of the same current depth.
-					ii = 1;
-					while ( ii <= i ) {
-						parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
-						if ( depth === parentControl.params.depth ) {
-							parentId = menuItemIds[i - ii];
-							break;
-						} else {
-							ii++;
-						}
-					}
-				}
-			} else {
-				if ( 1 === depth ) {
-					parentId = 0;
-				} else {
-					// Find closest previous item with depth of 2 less than the current depth.
-					ii = 1;
-					while ( ii <= i ) {
-						parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
-						if ( depth - 2 === parentControl.params.depth ) {
-							parentId = menuItemIds[i - ii];
-							break;
-						} else {
-							ii++;
-						}
-					}
-				}
-			}
+			/* @todo This is now wrong as it is trying to work with a nav_menu setting consisting of IDs, as opposed to working with nav_menu_item settings that have positions and menu_item_parent properties
+			 * menuSetting = this.getMenuControl().setting;
+			 * menuItemIds = Array.prototype.slice.call( menuSetting() );
+			 * previousMenuItemId = menuItemIds[i - 1];
+			 * previousMenuItem = api.Menus.getMenuItemControl( previousMenuItemId );
+			 * previousItemDepth = previousMenuItem.params.depth;
+			 *
+			 * // Can we move this item in this direction?
+			 * if ( 1 === offset && previousItemDepth < depth ) {
+			 * 	// Already a sub-item of previous item.
+			 * 	return;
+			 * } else if ( -1 === offset && 0 === depth ) {
+			 * 	// Already at the top level.
+			 * 	return;
+			 * }
+			 *
+			 * // Get new menu item parent id.
+			 * if ( 1 === offset ) {
+			 * 	// Parent will be previous item if they have the same depth.
+			 * 	if ( previousItemDepth === depth ) {
+			 * 		parentId = previousMenuItemId;
+			 * 	} else {
+			 * 		// Find closest previous item of the same current depth.
+			 * 		ii = 1;
+			 * 		while ( ii <= i ) {
+			 * 			parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
+			 * 			if ( depth === parentControl.params.depth ) {
+			 * 				parentId = menuItemIds[i - ii];
+			 * 				break;
+			 * 			} else {
+			 * 				ii++;
+			 * 			}
+			 * 		}
+			 * 	}
+			 * } else {
+			 * 	if ( 1 === depth ) {
+			 * 		parentId = 0;
+			 * 	} else {
+			 * 		// Find closest previous item with depth of 2 less than the current depth.
+			 * 		ii = 1;
+			 * 		while ( ii <= i ) {
+			 * 			parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
+			 * 			if ( depth - 2 === parentControl.params.depth ) {
+			 * 				parentId = menuItemIds[i - ii];
+			 * 				break;
+			 * 			} else {
+			 * 				ii++;
+			 * 			}
+			 * 		}
+			 * 	}
+			 * }
+			 */
 
 			// Update menu item parent field.
 			menuItemSetting = _.clone( control.setting() );
 			menuItemSetting.menu_item_parent = parentId;
 			control.setting( menuItemSetting );
 
+			/*
+			 * @todo Note that all of the following should be done based on setting changes
+			 * The logic could be wrapped in:
+			 *
+			 * control.setting.bind( function( newMenuItem, oldMenuItem ){ if ( newMenuItem.menu_item_parent !==  oldMenuItem.menu_item_parent ) { Now refresh positions } } );
+			 *
+			 * See _setupUpdateUI() for the current stub code that this logic needs to be placed inside of.
+			 */
+
 			// Update depth class for UI.
-			this.container.find( '.menu-item' )
+			this.container
 				.removeClass( 'menu-item-depth-' + depth )
 				.addClass( 'menu-item-depth-' + ( depth + offset ) );
 
@@ -1476,6 +1489,14 @@
 		}
 	} );
 
+	/**
+	 * wp.customize.Menus.MenuNameControl
+	 *
+	 * Customizer control for a nav menu's name.
+	 *
+	 * @constructor
+	 * @augments wp.customize.Control
+	 */
 	api.Menus.MenuNameControl = api.Control.extend({
 
 		ready: function () {
