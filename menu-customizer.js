@@ -900,16 +900,16 @@
 		 * Show/hide the settings when clicking on the menu item handle.
 		 */
 		_setupControlToggle: function() {
-			var self = this;
+			var control = this;
 
 			this.container.find( '.menu-item-handle' ).on( 'click', function( e ) {
 				e.preventDefault();
 				e.stopPropagation();
-				var menuControl = self.getMenuControl();
+				var menuControl = control.getMenuControl();
 				if ( menuControl.isReordering || menuControl.isSorting ) {
 					return;
 				}
-				self.toggleForm();
+				control.toggleForm();
 			} );
 		},
 
@@ -2252,20 +2252,13 @@
 	};
 
 	/**
-	 * @param menu_id
+	 * Get the control for a given menu.
+	 *
+	 * @param menuId
 	 * @return {wp.customize.controlConstructor.menus[]}
 	 */
-	api.Menus.getMenuControl = function( menu_id ) {
-		var settingId, menuControl;
-
-		settingId = 'nav_menu_' + menu_id;
-		menuControl = api.control( settingId );
-
-		if ( ! menuControl ) {
-			return;
-		}
-
-		return menuControl;
+	api.Menus.getMenuControl = function( menuId ) {
+		return api.control( 'nav_menu[' + menuId + ']' );
 	};
 
 	/**
