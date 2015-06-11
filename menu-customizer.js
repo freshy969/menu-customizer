@@ -1304,7 +1304,7 @@
 			prev.before( $( this.container ) );
 			wp.a11y.speak( api.Menus.data.l10n.movedUp );
 			// Maybe update parent & depth if it's a sub-item.
-			if ( 0 !== this.params.depth ) {
+			if ( 0 !== this.getDepth() ) {
 				// @todo
 			}
 			// @todo also move children
@@ -1322,7 +1322,7 @@
 			next.after( $( this.container ) );
 			wp.a11y.speak( api.Menus.data.l10n.movedDown );
 			// Maybe update parent & depth if it's a sub-item.
-			if ( 0 !== this.params.depth ) {
+			if ( 0 !== this.getDepth() ) {
 				// @todo
 			}
 			// @todo also move children
@@ -1455,19 +1455,16 @@
 			}
 			nextMenuItemId = menuItemIds[i + 1];
 			nextMenuItem = api.Menus.getMenuItemControl( nextMenuItemId );
-			nextItemDepth = nextMenuItem.params.depth;
+			nextItemDepth = nextMenuItem.getDepth();
 			if ( depth < nextItemDepth ) {
 				ii = 1;
 				while ( ii + i < menuItemIds.length ) {
 					childControl = api.Menus.getMenuItemControl( menuItemIds[i + ii] );
-					childDepth = childControl.params.depth;
+					childDepth = childControl.getDepth();
 					if ( depth === childDepth ) {
 						// No longer at a child control.
 						break;
 					} else {
-						// Update depth parameter;
-						childControl.params.depth = childDepth + offset;
-
 						// Update depth class for UI.
 						childControl.container.find( '.menu-item' )
 							.removeClass( 'menu-item-depth-' + childDepth )
