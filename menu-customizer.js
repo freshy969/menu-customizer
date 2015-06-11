@@ -842,13 +842,46 @@
 		},
 
 		ready: function() {
-			var control = this;
+			var control = this, navMenuIdRegex = /^nav_menu\[(-?\d+)]/;
+
 			// @todo It would be better if this was added directly on the setting itself, as opposed to the control.
 			control.setting.validate = function ( value ) {
 				return parseInt( value, 10 );
 			};
+
+			// Add/remove menus from the available options when they are added and removed.
+			api.bind( 'add', function ( setting ) {
+				var option, menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches || false === setting() ) {
+					return;
+				}
+				menuId = matches[1];
+				option = new Option( setting().name, menuId );
+				control.container.find( 'select' ).append( option );
+			});
+			api.bind( 'remove', function ( setting ) {
+				var menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches ) {
+					return;
+				}
+				menuId = matches[1];
+				control.container.find( 'option[value=' + menuId + ']' ).remove();
+			});
+			api.bind( 'change', function ( setting ) {
+				var menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches ) {
+					return;
+				}
+				menuId = matches[1];
+				if ( false === setting() ) {
+					control.container.find( 'option[value=' + menuId + ']' ).remove();
+				} else {
+					control.container.find( 'option[value=' + menuId + ']' ).text( setting().name );
+				}
+			});
 		}
 
+		// @todo is the following needing to be implemented anymore?
 		//// Update theme location checkboxes.
 		//updateMenuLocationCheckboxes: function( to, from ) {
 		//
@@ -2015,7 +2048,7 @@
 			api.section.add( customizeId, menuSection );
 
 			// Register the menu control setting.
-			api.create( customizeId, customizeId, '', {
+			api.create( customizeId, customizeId, {}, {
 				type: 'nav_menu',
 				transport: 'postMessage',
 				previewer: control.setting.previewer
