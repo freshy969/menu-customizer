@@ -1381,6 +1381,15 @@
 				return;
 			}
 
+			// Fix the position of the adjacent menu item
+			_.each( control.getMenuControl().getMenuItemControls(), function ( control ) {
+				if ( control.setting() && control.setting().position === clone.position ) {
+					var adjClone = _.clone( control.setting() );
+					adjClone.position = position;
+					control.setting.set( adjClone );
+				}
+			});
+
 			// Update menu item parent field.
 			if ( 1 === clone.position ) {
 				clone.menu_item_parent = 0;
