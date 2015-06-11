@@ -894,6 +894,7 @@
 			this._setupUpdateUI();
 			this._setupRemoveUI();
 			this._setupLinksUI();
+			this._setupTitleUI();
 		},
 
 		/**
@@ -1058,6 +1059,32 @@
 				}
 				e.preventDefault();
 				api.previewer.previewUrl( e.target.toString() );
+			} );
+		},
+
+		/**
+		 * Update item handle title when changed.
+		 */
+		_setupTitleUI: function() {
+			var control = this;
+
+			control.setting.bind( function ( item ) {
+				if ( ! item ) {
+					return;
+				}
+
+				var titleEl = control.container.find( '.menu-item-title' );
+
+				// Don't update to an empty title.
+				if ( item.title ) {
+					titleEl
+						.text( item.title )
+						.removeClass( 'no-title' );
+				} else {
+					titleEl
+						.text( api.Menus.data.l10n.untitled )
+						.addClass( 'no-title' );
+				}
 			} );
 		},
 
@@ -2361,34 +2388,5 @@
 	function menuItemIdToSettingId( menuItemId ) {
 		return 'nav_menu_item[' + menuItemId + ']';
 	}
-
-	/**
-	 * Update Section Title as menu name is changed and item handle title when label is changed.
-	 */
-	function setupUIPreviewing() {
-		// @todo This is wrong. We need to bind on menuControl.setting.bind( function ( menu ) { /* ... */ } )
-
-		return;
-
-		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e ) {
-			var input = $( e.currentTarget ), title, titleEl;
-			title = input.val();
-			titleEl = input.closest( '.menu-item' ).find( '.menu-item-title' );
-			// Don't update to empty title.
-			if ( title ) {
-				titleEl
-					.text( title )
-					.removeClass( 'no-title' );
-			} else {
-				titleEl
-					.text( api.Menus.data.l10n.untitled )
-					.addClass( 'no-title' );
-			}
-		} );
-	}
-
-	$( document ).ready( function() {
-		setupUIPreviewing();
-	} );
 
 })( wp.customize, wp, jQuery );
