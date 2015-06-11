@@ -3,6 +3,8 @@
 /**
  * Customize Menu Location Control Class
  *
+ * @todo Rename this to WP_Customize_Nav_Menu_Location_Control?
+ *
  * This custom control is only needed for JS.
  */
 class WP_Customize_Menu_Location_Control extends WP_Customize_Control {
@@ -12,7 +14,7 @@ class WP_Customize_Menu_Location_Control extends WP_Customize_Control {
 	 * @access public
 	 * @var string
 	 */
-	public $type = 'menu_location';
+	public $type = 'menu_location'; // @todo Rename to nav_menu_location?
 
 	/**
 	 * Location ID

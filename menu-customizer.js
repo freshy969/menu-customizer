@@ -673,6 +673,23 @@
 		 */
 		ready: function () {
 			var section = this;
+
+			/*
+			 * Since newly created sections won't be registered in PHP, we need to prevent the
+			 * preview's sending of the activeSections to result in this control
+			 * being deactivated when the preview refreshes. So we can hook onto
+			 * the setting that has the same ID and its presence can dictate
+			 * whether the section is active.
+			 */
+			section.active.validate = function () {
+				if ( ! api.has( section.id ) ) {
+					return false;
+				}
+				return !! api( section.id ).get();
+			};
+
+			section.populateControls();
+
 			section.navMenuLocationSettings = {};
 			section.assignedLocations = new api.Value( [] );
 
@@ -691,6 +708,51 @@
 			});
 
 			section.refreshAssignedLocations();
+		},
+
+		populateControls: function() {
+			var section = this, menuNameControlId, menuControl, menuNameControl;
+
+			// Add the control for managing the menu name.
+			menuNameControlId = section.id + '[name]';
+			menuNameControl = api.control( menuNameControlId );
+			if ( ! menuNameControl ) {
+				menuNameControl = new api.controlConstructor.nav_menu_name( menuNameControlId, {
+					params: {
+						type: 'nav_menu_name',
+						content: '<li id="customize-control-' + section.id.replace( '[', '-' ).replace( ']', '' ) + '-name" class="customize-control customize-control-nav_menu_name"></li>', // @todo core should do this for us
+						label: '',
+						active: true,
+						section: section.id,
+						priority: 0,
+						settings: {
+							'default': section.id
+						}
+					}
+				} );
+				api.control.add( menuNameControl.id, menuNameControl );
+				menuNameControl.active.set( true );
+			}
+
+			// Add the menu control.
+			menuControl = api.control( section.id );
+			if ( ! menuControl ) {
+				menuControl = new api.controlConstructor.nav_menu( section.id, {
+					params: {
+						type: 'nav_menu',
+						content: '<li id="customize-control-' + section.id.replace( '[', '-' ).replace( ']', '' ) + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
+						section: section.id,
+						priority: 999,
+						active: true,
+						settings: {
+							'default': section.id
+						}
+					}
+				} );
+				api.control.add( menuControl.id, menuControl );
+				menuControl.active.set( true );
+			}
+
 		},
 
 		/**
@@ -1546,6 +1608,15 @@
 			var control = this,
 				settingValue = control.setting();
 
+			/*
+			 * Since the control is not registered in PHP, we need to prevent the
+			 * preview's sending of the activeControls to result in this control
+			 * being deactivated.
+			 */
+			control.active.validate = function () {
+				return api.section( control.section() ).active();
+			};
+
 			control.nameElement = new api.Element( control.container.find( '.menu-name-field' ) );
 
 			control.nameElement.bind(function ( value ) {
@@ -1585,6 +1656,15 @@
 		ready: function() {
 			var control = this,
 				menuId = control.getMenuTermId();
+
+			/*
+			 * Since the control is not registered in PHP, we need to prevent the
+			 * preview's sending of the activeControls to result in this control
+			 * being deactivated.
+			 */
+			control.active.validate = function () {
+				return api.section( control.section() ).active();
+			};
 
 			control.$controlSection = control.container.closest( '.control-section' );
 			control.$sectionContent = control.container.closest( '.accordion-section-content' );
@@ -2075,23 +2155,10 @@
 				nameInput = container.find( '.menu-name-field' ).first(),
 				name = nameInput.val(),
 				menuSection,
-				customizeId, menuControl,
+				customizeId,
 				placeholderId = api.Menus.generatePlaceholderAutoIncrementId();
 
 			customizeId = 'nav_menu[' + String( placeholderId ) + ']';
-
-			// Add the menu section.
-			menuSection = new api.Menus.MenuSection( customizeId, {
-				params: {
-					id: customizeId,
-					panel: 'menus',
-					title: name,
-					customizeAction: api.Menus.data.l10n.customizingMenus,
-					type: 'menu',
-					priority: 10
-				}
-			} );
-			api.section.add( customizeId, menuSection );
 
 			// Register the menu control setting.
 			api.create( customizeId, customizeId, {}, {
@@ -2107,24 +2174,22 @@
 				}
 			) );
 
-			// Add the menu control.
-			menuControl = new api.controlConstructor.nav_menu( customizeId, {
+			/*
+			 * Add the menu section (and its controls).
+			 * Note that this will automatically create the required controls
+			 * inside via the Section's ready method.
+			 */
+			menuSection = new api.Menus.MenuSection( customizeId, {
 				params: {
-					type: 'nav_menu',
-					content: '<li id="customize-control-nav_menu-' + String( placeholderId ) + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
-					// menu_id: placeholderId, // @todo do we need this?
-					section: customizeId,
-					priority: 998,
-					active: true,
-					settings: {
-						'default': customizeId
-					}
-				},
-				previewer: control.setting.previewer
+					id: customizeId,
+					panel: 'menus',
+					title: name,
+					customizeAction: api.Menus.data.l10n.customizingMenus,
+					type: 'menu',
+					priority: 10
+				}
 			} );
-			api.control.add( customizeId, menuControl );
-
-			// @todo: nemu name and auto-add new items controls
+			api.section.add( customizeId, menuSection );
 
 			// Clear name field.
 			nameInput.val( '' );
