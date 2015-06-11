@@ -1005,6 +1005,7 @@
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
 						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
 						// @todo self._applyCardinalOrderClassNames();
+						control.priority.set( 10 + control.setting().position );
 					}
 				}
 			});
@@ -1350,22 +1351,23 @@
 		 * @param {Number} offset 1|-1
 		 */
 		_moveMenuItemByOne: function( offset ) {
-			throw new Error( '_moveMenuItemByOne needs to be updated to update the nav_menu_item setting property for position. Offset: ' + offset );
+			var control = this,
+				position = control.getMenuItemPosition() + offset,
+				clone = _.clone( control.setting() );
 
-			/* @todo the following is obsolete by the update to nav_menu and nav_menu_item settings.
-			 * var i, menuSetting, menuItemIds, adjacentMenuItemId;
-			 * i = this.getMenuItemPosition();
-			 *
-			 * menuSetting = this.getMenuControl().setting;
-			 * menuItemIds = Array.prototype.slice.call( menuSetting() ); // clone
-			 * adjacentMenuItemId = menuItemIds[i + offset];
-			 * menuItemIds[i + offset] = this.params.menu_item_id;
-			 * menuItemIds[i] = adjacentMenuItemId;
-			 *
-			 * menuSetting( menuItemIds );
-			 */
+			if ( 1 !== offset && -1 !== offset ) {
+				return;
+			}
+
+			// Update menu item position field.
+			clone.position = position;
+
+			// @todo update menu-item-reorder-nav to reflect the position change.
 
 			// @todo update menu item parents and depth if necessary based on new previous item.
+
+			// Update the control with our new settings.
+			control.setting( clone );
 		},
 
 		/**
