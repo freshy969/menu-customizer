@@ -368,7 +368,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 					$this->update_status = 'deleted';
 					$auto_add = false;
 				}
-				// @todo send back the IDs for all nav_menu_item posts that were deleted, so these settings (and controls) can be removed from Customizer.
 			}
 		} else {
 			// Insert or update menu.
