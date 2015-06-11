@@ -1042,9 +1042,7 @@
 
 				control.container.slideUp( function() {
 					control.setting.set( false );
-
 					wp.a11y.speak( api.Menus.data.l10n.itemDeleted );
-					control.container.remove();
 					$adjacentFocusTarget.focus(); // keyboard accessibility
 				} );
 			} );
