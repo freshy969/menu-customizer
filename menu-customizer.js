@@ -1563,14 +1563,9 @@
 				control.elements.auto_add.set( object.auto_add );
 			});
 
-			control.setting.bind( function ( to, from ) {
+			control.setting.bind( function ( to ) {
 				if ( false === to ) {
 					control._handleDeletion();
-				} else {
-					if ( ! from || to.position !== from.position ) {
-						// @todo now we need to update the priorities of all the menu item controls to reflect the new positions
-						// @todo self._applyCardinalOrderClassNames();
-					}
 				}
 			} );
 
