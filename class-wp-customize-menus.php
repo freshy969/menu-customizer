@@ -504,38 +504,36 @@ class WP_Customize_Menus {
 			) ) );
 		}
 
-		/*
-		 * // Add the add-new-menu section and controls.
-		 * $this->manager->add_section( new WP_Customize_New_Menu_Section( $this->manager, 'add_menu', array(
-		 * 	'title'     => __( 'Add a Menu' ),
-		 * 	'panel'     => 'menus',
-		 * 	'priority'  => 999,
-		 * ) ) );
-		 *
-		 * $this->manager->add_setting( 'new_menu_name', array(
-		 * 	'type'      => 'new_menu',
-		 * 	'default'   => '',
-		 * 	'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
-		 * ) );
-		 *
-		 * $this->manager->add_control( 'new_menu_name', array(
-		 * 	'label'        => '',
-		 * 	'section'      => 'add_menu',
-		 * 	'type'         => 'text',
-		 * 	'input_attrs'  => array(
-		 * 		'class'        => 'menu-name-field',
-		 * 		'placeholder'  => __( 'New menu name' ),
-		 * 	),
-		 * ) );
-		 *
-		 * $this->manager->add_setting( 'create_new_menu', array(
-		 * 	'type' => 'new_menu',
-		 * ) );
-		 *
-		 * $this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
-		 * 	'section'  => 'add_menu',
-		 * ) ) );
-		 */
+		// Add the add-new-menu section and controls.
+		$this->manager->add_section( new WP_Customize_New_Menu_Section( $this->manager, 'add_menu', array(
+			'title'     => __( 'Add a Menu' ),
+			'panel'     => 'menus',
+			'priority'  => 999,
+		) ) );
+
+		$this->manager->add_setting( 'new_menu_name', array(
+			'type'      => 'new_menu',
+			'default'   => '',
+			'transport' => 'postMessage',
+		) );
+
+		$this->manager->add_control( 'new_menu_name', array(
+			'label'        => '',
+			'section'      => 'add_menu',
+			'type'         => 'text',
+			'input_attrs'  => array(
+				'class'        => 'menu-name-field',
+				'placeholder'  => __( 'New menu name' ),
+			),
+		) );
+
+		$this->manager->add_setting( 'create_new_menu', array(
+			'type' => 'new_menu',
+		) );
+
+		$this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
+			'section'  => 'add_menu',
+		) ) );
 	}
 
 	/**

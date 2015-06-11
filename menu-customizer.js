@@ -1984,114 +1984,76 @@
 			} );
 		},
 
+		/**
+		 * Create the new menu with the name supplied.
+		 *
+		 * @returns {boolean}
+		 */
 		submit: function() {
-			throw new Error( 'This needs to be updated for the new settings.' );
 
-			var self = this,
-				processing,
-				params,
-				container = this.container.closest( '.accordion-section-new-menu' ),
-				name = container.find( '.menu-name-field' ).first(),
-				spinner = container.find( '.spinner' );
+			var control = this,
+				container = control.container.closest( '.accordion-section-new-menu' ),
+				nameInput = container.find( '.menu-name-field' ).first(),
+				name = nameInput.val(),
+				menuSection,
+				customizeId, menuControl,
+				placeholderId = api.Menus.generatePlaceholderAutoIncrementId();
 
-			// Show spinner.
-			spinner.css( 'visibility', 'visible' );
+			customizeId = 'nav_menu[' + String( placeholderId ) + ']';
 
-			// Trigger customizer processing state.
-			processing = wp.customize.state( 'processing' );
-			processing( processing() + 1 );
-
-			params = {
-				'action': 'add-nav-menu-customizer',
-				'wp_customize': 'on',
-				'menu-name': name.val(),
-				'customize-nav-menu-nonce': api.Menus.data.nonce
-			};
-
-			$.post( wp.ajax.settings.url, params, function( response ) {
-				if ( response.data && response.data.message ) {
-					// Display error message
-					alert( response.data.message );
-
-					// Remove this level of the customizer processing state.
-					processing( processing() - 1 );
-
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-				} else if ( response.success && response.data && response.data.id && response.data.name ) {
-					var priority, sectionId, SectionConstructor, menuSection,
-						menuSettingId, settingArgs, ControlConstructor, menuControl,
-						sectionParams, option;
-					response.data.id = parseInt( response.data.id, 10 );
-					sectionId = 'nav_menus[' + response.data.id + ']';
-					sectionParams = {
-						id: sectionId,
-						panel: 'menus',
-						title: response.data.name,
-						customizeAction: api.Menus.data.l10n.customizingMenus,
-						type: 'menu',
-						priority: priority
-					};
-
-					// Add the menu section.
-					SectionConstructor = api.Section;
-					menuSection = new SectionConstructor( sectionId, {
-						params: sectionParams
-					} );
-					api.section.add( sectionId, menuSection );
-
-					// Register the menu control setting.
-					menuSettingId = 'nav_menu_' + response.data.id;
-					settingArgs = {
-						type: 'nav_menu',
-						transport: 'refresh',
-						previewer: self.setting.previewer
-					};
-					api.create( menuSettingId, menuSettingId, '', settingArgs );
-					api( menuSettingId ).set( [] ); // Change to mark as dirty.
-
-					// Add the menu control.
-					ControlConstructor = api.controlConstructor.nav_menu;
-					menuControl = new ControlConstructor( menuSettingId, {
-						params: {
-							type: 'nav_menu',
-							content: '<li id="customize-control-nav_menu_' + response.data.id + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
-							menu_id: response.data.id,
-							section: sectionId,
-							priority: 998,
-							active: true,
-							settings: {
-								'default': menuSettingId
-							}
-						},
-						previewer: self.setting.previewer
-					} );
-					api.control.add( menuSettingId, menuControl );
-
-					// @todo: nemu name and auto-add new items controls
-					// requires @link https://core.trac.wordpress.org/ticket/30738 at a minimum to be reasonable
-
-					// Add the new menu as an option to each theme location control.
-					option = '<option value="' + response.data.id + '">' + response.data.name + '</option>';
-					$( '#accordion-section-menu_locations .customize-control select' ).append( option );
-
-					// Remove this level of the customizer processing state.
-					processing( processing() - 1 );
-
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-
-					// Clear name field.
-					name.val( '' );
-
-					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
-
-					// Focus on the new menu section.
-					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
+			// Add the menu section.
+			menuSection = new api.Menus.MenuSection( customizeId, {
+				params: {
+					id: customizeId,
+					panel: 'menus',
+					title: name,
+					customizeAction: api.Menus.data.l10n.customizingMenus,
+					type: 'menu',
+					priority: 10
 				}
-			});
+			} );
+			api.section.add( customizeId, menuSection );
 
-			return false;
+			// Register the menu control setting.
+			api.create( customizeId, customizeId, '', {
+				type: 'nav_menu',
+				transport: 'postMessage',
+				previewer: control.setting.previewer
+			} );
+			api( customizeId ).set( $.extend(
+				{},
+				api.Menus.data.defaultSettingValues.nav_menu,
+				{
+					name: name
+				}
+			) );
+
+			// Add the menu control.
+			menuControl = new api.controlConstructor.nav_menu( customizeId, {
+				params: {
+					type: 'nav_menu',
+					content: '<li id="customize-control-nav_menu-' + String( placeholderId ) + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
+					// menu_id: placeholderId, // @todo do we need this?
+					section: customizeId,
+					priority: 998,
+					active: true,
+					settings: {
+						'default': customizeId
+					}
+				},
+				previewer: control.setting.previewer
+			} );
+			api.control.add( customizeId, menuControl );
+
+			// @todo: nemu name and auto-add new items controls
+
+			// Clear name field.
+			nameInput.val( '' );
+
+			wp.a11y.speak( api.Menus.data.l10n.menuAdded );
+
+			// Focus on the new menu section.
+			api.section( customizeId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
 		}
 	});
 
@@ -2103,8 +2065,8 @@
 		menu_location: api.Menus.MenuLocationControl,
 		nav_menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
-		nav_menu_name: api.Menus.MenuNameControl
-		//@todo new_menu: api.Menus.NewMenuControl
+		nav_menu_name: api.Menus.MenuNameControl,
+		new_menu: api.Menus.NewMenuControl
 	});
 
 	/**
@@ -2118,8 +2080,8 @@
 	 * Extends wp.customize.sectionConstructor with section constructor for menu.
 	 */
 	$.extend( api.sectionConstructor, {
-		nav_menu: api.Menus.MenuSection
-		//new_menu: api.Menus.NewMenuSection
+		nav_menu: api.Menus.MenuSection,
+		new_menu: api.Menus.NewMenuSection
 	});
 
 	/**
