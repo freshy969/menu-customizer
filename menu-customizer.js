@@ -1407,15 +1407,6 @@
 		},
 
 		/**
-		 * Get the position (index) of the item in the containing menu.
-		 *
-		 * @returns {Number}
-		 */
-		getMenuItemDepth: function() {
-			return this.params.depth;
-		},
-
-		/**
 		 * Move menu item up one in the menu.
 		 */
 		moveUp: function() {
@@ -1498,7 +1489,7 @@
 				nextMenuItemId, nextMenuItem, nextItemDepth, childControl, childDepth,
 				control = this, menuItemSetting;
 
-			depth = this.getMenuItemDepth();
+			depth = this.getDepth();
 			i = this.getMenuItemPosition();
 
 			if ( 0 === i ) {
