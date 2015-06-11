@@ -136,7 +136,6 @@ class WP_Customize_Menus {
 					'id'          => 'home',
 					'title'       => _x( 'Home', 'nav menu home label' ),
 					'type'        => 'custom',
-					'type_label'  => __( 'Custom Link' ), // @todo This is already exported in JS.
 					'object'      => '',
 					'url'         => home_url(),
 				);
@@ -155,7 +154,6 @@ class WP_Customize_Menus {
 					'id'         => "post-{$post->ID}",
 					'title'      => $post->post_title,
 					'type'       => 'post_type',
-					'type_label' => get_post_type_object( $taxonomy_or_post_type )->labels->singular_name, // @todo this needs to already be exported in JS.
 					'object'     => $post->post_type,
 					'object_id'  => (int) $post->ID,
 				);
@@ -183,7 +181,6 @@ class WP_Customize_Menus {
 					'id'         => "term-{$term->term_id}",
 					'title'      => $term->name,
 					'type'       => 'taxonomy',
-					'type_label' => get_taxonomy( $taxonomy_or_post_type )->labels->singular_name, // @todo this needs to already be exported in JS.
 					'object'     => $term->taxonomy,
 					'object_id'  => $term->term_id,
 				);

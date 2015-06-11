@@ -54,7 +54,6 @@
 	api.Menus.AvailableItemModel = Backbone.Model.extend( $.extend(
 		{
 			id: null, // This is only used by Backbone.
-			type_label: null // @todo Eliminate this because the labels should be exported from PHP once up front.
 		},
 		api.Menus.data.defaultSettingValues.nav_menu_item
 	) );
