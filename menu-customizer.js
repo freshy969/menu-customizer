@@ -1005,7 +1005,6 @@
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
 						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
 						// @todo self._applyCardinalOrderClassNames();
-						control.priority.set( 10 + control.setting().position );
 					}
 				}
 			});
