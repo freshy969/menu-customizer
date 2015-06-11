@@ -1369,7 +1369,7 @@
 			var control = this,
 				position = control.getMenuItemPosition(),
 				parent = control.setting().menu_item_parent,
-				depth = control.params.depth,
+				depth = control.getDepth(),
 				clone = _.clone( control.setting() );
 
 			// Update menu item position field or return.
@@ -1381,13 +1381,6 @@
 				return;
 			}
 
-			// Update menu item depth field.
-			if ( 1 === clone.position ) {
-				clone.depth = 0;
-			} else {
-				// @todo update menu item depth if the new parent has a different depth than the previous one.
-			}
-			
 			// Update menu item parent field.
 			if ( 1 === clone.position ) {
 				clone.menu_item_parent = 0;
@@ -1397,12 +1390,15 @@
 
 			// Update the control with our new settings.
 			control.setting.set( clone );
-			
+
+			// Get the updated depth
+			var newDepth = control.getDepth();
+
 			// Update the depth UI class
-			if ( 'undefined' !== typeof clone.depth && clone.depth !== depth ) {
-				control.container.data( 'item-depth', clone.depth );
+			if ( newDepth !== depth ) {
+				control.container.data( 'item-depth', newDepth );
 				control.container.removeClass( 'menu-item-depth-' + String( depth ) );
-				control.container.addClass( 'menu-item-depth-' + String( clone.depth ) );
+				control.container.addClass( 'menu-item-depth-' + String( newDepth ) );
 			}
 		},
 
