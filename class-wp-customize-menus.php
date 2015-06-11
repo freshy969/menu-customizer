@@ -44,61 +44,15 @@ class WP_Customize_Menus {
 		$this->register_styles( wp_styles() );
 		$this->register_scripts( wp_scripts() );
 
-		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'new_menu_ajax' ) ); // Removed.
-		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) ); // Removed.
-		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) ); // Removed.
-		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) ); // Removed.
-
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
 		add_filter( 'customize_dynamic_setting_class', array( $this, 'filter_dynamic_setting_class' ), 10, 3 );
-		add_action( 'customize_update_menu_autoadd', array( $this, 'update_menu_autoadd' ), 10, 2 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 		add_action( 'customize_preview_init', array( $this, 'customize_preview_init' ) );
-	}
-
-	/**
-	 * Ajax handler for creating a new menu.
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function new_menu_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
-	}
-
-	/**
-	 * Ajax handler for deleting a menu.
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function delete_menu_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
-	}
-
-	/**
-	 * Ajax handler for updating a menu item.
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function update_item_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
-	}
-
-	/**
-	 * Ajax handler for adding a menu item. Based on wp_ajax_add_menu_item().
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function add_item_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
 	}
 
 	/**
@@ -577,27 +531,6 @@ class WP_Customize_Menus {
 		 * 	'section'  => 'add_menu',
 		 * ) ) );
 		 */
-	}
-
-	/**
-	 * Update the `auto_add` nav menus option.
-	 */
-	public function update_menu_autoadd( $value, $setting ) {
-		throw new Exception( 'eliminated' );
-	}
-
-	/**
-	 * Updates the order for and publishes an existing menu item.
-	 */
-	public function update_menu_item_order() {
-		throw new Exception( 'eliminated' );
-	}
-
-	/**
-	 * Update properties of a nav menu item, with the option to create a clone of the item.
-	 */
-	public function update_item() {
-		throw new Exception( 'eliminated' );
 	}
 
 	/**
