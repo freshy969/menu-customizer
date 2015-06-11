@@ -1,4 +1,4 @@
-/* global _wpCustomizeMenusSettings, confirm, alert, wpNavMenu, console */
+/* global _wpCustomizeMenusSettings, confirm, wpNavMenu, console */
 ( function( api, wp, $ ) {
 	'use strict';
 
@@ -53,7 +53,7 @@
 	 */
 	api.Menus.AvailableItemModel = Backbone.Model.extend( $.extend(
 		{
-			id: null, // This is only used by Backbone.
+			id: null // This is only used by Backbone.
 		},
 		api.Menus.data.defaultSettingValues.nav_menu_item
 	) );
@@ -1555,7 +1555,8 @@
 		 * Set up the control.
 		 */
 		ready: function() {
-			var control = this;
+			var control = this,
+				menuId = control.getMenuTermId();
 
 			control.$controlSection = control.container.closest( '.control-section' );
 			control.$sectionContent = control.container.closest( '.accordion-section-content' );
@@ -1572,13 +1573,28 @@
 			this._applyCardinalOrderClassNames();
 			this._setupLocations();
 			this._setupTitle();
+
+			// Add menu to Custom Menu widgets.
+			if ( control.setting() ) {
+				api.control.each( function ( widgetControl ) {
+					if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+						return;
+					}
+					var select = widgetControl.container.find( 'select' );
+					if ( select.find( 'option[value=' + String( menuId ) + ']' ).length === 0 ) {
+						select.append( new Option( control.setting().name, menuId ) );
+					}
+				} );
+				$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first' ).append( new Option( control.setting().name, menuId ) );
+			}
 		},
 
 		/**
 		 * Update ordering of menu item controls when the setting is updated.
 		 */
 		_setupModel: function() {
-			var control = this;
+			var control = this,
+				menuId = control.getMenuTermId();
 
 			control.elements = {};
 			control.elements.auto_add = new api.Element( control.container.find( 'input[type=checkbox].auto_add' ) );
@@ -1602,6 +1618,16 @@
 			control.setting.bind( function ( to ) {
 				if ( false === to ) {
 					control._handleDeletion();
+				} else {
+					// Update names in the Custom Menu widgets.
+					api.control.each( function ( widgetControl ) {
+						if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+							return;
+						}
+						var select = widgetControl.container.find( 'select' );
+						select.find( 'option[value=' + String( menuId ) + ']' ).text( to.name );
+					});
+					$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).text( to.name );
 				}
 			} );
 
@@ -1711,14 +1737,12 @@
 		_handleDeletion: function() {
 			var control = this,
 				section,
+				menuId = control.getMenuTermId(),
 				removeSection;
 			section = api.section( control.section() );
 			removeSection = function() {
 				section.container.remove();
 				api.section.remove( section.id );
-				// @todo Remove the option from the theme location dropdowns. Should be automatic based on the setting being deleted.
-				// dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
-				// dropdowns.find( 'option[value=' + menuId + ']' ).remove();
 			};
 
 			if ( section && section.expanded() ) {
@@ -1732,6 +1756,19 @@
 			} else {
 				removeSection();
 			}
+
+			// Remove the menu from any Custom Menu widgets.
+			api.control.each(function( widgetControl ) {
+				if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+					return;
+				}
+				var select = widgetControl.container.find( 'select' );
+				if ( select.val() === String( menuId ) ) {
+					select.prop( 'selectedIndex', 0 ).trigger( 'change' );
+				}
+				select.find( 'option[value=' + String( menuId ) + ']' ).remove();
+			});
+			$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).remove();
 		},
 
 		/**
