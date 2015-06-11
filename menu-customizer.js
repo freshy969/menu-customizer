@@ -1630,6 +1630,7 @@
 			this._setupAddition();
 			this._applyCardinalOrderClassNames();
 			this._setupLocations();
+			this._setupTitle();
 		},
 
 		/**
@@ -1850,6 +1851,55 @@
 				updateSelectedMenuLabel( navMenuLocationSetting.get() );
 
 			});
+		},
+
+		/**
+		 * Update Section Title as menu name is changed.
+		 */
+		_setupTitle: function() {
+			var control = this;
+
+			control.setting.bind( function ( menu ) {
+				if ( ! menu ) {
+					return;
+				}
+
+				// Empty names are not allowed (will not be saved), don't update to one.
+				if ( menu.name ) {
+					var section = control.container.closest( '.accordion-section' ),
+						menuId = control.getMenuTermId(),
+						controlTitle = section.find( '.accordion-section-title' ),
+						sectionTitle = section.find( '.customize-section-title h3' ),
+						location = section.find( '.menu-in-location' ),
+						action = sectionTitle.find( '.customize-action' );
+
+					// Update the control title
+					controlTitle.text( menu.name );
+					if ( location.length ) {
+						location.appendTo( controlTitle );
+					}
+
+					// Update the section title
+					sectionTitle.text( menu.name );
+					if ( action.length ) {
+						action.prependTo( sectionTitle );
+					}
+
+					// Update the nav menu name in location selects.
+					api.control.each( function( control ) {
+						if ( /^nav_menu_locations\[/.test( control.id ) ) {
+							control.container.find( 'option[value=' + menuId + ']' ).text( menu.name );
+						}
+					} );
+
+					// Update the nav menu name in all location checkboxes.
+					section.find( '.customize-control-checkbox input' ).each( function() {
+						if ( $( this ).prop( 'checked' ) ) {
+							$( '.current-menu-location-name-' + $( this ).data( 'location-id' ) ).text( menu.name );
+						}
+					} );
+				}
+			} );
 		},
 
 		/***********************************************************************
@@ -2320,38 +2370,6 @@
 
 		return;
 
-		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function( e ) {
-			var input = $( e.currentTarget ),
-				section = input.closest( '.accordion-section' ),
-				name = input.val(),
-				title = section.find( '.accordion-section-title' ),
-				title2 = section.find( '.customize-section-title h3' ),
-				id = section.attr( 'id' ),
-				location = section.find( '.menu-in-location' ),
-				action = title2.find( '.customize-action' );
-			// Empty names are not allowed (will not be saved), don't update to one.
-			if ( name ) {
-				title.text( name );
-				if ( location.length ) {
-					location.appendTo( title );
-				}
-				title2.text( name );
-				if ( action.length ) {
-					action.prependTo( title2 );
-				}
-				id = id.replace( 'accordion-section-nav_menus[', '' );
-				id = id.replace( ']', '' );
-				// @todo $( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
-
-				// Update menu name in other location checkboxes.
-				section.find( '.customize-control-checkbox input' ).each( function() {
-					var locationId = $( this ).data( 'location-id' );
-					if ( $( this ).prop( 'checked' ) ) {
-						$( '.current-menu-location-name-' + locationId ).text( name );
-					}
-				} );
-			}
-		} );
 		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e ) {
 			var input = $( e.currentTarget ), title, titleEl;
 			title = input.val();
