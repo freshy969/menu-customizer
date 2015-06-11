@@ -258,6 +258,10 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 
 		$_term = sanitize_term( $_term, $taxonomy, $filter );
 
+		// Placeholder (negative) term IDs get blown away by sanitize_term(), so we set them here.
+		$_term->term_id = $this->term_id;
+		$_term->term_taxonomy_id = $this->term_id;
+
 		if ( OBJECT === $output ) {
 			return $_term;
 		} elseif ( ARRAY_A === $output ) {
