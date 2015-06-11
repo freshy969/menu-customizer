@@ -1363,17 +1363,20 @@
 		 * @param {Number} offset 1|-1
 		 */
 		_moveMenuItemByOne: function( offset ) {
-			var i, menuSetting, menuItemIds, adjacentMenuItemId;
+			throw new Error( '_moveMenuItemByOne needs to be updated to update the nav_menu_item setting property for position. Offset: ' + offset );
 
-			i = this.getMenuItemPosition();
-
-			menuSetting = this.getMenuControl().setting;
-			menuItemIds = Array.prototype.slice.call( menuSetting() ); // clone
-			adjacentMenuItemId = menuItemIds[i + offset];
-			menuItemIds[i + offset] = this.params.menu_item_id;
-			menuItemIds[i] = adjacentMenuItemId;
-
-			menuSetting( menuItemIds );
+			/* @todo the following is obsolete by the update to nav_menu and nav_menu_item settings.
+			 * var i, menuSetting, menuItemIds, adjacentMenuItemId;
+			 * i = this.getMenuItemPosition();
+			 *
+			 * menuSetting = this.getMenuControl().setting;
+			 * menuItemIds = Array.prototype.slice.call( menuSetting() ); // clone
+			 * adjacentMenuItemId = menuItemIds[i + offset];
+			 * menuItemIds[i + offset] = this.params.menu_item_id;
+			 * menuItemIds[i] = adjacentMenuItemId;
+			 *
+			 * menuSetting( menuItemIds );
+			 */
 
 			// @todo update menu item parents and depth if necessary based on new previous item.
 		},
