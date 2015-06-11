@@ -603,8 +603,6 @@ class WP_Customize_Menus {
 	/**
 	 * Return an array of all the available item types.
 	 *
-	 * @todo This needs to export the names as well.
-	 *
 	 * @since Menu Customizer 0.0
 	 */
 	public function available_item_types() {
