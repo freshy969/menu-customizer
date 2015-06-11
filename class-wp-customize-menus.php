@@ -44,61 +44,15 @@ class WP_Customize_Menus {
 		$this->register_styles( wp_styles() );
 		$this->register_scripts( wp_scripts() );
 
-		add_action( 'wp_ajax_add-nav-menu-customizer', array( $this, 'new_menu_ajax' ) ); // Removed.
-		add_action( 'wp_ajax_delete-menu-customizer', array( $this, 'delete_menu_ajax' ) ); // Removed.
-		add_action( 'wp_ajax_update-menu-item-customizer', array( $this, 'update_item_ajax' ) ); // Removed.
-		add_action( 'wp_ajax_add-menu-item-customizer', array( $this, 'add_item_ajax' ) ); // Removed.
-
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
 		add_filter( 'customize_dynamic_setting_class', array( $this, 'filter_dynamic_setting_class' ), 10, 3 );
-		add_action( 'customize_update_menu_autoadd', array( $this, 'update_menu_autoadd' ), 10, 2 );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'print_templates' ) );
 		add_action( 'customize_controls_print_footer_scripts', array( $this, 'available_items_template' ) );
 		add_action( 'customize_preview_init', array( $this, 'customize_preview_init' ) );
-	}
-
-	/**
-	 * Ajax handler for creating a new menu.
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function new_menu_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
-	}
-
-	/**
-	 * Ajax handler for deleting a menu.
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function delete_menu_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
-	}
-
-	/**
-	 * Ajax handler for updating a menu item.
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function update_item_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
-	}
-
-	/**
-	 * Ajax handler for adding a menu item. Based on wp_ajax_add_menu_item().
-	 *
-	 * @since Menu Customizer 0.0.
-	 * @access public
-	 */
-	public function add_item_ajax() {
-		wp_send_json_error( 'ajax_eliminated' );
 	}
 
 	/**
@@ -474,16 +428,23 @@ class WP_Customize_Menus {
 			}
 
 			foreach ( $locations as $location => $description ) {
-				$menu_setting_id = "nav_menu_locations[{$location}]";
+				$setting_id = "nav_menu_locations[{$location}]";
 
-				$this->manager->add_setting( $menu_setting_id, array(
-					'sanitize_callback' => 'absint',
-					'theme_supports'    => 'menus',
-					'type'              => 'theme_mod',
-					'transport'         => 'postMessage',
-				) );
+				$setting = $this->manager->get_setting( $setting_id );
+				if ( $setting ) {
+					$setting->transport = 'postMessage';
+					remove_filter( "customize_sanitize_{$setting_id}", 'absint' );
+					add_filter( "customize_sanitize_{$setting_id}", array( $this, 'intval_base10' ) );
+				} else {
+					$this->manager->add_setting( $setting_id, array(
+						'sanitize_callback' => array( $this, 'intval_base10' ),
+						'theme_supports'    => 'menus',
+						'type'              => 'theme_mod',
+						'transport'         => 'postMessage',
+					) );
+				}
 
-				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $menu_setting_id, array(
+				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $setting_id, array(
 					'label'       => $description,
 					'location_id' => $location,
 					'section'     => 'menu_locations',
@@ -517,8 +478,6 @@ class WP_Customize_Menus {
 			) ) );
 
 			// Add the menu contents.
-			$menu_items = array();
-
 			$menu_items = wp_get_nav_menu_items( $menu_id );
 			if ( false === $menu_items ) {
 				$menu_items = array();
@@ -545,59 +504,50 @@ class WP_Customize_Menus {
 			) ) );
 		}
 
-		/*
-		 * // Add the add-new-menu section and controls.
-		 * $this->manager->add_section( new WP_Customize_New_Menu_Section( $this->manager, 'add_menu', array(
-		 * 	'title'     => __( 'Add a Menu' ),
-		 * 	'panel'     => 'menus',
-		 * 	'priority'  => 999,
-		 * ) ) );
-		 *
-		 * $this->manager->add_setting( 'new_menu_name', array(
-		 * 	'type'      => 'new_menu',
-		 * 	'default'   => '',
-		 * 	'transport' => 'postMessage', // Not previewed, so don't trigger a refresh.
-		 * ) );
-		 *
-		 * $this->manager->add_control( 'new_menu_name', array(
-		 * 	'label'        => '',
-		 * 	'section'      => 'add_menu',
-		 * 	'type'         => 'text',
-		 * 	'input_attrs'  => array(
-		 * 		'class'        => 'menu-name-field',
-		 * 		'placeholder'  => __( 'New menu name' ),
-		 * 	),
-		 * ) );
-		 *
-		 * $this->manager->add_setting( 'create_new_menu', array(
-		 * 	'type' => 'new_menu',
-		 * ) );
-		 *
-		 * $this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
-		 * 	'section'  => 'add_menu',
-		 * ) ) );
-		 */
+		// Add the add-new-menu section and controls.
+		$this->manager->add_section( new WP_Customize_New_Menu_Section( $this->manager, 'add_menu', array(
+			'title'     => __( 'Add a Menu' ),
+			'panel'     => 'menus',
+			'priority'  => 999,
+		) ) );
+
+		$this->manager->add_setting( 'new_menu_name', array(
+			'type'      => 'new_menu',
+			'default'   => '',
+			'transport' => 'postMessage',
+		) );
+
+		$this->manager->add_control( 'new_menu_name', array(
+			'label'        => '',
+			'section'      => 'add_menu',
+			'type'         => 'text',
+			'input_attrs'  => array(
+				'class'        => 'menu-name-field',
+				'placeholder'  => __( 'New menu name' ),
+			),
+		) );
+
+		$this->manager->add_setting( 'create_new_menu', array(
+			'type' => 'new_menu',
+		) );
+
+		$this->manager->add_control( new WP_New_Menu_Customize_Control( $this->manager, 'create_new_menu', array(
+			'section'  => 'add_menu',
+		) ) );
 	}
 
 	/**
-	 * Update the `auto_add` nav menus option.
+	 * Get the base10 intval.
+	 *
+	 * This is used as a setting's sanitize_callback; we can't use just plain
+	 * intval because the second argument is not what intval() expects.
+	 *
+	 * @param mixed $value Number to convert.
+	 *
+	 * @return int
 	 */
-	public function update_menu_autoadd( $value, $setting ) {
-		throw new Exception( 'eliminated' );
-	}
-
-	/**
-	 * Updates the order for and publishes an existing menu item.
-	 */
-	public function update_menu_item_order() {
-		throw new Exception( 'eliminated' );
-	}
-
-	/**
-	 * Update properties of a nav menu item, with the option to create a clone of the item.
-	 */
-	public function update_item() {
-		throw new Exception( 'eliminated' );
+	function intval_base10( $value ) {
+		return intval( $value, 10 );
 	}
 
 	/**

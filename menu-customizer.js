@@ -1,4 +1,4 @@
-/* global _wpCustomizeMenusSettings, confirm, alert, wpNavMenu, console */
+/* global _wpCustomizeMenusSettings, confirm, wpNavMenu, console */
 ( function( api, wp, $ ) {
 	'use strict';
 
@@ -53,7 +53,7 @@
 	 */
 	api.Menus.AvailableItemModel = Backbone.Model.extend( $.extend(
 		{
-			id: null, // This is only used by Backbone.
+			id: null // This is only used by Backbone.
 		},
 		api.Menus.data.defaultSettingValues.nav_menu_item
 	) );
@@ -842,36 +842,50 @@
 		},
 
 		ready: function() {
-			var control = this;
+			var control = this, navMenuIdRegex = /^nav_menu\[(-?\d+)]/;
+
 			// @todo It would be better if this was added directly on the setting itself, as opposed to the control.
 			control.setting.validate = function ( value ) {
 				return parseInt( value, 10 );
 			};
-		}
 
-		//// Update theme location checkboxes.
-		//updateMenuLocationCheckboxes: function( to, from ) {
-		//
-		//	var locationNames = $( '.current-menu-location-name-' + this.params.locationId ),
-		//		setTo = locationNames.parent(),
-		//		oldBox = $( '#menu-locations-' + from + '-' + this.params.locationId ),
-		//		newBox = $( '#menu-locations-' + to + '-' + this.params.locationId ),
-		//		menuName;
-		//	if ( 0 === to ) {
-		//		setTo.hide();
-		//		oldBox.prop( 'checked', false );
-		//	} else if ( ! to ) {
-		//		setTo.hide();
-		//	} else {
-		//		//menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
-		//		menuName = api.section( 'nav_menus[' + to + ']' ).container.find( '.live-update-section-title' ).val();
-		//		setTo.show();
-		//		locationNames.text( menuName );
-		//		oldBox.prop( 'checked', false );
-		//		newBox.prop( 'checked', true );
-		//		newBox.parent().find( '.theme-location-set' ).hide();
-		//	}
-		//}
+			// Add/remove menus from the available options when they are added and removed.
+			api.bind( 'add', function ( setting ) {
+				var option, menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches || false === setting() ) {
+					return;
+				}
+				menuId = matches[1];
+				option = new Option( setting().name, menuId );
+				control.container.find( 'select' ).append( option );
+			});
+			api.bind( 'remove', function ( setting ) {
+				var menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches ) {
+					return;
+				}
+				menuId = parseInt( matches[1], 10 );
+				if ( control.setting() === menuId ) {
+					control.setting.set( '' );
+				}
+				control.container.find( 'option[value=' + menuId + ']' ).remove();
+			});
+			api.bind( 'change', function ( setting ) {
+				var menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches ) {
+					return;
+				}
+				menuId = parseInt( matches[1], 10 );
+				if ( false === setting() ) {
+					if ( control.setting() === menuId ) {
+						control.setting.set( '' );
+					}
+					control.container.find( 'option[value=' + menuId + ']' ).remove();
+				} else {
+					control.container.find( 'option[value=' + menuId + ']' ).text( setting().name );
+				}
+			});
+		}
 	});
 
 	/**
@@ -1562,7 +1576,8 @@
 		 * Set up the control.
 		 */
 		ready: function() {
-			var control = this;
+			var control = this,
+				menuId = control.getMenuTermId();
 
 			control.$controlSection = control.container.closest( '.control-section' );
 			control.$sectionContent = control.container.closest( '.accordion-section-content' );
@@ -1579,13 +1594,28 @@
 			this._applyCardinalOrderClassNames();
 			this._setupLocations();
 			this._setupTitle();
+
+			// Add menu to Custom Menu widgets.
+			if ( control.setting() ) {
+				api.control.each( function ( widgetControl ) {
+					if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+						return;
+					}
+					var select = widgetControl.container.find( 'select' );
+					if ( select.find( 'option[value=' + String( menuId ) + ']' ).length === 0 ) {
+						select.append( new Option( control.setting().name, menuId ) );
+					}
+				} );
+				$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first' ).append( new Option( control.setting().name, menuId ) );
+			}
 		},
 
 		/**
 		 * Update ordering of menu item controls when the setting is updated.
 		 */
 		_setupModel: function() {
-			var control = this;
+			var control = this,
+				menuId = control.getMenuTermId();
 
 			control.elements = {};
 			control.elements.auto_add = new api.Element( control.container.find( 'input[type=checkbox].auto_add' ) );
@@ -1609,6 +1639,16 @@
 			control.setting.bind( function ( to ) {
 				if ( false === to ) {
 					control._handleDeletion();
+				} else {
+					// Update names in the Custom Menu widgets.
+					api.control.each( function ( widgetControl ) {
+						if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+							return;
+						}
+						var select = widgetControl.container.find( 'select' );
+						select.find( 'option[value=' + String( menuId ) + ']' ).text( to.name );
+					});
+					$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).text( to.name );
 				}
 			} );
 
@@ -1718,14 +1758,12 @@
 		_handleDeletion: function() {
 			var control = this,
 				section,
+				menuId = control.getMenuTermId(),
 				removeSection;
 			section = api.section( control.section() );
 			removeSection = function() {
 				section.container.remove();
 				api.section.remove( section.id );
-				// @todo Remove the option from the theme location dropdowns. Should be automatic based on the setting being deleted.
-				// dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
-				// dropdowns.find( 'option[value=' + menuId + ']' ).remove();
 			};
 
 			if ( section && section.expanded() ) {
@@ -1739,6 +1777,19 @@
 			} else {
 				removeSection();
 			}
+
+			// Remove the menu from any Custom Menu widgets.
+			api.control.each(function( widgetControl ) {
+				if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+					return;
+				}
+				var select = widgetControl.container.find( 'select' );
+				if ( select.val() === String( menuId ) ) {
+					select.prop( 'selectedIndex', 0 ).trigger( 'change' );
+				}
+				select.find( 'option[value=' + String( menuId ) + ']' ).remove();
+			});
+			$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).remove();
 		},
 
 		/**
@@ -2005,114 +2056,76 @@
 			} );
 		},
 
+		/**
+		 * Create the new menu with the name supplied.
+		 *
+		 * @returns {boolean}
+		 */
 		submit: function() {
-			throw new Error( 'This needs to be updated for the new settings.' );
 
-			var self = this,
-				processing,
-				params,
-				container = this.container.closest( '.accordion-section-new-menu' ),
-				name = container.find( '.menu-name-field' ).first(),
-				spinner = container.find( '.spinner' );
+			var control = this,
+				container = control.container.closest( '.accordion-section-new-menu' ),
+				nameInput = container.find( '.menu-name-field' ).first(),
+				name = nameInput.val(),
+				menuSection,
+				customizeId, menuControl,
+				placeholderId = api.Menus.generatePlaceholderAutoIncrementId();
 
-			// Show spinner.
-			spinner.css( 'visibility', 'visible' );
+			customizeId = 'nav_menu[' + String( placeholderId ) + ']';
 
-			// Trigger customizer processing state.
-			processing = wp.customize.state( 'processing' );
-			processing( processing() + 1 );
-
-			params = {
-				'action': 'add-nav-menu-customizer',
-				'wp_customize': 'on',
-				'menu-name': name.val(),
-				'customize-nav-menu-nonce': api.Menus.data.nonce
-			};
-
-			$.post( wp.ajax.settings.url, params, function( response ) {
-				if ( response.data && response.data.message ) {
-					// Display error message
-					alert( response.data.message );
-
-					// Remove this level of the customizer processing state.
-					processing( processing() - 1 );
-
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-				} else if ( response.success && response.data && response.data.id && response.data.name ) {
-					var priority, sectionId, SectionConstructor, menuSection,
-						menuSettingId, settingArgs, ControlConstructor, menuControl,
-						sectionParams, option;
-					response.data.id = parseInt( response.data.id, 10 );
-					sectionId = 'nav_menus[' + response.data.id + ']';
-					sectionParams = {
-						id: sectionId,
-						panel: 'menus',
-						title: response.data.name,
-						customizeAction: api.Menus.data.l10n.customizingMenus,
-						type: 'menu',
-						priority: priority
-					};
-
-					// Add the menu section.
-					SectionConstructor = api.Section;
-					menuSection = new SectionConstructor( sectionId, {
-						params: sectionParams
-					} );
-					api.section.add( sectionId, menuSection );
-
-					// Register the menu control setting.
-					menuSettingId = 'nav_menu_' + response.data.id;
-					settingArgs = {
-						type: 'nav_menu',
-						transport: 'refresh',
-						previewer: self.setting.previewer
-					};
-					api.create( menuSettingId, menuSettingId, '', settingArgs );
-					api( menuSettingId ).set( [] ); // Change to mark as dirty.
-
-					// Add the menu control.
-					ControlConstructor = api.controlConstructor.nav_menu;
-					menuControl = new ControlConstructor( menuSettingId, {
-						params: {
-							type: 'nav_menu',
-							content: '<li id="customize-control-nav_menu_' + response.data.id + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
-							menu_id: response.data.id,
-							section: sectionId,
-							priority: 998,
-							active: true,
-							settings: {
-								'default': menuSettingId
-							}
-						},
-						previewer: self.setting.previewer
-					} );
-					api.control.add( menuSettingId, menuControl );
-
-					// @todo: nemu name and auto-add new items controls
-					// requires @link https://core.trac.wordpress.org/ticket/30738 at a minimum to be reasonable
-
-					// Add the new menu as an option to each theme location control.
-					option = '<option value="' + response.data.id + '">' + response.data.name + '</option>';
-					$( '#accordion-section-menu_locations .customize-control select' ).append( option );
-
-					// Remove this level of the customizer processing state.
-					processing( processing() - 1 );
-
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-
-					// Clear name field.
-					name.val( '' );
-
-					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
-
-					// Focus on the new menu section.
-					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
+			// Add the menu section.
+			menuSection = new api.Menus.MenuSection( customizeId, {
+				params: {
+					id: customizeId,
+					panel: 'menus',
+					title: name,
+					customizeAction: api.Menus.data.l10n.customizingMenus,
+					type: 'menu',
+					priority: 10
 				}
-			});
+			} );
+			api.section.add( customizeId, menuSection );
 
-			return false;
+			// Register the menu control setting.
+			api.create( customizeId, customizeId, {}, {
+				type: 'nav_menu',
+				transport: 'postMessage',
+				previewer: control.setting.previewer
+			} );
+			api( customizeId ).set( $.extend(
+				{},
+				api.Menus.data.defaultSettingValues.nav_menu,
+				{
+					name: name
+				}
+			) );
+
+			// Add the menu control.
+			menuControl = new api.controlConstructor.nav_menu( customizeId, {
+				params: {
+					type: 'nav_menu',
+					content: '<li id="customize-control-nav_menu-' + String( placeholderId ) + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
+					// menu_id: placeholderId, // @todo do we need this?
+					section: customizeId,
+					priority: 998,
+					active: true,
+					settings: {
+						'default': customizeId
+					}
+				},
+				previewer: control.setting.previewer
+			} );
+			api.control.add( customizeId, menuControl );
+
+			// @todo: nemu name and auto-add new items controls
+
+			// Clear name field.
+			nameInput.val( '' );
+
+			wp.a11y.speak( api.Menus.data.l10n.menuAdded );
+
+			// Focus on the new menu section.
+			api.section( customizeId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
 		}
 	});
 
@@ -2124,8 +2137,8 @@
 		menu_location: api.Menus.MenuLocationControl,
 		nav_menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
-		nav_menu_name: api.Menus.MenuNameControl
-		//@todo new_menu: api.Menus.NewMenuControl
+		nav_menu_name: api.Menus.MenuNameControl,
+		new_menu: api.Menus.NewMenuControl
 	});
 
 	/**
@@ -2139,8 +2152,8 @@
 	 * Extends wp.customize.sectionConstructor with section constructor for menu.
 	 */
 	$.extend( api.sectionConstructor, {
-		nav_menu: api.Menus.MenuSection
-		//new_menu: api.Menus.NewMenuSection
+		nav_menu: api.Menus.MenuSection,
+		new_menu: api.Menus.NewMenuSection
 	});
 
 	/**
