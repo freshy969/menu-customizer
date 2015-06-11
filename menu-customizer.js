@@ -1134,21 +1134,7 @@
 			}
 
 			control.params.el_classes = containerClasses.join( ' ' );
-			if ( 'post_type' === settingValue.type ) {
-				if ( api.Menus.data.itemTypes.postTypes[ settingValue.object ] ) {
-					control.params.item_type_label = api.Menus.data.itemTypes.postTypes[ settingValue.object ].label;
-				} else {
-					control.params.item_type_label = api.Menus.data.l10n.taxonomyTermLabel;
-				}
-			} else if ( 'taxonomy' === settingValue.type ) {
-				if ( api.Menus.data.itemTypes.taxonomies[ settingValue.object ] ) {
-					control.params.item_type_label = api.Menus.data.itemTypes.taxonomies[ settingValue.object ].label;
-				} else {
-					control.params.item_type_label = api.Menus.data.l10n.postTypeLabel;
-				}
-			} else {
-				control.params.item_type_label = api.Menus.data.l10n.custom_label;
-			}
+			control.params.item_type_label = api.Menus.getTypeLabel( settingValue.type, settingValue.object );
 			control.params.item_type = settingValue.type;
 			control.params.url = settingValue.url;
 			control.params.target = settingValue.target;
@@ -2369,6 +2355,36 @@
 		}
 
 		return menuControl;
+	};
+
+	/**
+	 * Given a menu item type & object, get the label associated with it.
+	 *
+	 * @param {string} type
+	 * @param {string} object
+	 * @return {string}
+	 */
+	api.Menus.getTypeLabel = function( type, object ) {
+		var label,
+			data = api.Menus.data;
+
+		if ( 'post_type' === type ) {
+			if ( data.itemTypes.postTypes[ object ] ) {
+				label = data.itemTypes.postTypes[ object ].label;
+			} else {
+				label = data.l10n.postTypeLabel;
+			}
+		} else if ( 'taxonomy' === type ) {
+			if ( data.itemTypes.taxonomies[ object ] ) {
+				label = data.itemTypes.taxonomies[ object ].label;
+			} else {
+				label = data.l10n.taxonomyTermLabel;
+			}
+		} else {
+			label = data.l10n.custom_label;
+		}
+
+		return label;
 	};
 
 	/**
