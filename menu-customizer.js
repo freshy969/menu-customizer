@@ -994,6 +994,7 @@
 			control.setting.bind(function ( to, from ) {
 				if ( false === to ) {
 					control.container.remove();
+					// @todo this will need to now shift up any child menu items to take this parent's place, or the children should be deleted as well.
 				} else {
 					_.each( to, function ( value, key ) {
 						if ( control.elements[key] ) {
@@ -1016,7 +1017,7 @@
 			var control = this, $removeBtn;
 
 			// Configure delete button.
-			$removeBtn = this.container.find( '.item-delete' );
+			$removeBtn = control.container.find( '.item-delete' );
 
 			$removeBtn.on( 'click', function( e ) {
 				e.preventDefault();
