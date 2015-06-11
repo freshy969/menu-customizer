@@ -1004,6 +1004,8 @@
 
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
 						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
+						control.priority.set( 10 + control.setting().position );
+
 						// @todo self._applyCardinalOrderClassNames();
 					}
 				}
@@ -1351,22 +1353,41 @@
 		 */
 		_moveMenuItemByOne: function( offset ) {
 			var control = this,
-				position = control.getMenuItemPosition() + offset,
+				position = control.getMenuItemPosition(),
+				parent = control.setting().menu_item_parent,
+				depth = control.params.depth,
 				clone = _.clone( control.setting() );
 
-			if ( 1 !== offset && -1 !== offset ) {
+			// Update menu item position field or return.
+			if ( 1 === offset ) {
+				clone.position = position + 1;
+			} else if ( -1 === offset ) {
+				clone.position = position - 1;
+			} else {
 				return;
 			}
 
-			// Update menu item position field.
-			clone.position = position;
-
-			// @todo update menu-item-reorder-nav to reflect the position change.
-
-			// @todo update menu item parents and depth if necessary based on new previous item.
+			// Update menu item depth field.
+			if ( 1 === clone.position ) {
+				clone.depth = 0;
+			}
+			
+			// Update menu item parent field.
+			if ( 1 === clone.position ) {
+				clone.menu_item_parent = 0;
+			} else {
+				// @todo update menu item parents
+			}
 
 			// Update the control with our new settings.
-			control.setting( clone );
+			control.setting.set( clone );
+			
+			// Update the depth UI class
+			if ( 'undefined' !== typeof clone.depth && clone.depth !== depth ) {
+				control.container.data( 'item-depth', clone.depth );
+				control.container.removeClass( 'menu-item-depth-' + String( depth ) );
+				control.container.addClass( 'menu-item-depth-' + String( clone.depth ) );
+			}
 		},
 
 		/**
