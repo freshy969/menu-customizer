@@ -917,18 +917,14 @@
 		 * Set up the menu-item-reorder-nav
 		 */
 		_setupReorderUI: function() {
-			var self = this, template, $reorderNav;
+			var control = this, template, $reorderNav;
 
 			template = wp.template( 'menu-item-reorder-nav' );
 
-			/**
-			 * Add the menu item reordering elements to the menu item control.
-			 */
+			// Add the menu item reordering elements to the menu item control.
 			this.container.find( '.item-controls' ).after( template );
 
-			/**
-			 * Handle clicks for up/down/left-right on the reorder nav.
-			 */
+			// Handle clicks for up/down/left-right on the reorder nav.
 			$reorderNav = this.container.find( '.menu-item-reorder-nav' );
 			$reorderNav.find( '.menus-move-up, .menus-move-down, .menus-move-left, .menus-move-right' ).on( 'click keypress', function( event ) {
 				if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
@@ -940,20 +936,20 @@
 					isMoveDown = $( this ).is( '.menus-move-down' ),
 					isMoveLeft = $( this ).is( '.menus-move-left' ),
 					isMoveRight = $( this ).is( '.menus-move-right' ),
-					i = self.getMenuItemPosition();
+					i = control.getMenuItemPosition();
 
-				if ( ( isMoveUp && 0 === i ) || ( isMoveDown && i === self.getMenuControl().setting().length - 1 ) ) {
+				if ( ( isMoveUp && 0 === i ) || ( isMoveDown && i === control.getMenuControl().setting().length - 1 ) ) {
 					return;
 				}
 
 				if ( isMoveUp ) {
-					self.moveUp();
+					control.moveUp();
 				} else if ( isMoveDown ) {
-					self.moveDown();
+					control.moveDown();
 				} else if ( isMoveLeft ) {
-					self.moveLeft();
+					control.moveLeft();
 				} else if ( isMoveRight ) {
-					self.moveRight();
+					control.moveRight();
 				}
 
 				$( this ).focus(); // Re-focus after the container was moved.
@@ -975,6 +971,7 @@
 			control.elements.classes = new api.Element( control.container.find( '.edit-menu-item-classes' ) );
 			control.elements.xfn = new api.Element( control.container.find( '.edit-menu-item-xfn' ) );
 			control.elements.description = new api.Element( control.container.find( '.edit-menu-item-description' ) );
+			// @todo allow other elements, added by plugins, to be automatically picked up here; allow additional values to be added to setting array.
 
 			_.each( control.elements, function ( element, property ) {
 				element.bind(function ( value ) {
