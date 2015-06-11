@@ -468,15 +468,6 @@ class WP_Customize_Menus {
 			$nav_menu_setting_id = 'nav_menu[' . $menu_id . ']';
 			$this->manager->add_setting( new WP_Customize_Nav_Menu_Setting( $this->manager, $nav_menu_setting_id ) );
 
-			// Add a control for the menu name.
-			$control_id = $nav_menu_setting_id . '[name]';
-			$this->manager->add_control( new WP_Customize_Nav_Menu_Name_Control( $this->manager, $control_id, array(
-				'label'        => '',
-				'section'      => $section_id,
-				'priority'     => 0,
-				'settings'     => $nav_menu_setting_id,
-			) ) );
-
 			// Add the menu contents.
 			$menu_items = wp_get_nav_menu_items( $menu_id );
 			if ( false === $menu_items ) {
@@ -497,11 +488,7 @@ class WP_Customize_Menus {
 				) ) );
 			}
 
-			// Add the menu control, which handles adding, ordering, auto-add, and location assignment. Note that the name control is split out above.
-			$this->manager->add_control( new WP_Customize_Nav_Menu_Control( $this->manager, $nav_menu_setting_id, array(
-				'section'   => $section_id,
-				'priority'  => 999,
-			) ) );
+			// Note: other controls inside of this section get added dynamically in JS via the MenuSection.ready() function.
 		}
 
 		// Add the add-new-menu section and controls.
