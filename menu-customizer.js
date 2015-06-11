@@ -1384,6 +1384,8 @@
 			// Update menu item depth field.
 			if ( 1 === clone.position ) {
 				clone.depth = 0;
+			} else {
+				// @todo update menu item depth if the new parent has a different depth than the previous one.
 			}
 			
 			// Update menu item parent field.
