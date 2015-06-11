@@ -428,16 +428,23 @@ class WP_Customize_Menus {
 			}
 
 			foreach ( $locations as $location => $description ) {
-				$menu_setting_id = "nav_menu_locations[{$location}]";
+				$setting_id = "nav_menu_locations[{$location}]";
 
-				$this->manager->add_setting( $menu_setting_id, array(
-					'sanitize_callback' => 'absint',
-					'theme_supports'    => 'menus',
-					'type'              => 'theme_mod',
-					'transport'         => 'postMessage',
-				) );
+				$setting = $this->manager->get_setting( $setting_id );
+				if ( $setting ) {
+					$setting->transport = 'postMessage';
+					remove_filter( "customize_sanitize_{$setting_id}", 'absint' );
+					add_filter( "customize_sanitize_{$setting_id}", array( $this, 'intval_base10' ) );
+				} else {
+					$this->manager->add_setting( $setting_id, array(
+						'sanitize_callback' => array( $this, 'intval_base10' ),
+						'theme_supports'    => 'menus',
+						'type'              => 'theme_mod',
+						'transport'         => 'postMessage',
+					) );
+				}
 
-				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $menu_setting_id, array(
+				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $setting_id, array(
 					'label'       => $description,
 					'location_id' => $location,
 					'section'     => 'menu_locations',
@@ -471,8 +478,6 @@ class WP_Customize_Menus {
 			) ) );
 
 			// Add the menu contents.
-			$menu_items = array();
-
 			$menu_items = wp_get_nav_menu_items( $menu_id );
 			if ( false === $menu_items ) {
 				$menu_items = array();
@@ -531,6 +536,20 @@ class WP_Customize_Menus {
 		 * 	'section'  => 'add_menu',
 		 * ) ) );
 		 */
+	}
+
+	/**
+	 * Get the base10 intval.
+	 *
+	 * This is used as a setting's sanitize_callback; we can't use just plain
+	 * intval because the second argument is not what intval() expects.
+	 *
+	 * @param mixed $value Number to convert.
+	 *
+	 * @return int
+	 */
+	function intval_base10( $value ) {
+		return intval( $value, 10 );
 	}
 
 	/**
