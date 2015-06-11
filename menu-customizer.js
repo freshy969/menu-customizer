@@ -864,7 +864,10 @@
 				if ( ! matches ) {
 					return;
 				}
-				menuId = matches[1];
+				menuId = parseInt( matches[1], 10 );
+				if ( control.setting() === menuId ) {
+					control.setting.set( '' );
+				}
 				control.container.find( 'option[value=' + menuId + ']' ).remove();
 			});
 			api.bind( 'change', function ( setting ) {
@@ -872,39 +875,17 @@
 				if ( ! matches ) {
 					return;
 				}
-				menuId = matches[1];
+				menuId = parseInt( matches[1], 10 );
 				if ( false === setting() ) {
+					if ( control.setting() === menuId ) {
+						control.setting.set( '' );
+					}
 					control.container.find( 'option[value=' + menuId + ']' ).remove();
 				} else {
 					control.container.find( 'option[value=' + menuId + ']' ).text( setting().name );
 				}
 			});
 		}
-
-		// @todo is the following needing to be implemented anymore?
-		//// Update theme location checkboxes.
-		//updateMenuLocationCheckboxes: function( to, from ) {
-		//
-		//	var locationNames = $( '.current-menu-location-name-' + this.params.locationId ),
-		//		setTo = locationNames.parent(),
-		//		oldBox = $( '#menu-locations-' + from + '-' + this.params.locationId ),
-		//		newBox = $( '#menu-locations-' + to + '-' + this.params.locationId ),
-		//		menuName;
-		//	if ( 0 === to ) {
-		//		setTo.hide();
-		//		oldBox.prop( 'checked', false );
-		//	} else if ( ! to ) {
-		//		setTo.hide();
-		//	} else {
-		//		//menuName = api.section( 'nav_menus[' + to + ']' ).params.title;
-		//		menuName = api.section( 'nav_menus[' + to + ']' ).container.find( '.live-update-section-title' ).val();
-		//		setTo.show();
-		//		locationNames.text( menuName );
-		//		oldBox.prop( 'checked', false );
-		//		newBox.prop( 'checked', true );
-		//		newBox.parent().find( '.theme-location-set' ).hide();
-		//	}
-		//}
 	});
 
 	/**
