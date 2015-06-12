@@ -422,7 +422,7 @@ class WP_Customize_Menus {
 
 		// @todo if ( ! $menus ) : make a "default" menu
 		if ( $menus ) {
-			$choices = array( '' => __( '&mdash; Select &mdash;' ) );
+			$choices = array( '0' => __( '&mdash; Select &mdash;' ) );
 			foreach ( $menus as $menu ) {
 				$choices[ $menu->term_id ] = wp_html_excerpt( $menu->name, 40, '&hellip;' );
 			}

@@ -682,7 +682,7 @@
 			 * the setting that has the same ID and its presence can dictate
 			 * whether the section is active.
 			 */
-			section.active.validate = function () {
+			section.active.validate = function() {
 				if ( ! api.has( section.id ) ) {
 					return false;
 				}
@@ -698,7 +698,7 @@
 				var matches = id.match( /^nav_menu_locations\[(.+?)]/ );
 				if ( matches ) {
 					section.navMenuLocationSettings[ matches[1] ] = setting;
-					setting.bind( function (){
+					setting.bind( function(){
 						section.refreshAssignedLocations();
 					});
 				}
@@ -906,12 +906,12 @@
 			var control = this, navMenuIdRegex = /^nav_menu\[(-?\d+)]/;
 
 			// @todo It would be better if this was added directly on the setting itself, as opposed to the control.
-			control.setting.validate = function ( value ) {
+			control.setting.validate = function( value ) {
 				return parseInt( value, 10 );
 			};
 
 			// Add/remove menus from the available options when they are added and removed.
-			api.bind( 'add', function ( setting ) {
+			api.bind( 'add', function( setting ) {
 				var option, menuId, matches = setting.id.match( navMenuIdRegex );
 				if ( ! matches || false === setting() ) {
 					return;
@@ -1918,7 +1918,7 @@
 					updateSelectedMenuLabel,
 					navMenuLocationSetting = api( 'nav_menu_locations[' + checkbox.data( 'location-id' ) + ']' );
 
-				updateSelectedMenuLabel = function ( selectedMenuId ) {
+				updateSelectedMenuLabel = function( selectedMenuId ) {
 					var menuSetting = api( 'nav_menu[' + String( selectedMenuId ) + ']' );
 					if ( ! selectedMenuId || ! menuSetting || ! menuSetting() ) {
 						container.find( '.theme-location-set' ).hide();
@@ -1930,7 +1930,7 @@
 				element = new api.Element( checkbox );
 				element.set( navMenuLocationSetting.get() === control.getMenuTermId() );
 
-				checkbox.on( 'change', function () {
+				checkbox.on( 'change', function() {
 					// Note: We can't use element.bind( function( checked ){ ... } ) here because it will trigger a change as well.
 					navMenuLocationSetting.set( this.checked ? control.getMenuTermId() : 0 );
 				} );
