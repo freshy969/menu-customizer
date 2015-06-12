@@ -706,26 +706,15 @@ button.not-a-button {
 	top: 11px;
 }
 
-#available-menu-items .menu-item-handle.item-added {
-	background-color: #eee;
+#available-menu-items .menu-item-handle.item-added .item-type,
+#available-menu-items .menu-item-handle.item-added .item-title,
+#available-menu-items .menu-item-handle.item-added:hover .item-add,
+#available-menu-items .menu-item-handle.item-added .item-add:focus {
+	color: #82878c;
 }
 
-#available-menu-items .menu-item-handle .item-added {
-	display: none;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	padding: 0;
-	width: 72px;
-	margin: -15px 0 0 -36px;
-	text-align: center;
-	background: rgba(0,0,0,.5);
-	color: #fff;
-	border-radius: 3px;
-}
-
-#available-menu-items .menu-item-handle.item-added .item-added {
-	display: block;
+#available-menu-items .menu-item-handle.item-added .item-add:before {
+	content: "\f147";
 }
 
 #available-menu-items .accordion-section-title.loading .spinner,

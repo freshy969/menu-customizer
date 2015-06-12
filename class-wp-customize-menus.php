@@ -577,7 +577,6 @@ class WP_Customize_Menus {
 					<dt class="menu-item-handle">
 						<span class="item-type">{{ data.type_label }}</span>
 						<span class="item-title">{{ data.title }}</span>
-						<span class="item-added"><?php _e( 'Added' ); ?></span>
 						<button type="button" class="not-a-button item-add"><?php _e( 'Add Menu Item' ) ?></button>
 					</dt>
 				</dl>
