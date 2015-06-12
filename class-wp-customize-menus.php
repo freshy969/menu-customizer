@@ -718,12 +718,43 @@ class WP_Customize_Menus {
 		add_action( 'template_redirect', array( $this, 'render_menu' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'customize_preview_enqueue_deps' ) );
 		if ( ! isset( $_REQUEST[ self::RENDER_QUERY_VAR ] ) ) {
+			add_filter( 'wp_nav_menu_args', array( $this, 'filter_wp_nav_menu_args' ), 1000 );
 			add_filter( 'wp_nav_menu', array( $this, 'filter_wp_nav_menu' ), 10, 2 );
 		}
 	}
 
 	/**
-	 * Filter whether to short-circuit the wp_nav_menu() output.
+	 * Keep track of the arguments that are being passed to wp_nav_menu().
+	 *
+	 * @see wp_nav_menu()
+	 *
+	 * @param array $args  An array containing wp_nav_menu() arguments.
+	 * @return array
+	 */
+	function filter_wp_nav_menu_args( $args ) {
+		$this->preview_nav_menu_instance_number += 1;
+		$args['instance_number'] = $this->preview_nav_menu_instance_number;
+
+		$can_partial_refresh = (
+			$args['echo']
+			&&
+			is_string( $args['fallback_cb'] )
+			&&
+			is_string( $args['walker'] )
+		);
+		$args['can_partial_refresh'] = $can_partial_refresh;
+		if ( ! $can_partial_refresh ) {
+			unset( $args['fallback_cb'] );
+			unset( $args['walker'] );
+		}
+		ksort( $args );
+		$args['args_hash'] = $this->hash_nav_menu_args( $args );
+		$this->preview_nav_menu_instance_args[ $this->preview_nav_menu_instance_number ] = $args;
+		return $args;
+	}
+
+	/**
+	 * Prepare wp_nav_menu() calls for partial refresh. Wraps output in container for refreshing.
 	 *
 	 * @see wp_nav_menu()
 	 *
@@ -732,40 +763,13 @@ class WP_Customize_Menus {
 	 * @return null
 	 */
 	function filter_wp_nav_menu( $nav_menu_content, $args ) {
-		$this->preview_nav_menu_instance_number += 1;
-
-		// Get the nav menu based on the requested menu.
-		$nav_menu = wp_get_nav_menu_object( $args->menu );
-
-		// Get the nav menu based on the theme_location.
-		if ( ! $nav_menu && $args->theme_location && ( $locations = get_nav_menu_locations() ) && isset( $locations[ $args->theme_location ] ) ) {
-			$nav_menu = wp_get_nav_menu_object( $locations[ $args->theme_location ] );
+		if ( ! empty( $args->can_partial_refresh ) && ! empty( $args->instance_number ) ) {
+			$nav_menu_content = sprintf(
+				'<div id="partial-refresh-menu-container-%1$d" class="partial-refresh-menu-container" data-instance-number="%1$d">%2$s</div>',
+				$args->instance_number,
+				$nav_menu_content
+			);
 		}
-
-		// Get the first menu that has items if we still can't find a menu.
-		if ( ! $nav_menu && ! $args->theme_location ) {
-			$menus = wp_get_nav_menus();
-			foreach ( $menus as $menu_maybe ) {
-				if ( $menu_items = wp_get_nav_menu_items( $menu_maybe->term_id, array( 'update_post_term_cache' => false ) ) ) {
-					$nav_menu = $menu_maybe;
-					break;
-				}
-			}
-		}
-
-		if ( $nav_menu ) {
-			$exported_args = get_object_vars( $args );
-			if ( ! is_string( $exported_args['fallback_cb'] ) ) {
-				// This could be a closure or object method which would blow serialization, so override.
-				$exported_args['fallback_cb'] = '__return_empty_string';
-			}
-			unset( $exported_args['echo'] ); // We'll be forcing echo in the Ajax request handler anyway.
-			ksort( $exported_args );
-			$exported_args['args_hash'] = $this->hash_nav_menu_args( $exported_args );
-			$this->preview_nav_menu_instance_args[ $this->preview_nav_menu_instance_number ] = $exported_args;
-			$nav_menu_content = sprintf( '<div id="partial-refresh-menu-container-%1$d" class="partial-refresh-menu-container" data-instance-number="%1$d">%2$s</div>', $this->preview_nav_menu_instance_number, $nav_menu_content );
-		}
-
 		return $nav_menu_content;
 	}
 

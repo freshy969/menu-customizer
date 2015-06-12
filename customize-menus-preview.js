@@ -1,6 +1,6 @@
 /*global jQuery, JSON, _wpCustomizePreviewMenusExports, _ */
 
-wp.customize.menusPreview = ( function( $ ) {
+wp.customize.menusPreview = ( function( $, api ) {
 	'use strict';
 	var self;
 
@@ -19,7 +19,7 @@ wp.customize.menusPreview = ( function( $ ) {
 		refreshDebounceDelay: 200
 	};
 
-	wp.customize.bind( 'preview-ready', function() {
+	api.bind( 'preview-ready', function() {
 		self.previewReady.resolve();
 	} );
 	self.previewReady.done( function() {
@@ -37,19 +37,19 @@ wp.customize.menusPreview = ( function( $ ) {
 		}
 
 		self.previewReady.done( function() {
-			wp.customize.each( function ( setting, id ) {
+			api.each( function ( setting, id ) {
 				setting.id = id;
 				self.bindListener( setting );
 			} );
 
-			wp.customize.preview.bind( 'setting', function( args ) {
+			api.preview.bind( 'setting', function( args ) {
 				var id, value, setting;
 				args = args.slice();
 				id = args.shift();
 				value = args.shift();
-				if ( ! wp.customize.has( id ) ) {
+				if ( ! api.has( id ) ) {
 					// Currently customize-preview.js is not creating settings for dynamically-created settings in the pane; so we have to do it
-					setting = wp.customize.create( id, value ); // @todo This should be in core
+					setting = api.create( id, value ); // @todo This should be in core
 					setting.id = id;
 					if ( self.bindListener( setting ) ) {
 						setting.callbacks.fireWith( setting, [ setting(), setting() ] );
@@ -131,7 +131,7 @@ wp.customize.menusPreview = ( function( $ ) {
 	self.refreshMenu = function( menuId ) {
 		var self = this, assignedLocations = [];
 
-		wp.customize.each(function ( setting, id ) {
+		api.each(function ( setting, id ) {
 			var matches = id.match( /^nav_menu_locations\[(.+?)]/ );
 			if ( matches && menuId === setting() ) {
 				assignedLocations.push( matches[1] );
@@ -151,7 +151,6 @@ wp.customize.menusPreview = ( function( $ ) {
 				self.refreshMenuInstanceDebounced( instanceNumber );
 			}
 		} );
-		// @todo If there was no location found, or if the original arguments to wp_nav_menu included echo=false, need to do full refresh
 	};
 
 	/**
@@ -160,13 +159,19 @@ wp.customize.menusPreview = ( function( $ ) {
 	 * @param {int} instanceNumber
 	 */
 	self.refreshMenuInstance = function( instanceNumber ) {
-		var self = this, data, customized, container, request, wpNavArgs;
+		var self = this, data, customized, container, request, wpNavArgs, instance;
 
 		if ( ! self.navMenuInstanceArgs[ instanceNumber ] ) {
 			throw new Error( 'unknown_instance_number' );
 		}
+		instance = self.navMenuInstanceArgs[ instanceNumber ];
 
 		container = $( '#partial-refresh-menu-container-' + String( instanceNumber ) );
+
+		if ( ! instance.can_partial_refresh || 0 === container.length ) {
+			api.preview.send('refresh');
+			return;
+		}
 
 		data = {
 			nonce: self.previewCustomizeNonce, // for Customize Preview
@@ -177,7 +182,7 @@ wp.customize.menusPreview = ( function( $ ) {
 		}
 		data[ self.renderQueryVar ] = '1';
 		customized = {};
-		wp.customize.each( function( setting, id ) {
+		api.each( function( setting, id ) {
 			if ( /^(nav_menu|nav_menu_locations)/.test( id ) ) {
 				customized[ id ] = setting.get();
 			}
@@ -185,12 +190,10 @@ wp.customize.menusPreview = ( function( $ ) {
 		data.customized = JSON.stringify( customized );
 		data[ self.renderNoncePostKey ] = self.renderNonceValue;
 
-		wpNavArgs = $.extend( {}, self.navMenuInstanceArgs[ instanceNumber ] );
+		wpNavArgs = $.extend( {}, instance );
 		data.wp_nav_menu_args_hash = wpNavArgs.args_hash;
 		delete wpNavArgs.args_hash;
 		data.wp_nav_menu_args = JSON.stringify( wpNavArgs );
-
-		// @todo Allow plugins to prevent a partial refresh via jQuery event like for widgets? Fallback to self.preview.send( 'refresh' );
 
 		container.addClass( 'customize-partial-refreshing' );
 
@@ -231,4 +234,4 @@ wp.customize.menusPreview = ( function( $ ) {
 
 	return self;
 
-}( jQuery ) );
+}( jQuery, wp.customize ) );
