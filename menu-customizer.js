@@ -649,7 +649,7 @@
 	 * wp.customize.Menus.MenuSection
 	 *
 	 * Customizer section for menus. This is used only for lazy-loading child controls.
-	 * Note that 'menu' must match the WP_Customize_Menu_Section::$type.
+	 * Note that 'nav_menu' must match the WP_Customize_Menu_Section::$type.
 	 *
 	 * @constructor
 	 * @augments wp.customize.Section
@@ -664,6 +664,7 @@
 		 */
 		initialize: function( id, options ) {
 			var section = this;
+			section.contentEmbedded = false;
 			api.Section.prototype.initialize.call( section, id, options );
 			section.deferred.initSortables = $.Deferred();
 		},
@@ -815,7 +816,7 @@
 
 			if ( expanded && ! section.contentEmbedded ) {
 				_.each( wp.customize.section( section.id ).controls(), function( control ) {
-					if ( 'menu_item' === control.params.type ) {
+					if ( 'nav_menu_item' === control.params.type ) {
 						control.actuallyEmbed();
 					}
 				} );
@@ -826,8 +827,6 @@
 			}
 			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
 		}
-
-		// @todo Restore onChangeExpanded to actuallyEmbed the nav_menu_items
 	});
 
 	/**
@@ -961,9 +960,25 @@
 	 */
 	api.Menus.MenuItemControl = api.Control.extend({
 		/**
-		 * Set up the control.
+		 * @since Menu Customizer 0.3
+		 *
+		 * Override the embed() method to do nothing,
+		 * so that the control isn't embedded on load.
 		 */
-		ready: function() {
+		embed: function () {},
+
+		/**
+		 * @since Menu Customizer 0.3
+		 */
+		actuallyEmbed: function () {
+			this.renderContent();
+			this.actuallyReady();
+		},
+
+		/**
+		 * Set up the control (essentially ready()).
+		 */
+		actuallyReady: function() {
 			this._setupControlToggle();
 			this._setupReorderUI();
 			this._setupUpdateUI();
@@ -2077,7 +2092,7 @@
 			setting = api.create( customizeId, customizeId, {}, settingArgs );
 			setting.set( item ); // Change from initial empty object to actual item to mark as dirty.
 
-			// Add the menu control.
+			// Add the menu item control.
 			menuItemControl = new api.controlConstructor.nav_menu_item( customizeId, {
 				params: {
 					type: 'nav_menu_item',
@@ -2093,6 +2108,7 @@
 				previewer: api.previewer
 			} );
 
+			menuItemControl.actuallyEmbed();
 			menuItemControl.toggleDeletePosition( true );
 
 			api.control.add( customizeId, menuItemControl );
