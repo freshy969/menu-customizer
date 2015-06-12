@@ -1452,12 +1452,7 @@
 				}
 			});
 
-			// Update menu item parent field.
-			if ( 1 === clone.position ) {
-				clone.menu_item_parent = 0;
-			} else {
-				// @todo update menu item parents
-			}
+			// @todo update menu item parents
 
 			// Update the control with our new settings.
 			control.setting.set( clone );
