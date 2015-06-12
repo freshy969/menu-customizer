@@ -146,11 +146,16 @@ wp.customize.menusPreview = ( function( $, api ) {
 	};
 
 	self.refreshMenuLocation = function( location ) {
+		var foundInstance = false;
 		_.each( self.navMenuInstanceArgs, function( navMenuArgs, instanceNumber ) {
 			if ( location === navMenuArgs.theme_location ) {
 				self.refreshMenuInstanceDebounced( instanceNumber );
+				foundInstance = true;
 			}
 		} );
+		if ( ! foundInstance ) {
+			api.preview.send( 'refresh' );
+		}
 	};
 
 	/**
@@ -183,6 +188,7 @@ wp.customize.menusPreview = ( function( $, api ) {
 		data[ self.renderQueryVar ] = '1';
 		customized = {};
 		api.each( function( setting, id ) {
+			// @todo We need to limit this to just the menu items that are associated with this menu/location.
 			if ( /^(nav_menu|nav_menu_locations)/.test( id ) ) {
 				customized[ id ] = setting.get();
 			}
