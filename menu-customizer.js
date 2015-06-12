@@ -890,7 +890,7 @@
 	 * wp.customize.Menus.MenuLocationControl
 	 *
 	 * Customizer control for menu locations (rendered as a <select>).
-	 * Note that 'menu_location' must match the WP_Customize_Menu_Location_Control::$type.
+	 * Note that 'nav_menu_location' must match the WP_Customize_Nav_Menu_Location_Control::$type.
 	 *
 	 * @constructor
 	 * @augments wp.customize.Control
@@ -2201,7 +2201,7 @@
 	 * menu_location, menu_item, nav_menu, and new_menu.
 	 */
 	$.extend( api.controlConstructor, {
-		menu_location: api.Menus.MenuLocationControl,
+		nav_menu_location: api.Menus.MenuLocationControl,
 		nav_menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
 		nav_menu_name: api.Menus.MenuNameControl,

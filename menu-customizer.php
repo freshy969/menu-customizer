@@ -48,7 +48,7 @@ function menu_customizer_init( $wp_customize ) {
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-item-control.php';
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-name-control.php';
 	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-section.php';
-	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-menu-location-control.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-location-control.php';
 
 	$wp_customize->menus = new WP_Customize_Menus( $wp_customize );
 }

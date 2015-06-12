@@ -444,7 +444,7 @@ class WP_Customize_Menus {
 					) );
 				}
 
-				$this->manager->add_control( new WP_Customize_Menu_Location_Control( $this->manager, $setting_id, array(
+				$this->manager->add_control( new WP_Customize_Nav_Menu_Location_Control( $this->manager, $setting_id, array(
 					'label'       => $description,
 					'location_id' => $location,
 					'section'     => 'menu_locations',
