@@ -671,7 +671,7 @@
 		/**
 		 *
 		 */
-		ready: function () {
+		ready: function() {
 			var section = this;
 
 			/*
@@ -1599,7 +1599,7 @@
 	 */
 	api.Menus.MenuNameControl = api.Control.extend({
 
-		ready: function () {
+		ready: function() {
 			var control = this,
 				settingValue = control.setting();
 
@@ -2233,11 +2233,15 @@
 			collection: api.Menus.availableMenuItems
 		});
 
-		api.bind( 'saved', function ( data ) {
+		api.bind( 'saved', function( data ) {
 			if ( data.nav_menu_updates || data.nav_menu_item_updates ) {
 				api.Menus.applySavedData( data );
 			}
 		} );
+
+		api.previewer.bind( 'refresh', function() {
+			api.previewer.refresh();
+		});
 	} );
 
 	/**
@@ -2248,7 +2252,7 @@
 	 * @param {array} data.nav_menu_updates
 	 * @param {array} data.nav_menu_item_updates
 	 */
-	api.Menus.applySavedData = function ( data ) {
+	api.Menus.applySavedData = function( data ) {
 
 		var insertedMenuIdMapping = {};
 
@@ -2335,9 +2339,9 @@
 			}
 		} );
 
-		_( data.nav_menu_item_updates ).each(function ( update ) {
+		_( data.nav_menu_item_updates ).each(function( update ) {
 			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, oldControl, newControl;
-			if ( update.status === 'inserted' ) {
+			if ( 'inserted' === update.status ) {
 				if ( ! update.previous_post_id ) {
 					throw new Error( 'Expected previous_post_id' );
 				}
