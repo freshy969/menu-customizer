@@ -106,7 +106,7 @@ class WP_Customize_Menus {
 			foreach ( $posts as $post ) {
 				$items[] = array(
 					'id'         => "post-{$post->ID}",
-					'title'      => $post->post_title,
+					'title'      => html_entity_decode( get_the_title( $post ), ENT_HTML401 | ENT_QUOTES, get_bloginfo( 'charset' ) ),
 					'type'       => 'post_type',
 					'object'     => $post->post_type,
 					'object_id'  => (int) $post->ID,
