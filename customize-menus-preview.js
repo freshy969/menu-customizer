@@ -151,6 +151,7 @@ wp.customize.menusPreview = ( function( $ ) {
 				self.refreshMenuInstanceDebounced( instanceNumber );
 			}
 		} );
+		// @todo If there was no location found, or if the original arguments to wp_nav_menu included echo=false, need to do full refresh
 	};
 
 	/**

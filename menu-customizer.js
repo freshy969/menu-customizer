@@ -2159,7 +2159,7 @@
 			api.create( customizeId, customizeId, {}, {
 				type: 'nav_menu',
 				transport: 'postMessage',
-				previewer: control.setting.previewer
+				previewer: api.previewer
 			} );
 			api( customizeId ).set( $.extend(
 				{},
@@ -2253,6 +2253,7 @@
 		var insertedMenuIdMapping = {};
 
 		_( data.nav_menu_updates ).each(function ( update ) {
+			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, oldSection, newSection;
 			if ( 'inserted' === update.status ) {
 				if ( ! update.previous_term_id ) {
 					throw new Error( 'Expected previous_term_id' );
@@ -2260,24 +2261,88 @@
 				if ( ! update.term_id ) {
 					throw new Error( 'Expected term_id' );
 				}
-				insertedMenuIdMapping[ update.previous_term_id ] = update.term_id;
+				oldCustomizeId = 'nav_menu[' + String( update.previous_term_id ) + ']';
+				if ( ! api.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected setting to exist: ' + oldCustomizeId );
+				}
+				oldSetting = api( oldCustomizeId );
+				if ( ! api.section.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected control to exist: ' + oldCustomizeId );
+				}
+				oldSection = api.section( oldCustomizeId );
 
-				// @todo Revisit this when menus can be added again.
-				// @todo Now we have to create the new menu section, menu control, and menu setting.
+				settingValue = oldSetting.get();
+				if ( ! settingValue ) {
+					throw new Error( 'Did not expect setting to be empty (deleted).' );
+				}
+				settingValue = _.clone( settingValue );
+
+				insertedMenuIdMapping[ update.previous_term_id ] = update.term_id;
+				newCustomizeId = 'nav_menu[' + String( update.term_id ) + ']';
+				newSetting = api.create( newCustomizeId, newCustomizeId, settingValue, {
+					type: 'nav_menu',
+					transport: 'postMessage',
+					previewer: api.previewer
+				} );
+
+				if ( oldSection.expanded() ) {
+					oldSection.collapse();
+				}
+
+				// Add the menu section.
+				newSection = new api.Menus.MenuSection( newCustomizeId, {
+					params: {
+						id: newCustomizeId,
+						panel: 'menus',
+						title: settingValue.name,
+						customizeAction: api.Menus.data.l10n.customizingMenus,
+						type: 'menu',
+						priority: oldSection.priority.get(),
+						active: true
+					}
+				} );
+
+				// Remove old setting and control.
+				oldSection.container.remove();
+				api.section.remove( oldCustomizeId );
+
+				// Add new control to take its place.
+				api.section.add( newCustomizeId, newSection );
+
+				// Delete the placeholder and preview the new setting.
+				oldSetting.callbacks.disable(); // Prevent setting triggering Customizer dirty state when set.
+				oldSetting.set( false );
+				oldSetting.preview();
+				newSetting.preview();
+
+				// Update nav_menu_locations to reference the new ID.
+				api.each( function ( setting ) {
+					var wasSaved = api.state( 'saved' ).get();
+					if ( /^nav_menu_locations\[/.test( setting.id ) && setting.get() === update.previous_term_id ) {
+						setting.set( update.term_id );
+						setting._dirty = false; // Not dirty because this is has also just been done on server in WP_Customize_Nav_Menu_Setting::update().
+						api.state( 'saved' ).set( wasSaved );
+						setting.preview();
+					}
+				} );
+
+				if ( oldSection.expanded.get() ) {
+					// @todo This doesn't seem to be working.
+					newSection.expand();
+				}
+
+				// @todo Update the Custom Menu selects, ensuring the newly-inserted IDs are used for any that have selected a placeholder menu.
 			}
 		} );
 
 		_( data.nav_menu_item_updates ).each(function ( update ) {
-			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, newControl;
+			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, oldControl, newControl;
 			if ( update.status === 'inserted' ) {
 				if ( ! update.previous_post_id ) {
 					throw new Error( 'Expected previous_post_id' );
 				}
 				if ( ! update.post_id ) {
-					throw new Error( 'Expected previous_post_id' );
-				}
-				if ( ! update.post_id ) {
-					throw new Error( 'Expected previous_post_id' );
+					throw new Error( 'Expected post_id' );
 				}
 				oldCustomizeId = 'nav_menu_item[' + String( update.previous_post_id ) + ']';
 				if ( ! api.has( oldCustomizeId ) ) {
@@ -2287,6 +2352,7 @@
 				if ( ! api.control.has( oldCustomizeId ) ) {
 					throw new Error( 'Expected control to exist: ' + oldCustomizeId );
 				}
+				oldControl = api.control( oldCustomizeId );
 
 				settingValue = oldSetting.get();
 				if ( ! settingValue ) {
@@ -2313,7 +2379,7 @@
 						content: '<li id="customize-control-nav_menu_item-' + String( update.post_id ) + '" class="customize-control customize-control-nav_menu_item"></li>',
 						menu_id: update.post_id,
 						section: 'nav_menu[' + String( settingValue.nav_menu_term_id ) + ']',
-						priority: api.control( oldCustomizeId ).priority.get(),
+						priority: oldControl.priority.get(),
 						active: true,
 						settings: {
 							'default': newCustomizeId
@@ -2323,19 +2389,23 @@
 				} );
 
 				// Remove old setting and control.
-				api.control( oldCustomizeId ).container.remove();
+				oldControl.container.remove();
 				api.control.remove( oldCustomizeId );
 
 				// Add new control to take its place.
 				api.control.add( newCustomizeId, newControl );
 
 				// Delete the placeholder and preview the new setting.
-				oldSetting.callbacks.disable(); // Prevent setting from being marked as dirty when it is set to false.
+				oldSetting.callbacks.disable(); // Prevent setting triggering Customizer dirty state when set.
 				oldSetting.set( false );
 				oldSetting.preview();
 				newSetting.preview();
+
+				newControl.container.toggleClass( 'menu-item-edit-inactive', oldControl.container.hasClass( 'menu-item-edit-inactive' ) );
 			}
 		});
+
+		// @todo trigger change event for each Custom Menu widget that was modified.
 	};
 
 	/**

@@ -92,6 +92,13 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	public $is_previewed = false;
 
 	/**
+	 * Whether or not update() was called.
+	 *
+	 * @var bool
+	 */
+	public $is_updated = false;
+
+	/**
 	 * Status for calling the update method, used in customize_save_response filter.
 	 *
 	 * When status is inserted, the placeholder term ID is stored in $previous_term_id.
@@ -355,8 +362,14 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * @return void
 	 */
 	protected function update( $value ) {
+		if ( $this->is_updated ) {
+			return;
+		}
+		$this->is_updated = true;
 		$is_placeholder = ( $this->term_id < 0 );
 		$is_delete = ( false === $value );
+
+		add_filter( 'customize_save_response', array( $this, 'amend_customize_save_response' ) );
 
 		$auto_add = null;
 		if ( $is_delete ) {
@@ -405,7 +418,20 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 			update_option( 'nav_menu_options', $nav_menu_options );
 		}
 
-		add_filter( 'customize_save_response', array( $this, 'amend_customize_save_response' ) );
+		// Make sure that new menus assigned to nav menu locations use their new IDs.
+		if ( 'inserted' === $this->update_status ) {
+			foreach ( $this->manager->settings() as $setting ) {
+				if ( ! preg_match( '/^nav_menu_locations\[/', $setting->id ) ) {
+					continue;
+				}
+				$post_value = $setting->post_value( null );
+				// @todo We need to make sure this change gets applied to the client as well.
+				if ( ! is_null( $post_value ) && $this->previous_term_id === intval( $post_value ) ) {
+					$this->manager->set_post_value( $setting->id, $this->term_id );
+					$setting->save();
+				}
+			}
+		}
 	}
 
 	/**

@@ -107,6 +107,13 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	public $is_previewed = false;
 
 	/**
+	 * Whether or not update() was called.
+	 *
+	 * @var bool
+	 */
+	public $is_updated = false;
+
+	/**
 	 * Status for calling the update method, used in customize_save_response filter.
 	 *
 	 * When status is inserted, the placeholder post ID is stored in $previous_post_id.
@@ -422,8 +429,14 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 	 * @return void
 	 */
 	protected function update( $value ) {
+		if ( $this->is_updated ) {
+			return;
+		}
+		$this->is_updated = true;
 		$is_placeholder = ( $this->post_id < 0 );
 		$is_delete = ( false === $value );
+
+		add_filter( 'customize_save_response', array( $this, 'amend_customize_save_response' ) );
 
 		if ( $is_delete ) {
 			// If the current setting post is a placeholder, a delete request is a no-op.
@@ -440,6 +453,50 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 				// @todo send back the IDs for all associated nav menu items deleted, so these settings (and controls) can be removed from Customizer?
 			}
 		} else {
+
+			// Handle saving menu items for menus that are being newly-created.
+			if ( $value['nav_menu_term_id'] < 0 ) {
+				$nav_menu_setting_id = sprintf( 'nav_menu[%s]', $value['nav_menu_term_id'] );
+				$nav_menu_setting = $this->manager->get_setting( $nav_menu_setting_id );
+				if ( ! $nav_menu_setting || ! ( $nav_menu_setting instanceof WP_Customize_Nav_Menu_Setting ) ) {
+					$this->update_status = 'error';
+					$this->update_error = new WP_Error( 'unexpected_nav_menu_setting' );
+					return;
+				}
+				if ( false === $nav_menu_setting->save() ) {
+					$this->update_status = 'error';
+					$this->update_error = new WP_Error( 'nav_menu_setting_failure' );
+				}
+				if ( $nav_menu_setting->previous_term_id !== intval( $value['nav_menu_term_id'] ) ) {
+					$this->update_status = 'error';
+					$this->update_error = new WP_Error( 'unexpected_previous_term_id' );
+					return;
+				}
+				$value['nav_menu_term_id'] = $nav_menu_setting->term_id;
+			}
+
+			// Handle saving a nav menu item that is a child of a nav menu item being newly-created.
+			if ( $value['menu_item_parent'] < 0 ) {
+				$parent_nav_menu_item_setting_id = sprintf( 'nav_menu_item[%s]', $value['menu_item_parent'] );
+				$parent_nav_menu_item_setting = $this->manager->get_setting( $parent_nav_menu_item_setting_id );
+				if ( ! $parent_nav_menu_item_setting || ! ( $parent_nav_menu_item_setting instanceof WP_Customize_Nav_Menu_Item_Setting ) ) {
+					$this->update_status = 'error';
+					$this->update_error = new WP_Error( 'unexpected_nav_menu_item_setting' );
+					return;
+				}
+				if ( false === $parent_nav_menu_item_setting->save() ) {
+					$this->update_status = 'error';
+					$this->update_error = new WP_Error( 'nav_menu_item_setting_failure' );
+				}
+				if ( $parent_nav_menu_item_setting->previous_post_id !== intval( $value['menu_item_parent'] ) ) {
+					$this->update_status = 'error';
+					$this->update_error = new WP_Error( 'unexpected_previous_post_id' );
+					return;
+				}
+				$value['menu_item_parent'] = $parent_nav_menu_item_setting->post_id;
+
+			}
+
 			// Insert or update menu.
 			$menu_item_data = array(
 				'menu-item-object-id'   => $value['object_id'],
@@ -477,7 +534,6 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 			}
 		}
 
-		add_filter( 'customize_save_response', array( $this, 'amend_customize_save_response' ) );
 	}
 
 	/**
