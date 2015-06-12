@@ -37,7 +37,7 @@ wp.customize.menusPreview = ( function( $, api ) {
 		}
 
 		self.previewReady.done( function() {
-			api.each( function ( setting, id ) {
+			api.each( function( setting, id ) {
 				setting.id = id;
 				self.bindListener( setting );
 			} );
@@ -64,7 +64,7 @@ wp.customize.menusPreview = ( function( $, api ) {
 	 * @param {wp.customize.Value} setting
 	 * @returns {boolean} Whether the setting was bound.
 	 */
-	self.bindListener = function ( setting ) {
+	self.bindListener = function( setting ) {
 		var matches, themeLocation;
 
 		matches = setting.id.match( /^nav_menu\[(-?\d+)]$/ );
@@ -92,7 +92,6 @@ wp.customize.menusPreview = ( function( $, api ) {
 
 		return false;
 	};
-
 
 	/**
 	 * Handle changing of a nav_menu setting.
@@ -131,7 +130,7 @@ wp.customize.menusPreview = ( function( $, api ) {
 	self.refreshMenu = function( menuId ) {
 		var self = this, assignedLocations = [];
 
-		api.each(function ( setting, id ) {
+		api.each(function( setting, id ) {
 			var matches = id.match( /^nav_menu_locations\[(.+?)]/ );
 			if ( matches && menuId === setting() ) {
 				assignedLocations.push( matches[1] );
@@ -174,7 +173,7 @@ wp.customize.menusPreview = ( function( $, api ) {
 		container = $( '#partial-refresh-menu-container-' + String( instanceNumber ) );
 
 		if ( ! instance.can_partial_refresh || 0 === container.length ) {
-			api.preview.send('refresh');
+			api.preview.send( 'refresh' );
 			return;
 		}
 
@@ -226,12 +225,12 @@ wp.customize.menusPreview = ( function( $, api ) {
 
 	self.currentRefreshMenuInstanceDebouncedCalls = {};
 
-	self.refreshMenuInstanceDebounced = function ( instanceNumber ) {
+	self.refreshMenuInstanceDebounced = function( instanceNumber ) {
 		if ( self.currentRefreshMenuInstanceDebouncedCalls[ instanceNumber ] ) {
 			clearTimeout( self.currentRefreshMenuInstanceDebouncedCalls[ instanceNumber ] );
 		}
 		self.currentRefreshMenuInstanceDebouncedCalls[ instanceNumber ] = setTimeout(
-			function () {
+			function() {
 				self.refreshMenuInstance( instanceNumber );
 			},
 			self.refreshDebounceDelay
