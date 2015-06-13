@@ -664,7 +664,6 @@
 		 */
 		initialize: function( id, options ) {
 			var section = this;
-			section.contentEmbedded = false;
 			api.Section.prototype.initialize.call( section, id, options );
 			section.deferred.initSortables = $.Deferred();
 		},
@@ -810,20 +809,19 @@
 				// Add attributes needed by wpNavMenu
 				$( '#menu-to-edit' ).removeAttr( 'id' );
 				wpNavMenu.menuList.attr( 'id', 'menu-to-edit' ).addClass( 'menu' );
-			}
 
-			if ( expanded && ! section.contentEmbedded ) {
-				_.each( wp.customize.section( section.id ).controls(), function( control ) {
+				_.each( api.section( section.id ).controls(), function( control ) {
 					if ( 'nav_menu_item' === control.params.type ) {
 						control.actuallyEmbed();
 					}
 				} );
-				section.contentEmbedded = true;
 
-				wpNavMenu.initSortables(); // Depends on menu-to-edit ID being set above.
-				section.deferred.initSortables.resolve( wpNavMenu.menuList ); // Now MenuControl can extend the sortable.
+				if ( 'resolved' !== section.deferred.initSortables.state() ) {
+					wpNavMenu.initSortables(); // Depends on menu-to-edit ID being set above.
+					section.deferred.initSortables.resolve( wpNavMenu.menuList ); // Now MenuControl can extend the sortable.
+				}
 			}
-			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
+			api.Section.prototype.onChangeExpanded.call( section, expanded, args );
 		}
 	});
 
@@ -961,22 +959,41 @@
 		 * @since Menu Customizer 0.3
 		 *
 		 * Override the embed() method to do nothing,
-		 * so that the control isn't embedded on load.
+		 * so that the control isn't embedded on load,
+		 * unless the containing section is already expanded.
 		 */
-		embed: function() {},
-
-		/**
-		 * @since Menu Customizer 0.3
-		 */
-		actuallyEmbed: function() {
-			this.renderContent();
-			this.actuallyReady();
+		embed: function() {
+			var control = this,
+				sectionId = control.section(),
+				section;
+			if ( ! sectionId ) {
+				return;
+			}
+			section = api.section( sectionId );
+			if ( section && section.expanded() ) {
+				control.actuallyEmbed();
+			}
 		},
 
 		/**
-		 * Set up the control (essentially ready()).
+		 * This function is called in Section.onChangeExpanded() so the control
+		 * will only get embedded when the Section is first expanded.
+		 *
+		 * @since Menu Customizer 0.3
 		 */
-		actuallyReady: function() {
+		actuallyEmbed: function() {
+			var control = this;
+			if ( 'resolved' === control.deferred.embedded.state() ) {
+				return;
+			}
+			control.renderContent();
+			control.deferred.embedded.resolve(); // This triggers control.ready().
+		},
+
+		/**
+		 * Set up the control.
+		 */
+		ready: function() {
 			this._setupControlToggle();
 			this._setupReorderUI();
 			this._setupUpdateUI();
@@ -1204,7 +1221,6 @@
 		 * Amend the control's params with the data necessary for the JS template just in time.
 		 */
 		renderContent: function() {
-
 			var control = this,
 				settingValue = control.setting(),
 				containerClasses;
@@ -2106,7 +2122,6 @@
 				previewer: api.previewer
 			} );
 
-			menuItemControl.actuallyEmbed();
 			menuItemControl.toggleDeletePosition( true );
 
 			api.control.add( customizeId, menuItemControl );
