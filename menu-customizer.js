@@ -29,7 +29,7 @@
 			nav_menu_item: {}
 		}
 	};
-	if ( typeof _wpCustomizeMenusSettings !== 'undefined' ) {
+	if ( 'undefined' !== typeof _wpCustomizeMenusSettings ) {
 		$.extend( api.Menus.data, _wpCustomizeMenusSettings );
 	}
 
@@ -299,7 +299,7 @@
 			};
 			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
 
-			request.done(function ( data ) {
+			request.done(function( data ) {
 				var items, typeInner;
 				items = data.items;
 				if ( 0 === items.length ) {
@@ -314,12 +314,12 @@
 				});
 				self.pages[ type ] = self.pages[ type ] + 1;
 			});
-			request.fail(function ( data ) {
+			request.fail(function( data ) {
 				if ( typeof console !== 'undefined' && console.error ) {
 					console.error( data );
 				}
 			});
-			request.always(function () {
+			request.always(function() {
 				$( '#available-menu-items-' + type + ' .accordion-section-title' ).removeClass( 'loading' );
 				self.loading = false;
 			});
@@ -698,13 +698,13 @@
 				var matches = id.match( /^nav_menu_locations\[(.+?)]/ );
 				if ( matches ) {
 					section.navMenuLocationSettings[ matches[1] ] = setting;
-					setting.bind( function(){
+					setting.bind( function() {
 						section.refreshAssignedLocations();
 					});
 				}
 			});
 
-			section.assignedLocations.bind(function ( to ) {
+			section.assignedLocations.bind(function( to ) {
 				section.updateAssignedLocationsInSectionTitle( to );
 			});
 
@@ -772,17 +772,15 @@
 		},
 
 		/**
-		 * 
-		 *
 		 * @param {array} themeLocations
 		 */
-		updateAssignedLocationsInSectionTitle: function ( themeLocations ) {
+		updateAssignedLocationsInSectionTitle: function( themeLocations ) {
 			var section = this,
 				$title;
 
 			$title = section.container.find( '.accordion-section-title:first' );
 			$title.find( '.menu-in-location' ).remove();
-			_.each( themeLocations, function ( themeLocation ){
+			_.each( themeLocations, function( themeLocation ) {
 				var $label = $( '<span class="menu-in-location"></span>' );
 				$label.text( api.Menus.data.l10n.menuLocation.replace( '%s', themeLocation ) );
 				$title.append( $label );
@@ -796,7 +794,7 @@
 		 *
 		 * @returns {Number}
 		 */
-		getMenuTermId: function () {
+		getMenuTermId: function() {
 			var matches = this.id.match( /^nav_menu\[(.+?)]/ ),
 				menuTermId = parseInt( matches[1], 10 );
 			return menuTermId;
@@ -895,7 +893,7 @@
 	 * @augments wp.customize.Control
 	 */
 	api.Menus.MenuLocationControl = api.Control.extend({
-		initialize: function ( id, options ) {
+		initialize: function( id, options ) {
 			var control = this,
 				matches = id.match( /^nav_menu_locations\[(.+?)]/ );
 			control.themeLocation = matches[1];
@@ -920,7 +918,7 @@
 				option = new Option( setting().name, menuId );
 				control.container.find( 'select' ).append( option );
 			});
-			api.bind( 'remove', function ( setting ) {
+			api.bind( 'remove', function( setting ) {
 				var menuId, matches = setting.id.match( navMenuIdRegex );
 				if ( ! matches ) {
 					return;
@@ -931,7 +929,7 @@
 				}
 				control.container.find( 'option[value=' + menuId + ']' ).remove();
 			});
-			api.bind( 'change', function ( setting ) {
+			api.bind( 'change', function( setting ) {
 				var menuId, matches = setting.id.match( navMenuIdRegex );
 				if ( ! matches ) {
 					return;
@@ -965,12 +963,12 @@
 		 * Override the embed() method to do nothing,
 		 * so that the control isn't embedded on load.
 		 */
-		embed: function () {},
+		embed: function() {},
 
 		/**
 		 * @since Menu Customizer 0.3
 		 */
-		actuallyEmbed: function () {
+		actuallyEmbed: function() {
 			this.renderContent();
 			this.actuallyReady();
 		},
@@ -1064,8 +1062,8 @@
 			control.elements.description = new api.Element( control.container.find( '.edit-menu-item-description' ) );
 			// @todo allow other elements, added by plugins, to be automatically picked up here; allow additional values to be added to setting array.
 
-			_.each( control.elements, function ( element, property ) {
-				element.bind(function ( value ) {
+			_.each( control.elements, function( element, property ) {
+				element.bind(function( value ) {
 					if ( element.element.is( 'input[type=checkbox]' ) ) {
 						value = ( value ) ? element.element.val() : '';
 					}
@@ -1082,12 +1080,12 @@
 				}
 			});
 
-			control.setting.bind(function ( to, from ) {
+			control.setting.bind(function( to, from ) {
 				if ( false === to ) {
 					control.container.remove();
 					// @todo this will need to now shift up any child menu items to take this parent's place, or the children should be deleted as well.
 				} else {
-					_.each( to, function ( value, key ) {
+					_.each( to, function( value, key ) {
 						if ( control.elements[key] ) {
 							control.elements[key].set( to[key] );
 						}
@@ -1162,7 +1160,7 @@
 		_setupTitleUI: function() {
 			var control = this;
 
-			control.setting.bind( function ( item ) {
+			control.setting.bind( function( item ) {
 				if ( ! item ) {
 					return;
 				}
@@ -1186,7 +1184,7 @@
 		 *
 		 * @returns {number}
 		 */
-		getDepth: function () {
+		getDepth: function() {
 			var control = this, setting = control.setting(), depth = 0;
 			if ( ! setting ) {
 				return 0;
@@ -1205,7 +1203,7 @@
 		/**
 		 * Amend the control's params with the data necessary for the JS template just in time.
 		 */
-		renderContent: function () {
+		renderContent: function() {
 
 			var control = this,
 				settingValue = control.setting(),
@@ -1264,7 +1262,7 @@
 			}
 		},
 
-		getMenuItemPostId: function () {
+		getMenuItemPostId: function() {
 			var matches = this.id.match( /^nav_menu_item\[(.+?)]/ );
 			if ( ! matches ) {
 				throw new Error( 'Failed to parse ID out setting ID: ' + this.id );
@@ -1459,7 +1457,7 @@
 			}
 
 			// Fix the position of the adjacent menu item
-			_.each( control.getMenuControl().getMenuItemControls(), function ( control ) {
+			_.each( control.getMenuControl().getMenuItemControls(), function( control ) {
 				if ( control.setting() && control.setting().position === clone.position ) {
 					var adjClone = _.clone( control.setting() );
 					adjClone.position = position;
@@ -1623,13 +1621,13 @@
 			 * preview's sending of the activeControls to result in this control
 			 * being deactivated.
 			 */
-			control.active.validate = function () {
+			control.active.validate = function() {
 				return api.section( control.section() ).active();
 			};
 
 			control.nameElement = new api.Element( control.container.find( '.menu-name-field' ) );
 
-			control.nameElement.bind(function ( value ) {
+			control.nameElement.bind(function( value ) {
 				var settingValue = control.setting();
 				if ( settingValue && settingValue.name !== value ) {
 					settingValue = _.clone( settingValue );
@@ -1641,7 +1639,7 @@
 				control.nameElement.set( settingValue.name );
 			}
 
-			control.setting.bind(function ( object ) {
+			control.setting.bind(function( object ) {
 				if ( object ) {
 					control.nameElement.set( object.name );
 				}
@@ -1672,7 +1670,7 @@
 			 * preview's sending of the activeControls to result in this control
 			 * being deactivated.
 			 */
-			control.active.validate = function () {
+			control.active.validate = function() {
 				return api.section( control.section() ).active();
 			};
 
@@ -1694,7 +1692,7 @@
 
 			// Add menu to Custom Menu widgets.
 			if ( control.setting() ) {
-				api.control.each( function ( widgetControl ) {
+				api.control.each( function( widgetControl ) {
 					if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
 						return;
 					}
@@ -1717,7 +1715,7 @@
 			control.elements = {};
 			control.elements.auto_add = new api.Element( control.container.find( 'input[type=checkbox].auto_add' ) );
 
-			control.elements.auto_add.bind(function ( auto_add ) {
+			control.elements.auto_add.bind(function( auto_add ) {
 				var settingValue = control.setting();
 				if ( settingValue && settingValue.auto_add !== auto_add ) {
 					settingValue = _.clone( settingValue );
@@ -1726,19 +1724,19 @@
 				}
 			});
 			control.elements.auto_add.set( control.setting().auto_add );
-			control.setting.bind(function ( object ) {
+			control.setting.bind(function( object ) {
 				if ( ! object ) {
 					return;
 				}
 				control.elements.auto_add.set( object.auto_add );
 			});
 
-			control.setting.bind( function ( to ) {
+			control.setting.bind( function( to ) {
 				if ( false === to ) {
 					control._handleDeletion();
 				} else {
 					// Update names in the Custom Menu widgets.
-					api.control.each( function ( widgetControl ) {
+					api.control.each( function( widgetControl ) {
 						if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
 							return;
 						}
@@ -1749,7 +1747,7 @@
 				}
 			} );
 
-			control.container.find( '.menu-delete' ).on( 'click keydown', function ( event ) {
+			control.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -1779,7 +1777,7 @@
 			});
 
 			menuList.on( 'sortstop', function() {
-				setTimeout( function () { // Next tick.
+				setTimeout( function() { // Next tick.
 					var menuItemContainerIds = control.$sectionContent.sortable( 'toArray' ),
 						menuItemControls = [],
 						position = 0,
@@ -1787,10 +1785,10 @@
 
 					control.isSorting = false;
 
-					_.each( menuItemContainerIds, function ( menuItemContainerId ) {
+					_.each( menuItemContainerIds, function( menuItemContainerId ) {
 						var menuItemId, menuItemControl;
 						menuItemId = parseInt( menuItemContainerId.replace( /^customize-control-nav_menu_item-/, '' ), 10 );
-						if ( !menuItemId ) {
+						if ( ! menuItemId ) {
 							return;
 						}
 						menuItemControl = api.control( 'nav_menu_item[' + String( menuItemId ) + ']' );
@@ -1799,7 +1797,7 @@
 						}
 					} );
 
-					_.each( menuItemControls, function ( menuItemControl ) {
+					_.each( menuItemControls, function( menuItemControl ) {
 						var setting = _.clone( menuItemControl.setting() );
 						position += 1;
 						priority += 1;
@@ -1911,7 +1909,7 @@
 		_setupLocations: function() {
 			var control = this;
 
-			control.container.find( '.assigned-menu-location' ).each(function () {
+			control.container.find( '.assigned-menu-location' ).each(function() {
 				var container = $( this ),
 					checkbox = container.find( 'input[type=checkbox]' ),
 					element,
@@ -1950,7 +1948,7 @@
 		_setupTitle: function() {
 			var control = this;
 
-			control.setting.bind( function ( menu ) {
+			control.setting.bind( function( menu ) {
 				if ( ! menu ) {
 					return;
 				}
@@ -2001,13 +1999,13 @@
 		 *
 		 * @returns {Number}
 		 */
-		getMenuTermId: function () {
+		getMenuTermId: function() {
 			var matches = this.setting.id.match( /^nav_menu\[(.+?)]/ ),
 				menuTermId = parseInt( matches[1], 10 );
 			return menuTermId;
 		},
 
-		confirmDelete: function () {
+		confirmDelete: function() {
 			var control = this;
 			if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
 				control.setting.set( false );
@@ -2044,7 +2042,7 @@
 				menuItemControls = [],
 				menuTermId = menuControl.getMenuTermId();
 
-			api.control.each(function ( control ) {
+			api.control.each(function( control ) {
 				if ( /^nav_menu_item\[/.test( control.id ) && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
 					menuItemControls.push( control );
 				}
@@ -2062,7 +2060,7 @@
 		addItemToMenu: function( item ) {
 			var menuControl = this, customizeId, settingArgs, setting, menuItemControl, placeholderId, position = 0, priority = 10;
 
-			_.each( menuControl.getMenuItemControls(), function ( control ) {
+			_.each( menuControl.getMenuItemControls(), function( control ) {
 				if ( control.setting() ) {
 					position = Math.max( position, control.setting().position );
 					priority = Math.max( priority, control.priority() );
@@ -2272,7 +2270,7 @@
 
 		var insertedMenuIdMapping = {};
 
-		_( data.nav_menu_updates ).each(function ( update ) {
+		_( data.nav_menu_updates ).each(function( update ) {
 			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, oldSection, newSection;
 			if ( 'inserted' === update.status ) {
 				if ( ! update.previous_term_id ) {
@@ -2336,7 +2334,7 @@
 				newSetting.preview();
 
 				// Update nav_menu_locations to reference the new ID.
-				api.each( function ( setting ) {
+				api.each( function( setting ) {
 					var wasSaved = api.state( 'saved' ).get();
 					if ( /^nav_menu_locations\[/.test( setting.id ) && setting.get() === update.previous_term_id ) {
 						setting.set( update.term_id );
