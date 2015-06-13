@@ -1802,11 +1802,12 @@
 					control.isSorting = false;
 
 					_.each( menuItemContainerIds, function( menuItemContainerId ) {
-						var menuItemId, menuItemControl;
-						menuItemId = parseInt( menuItemContainerId.replace( /^customize-control-nav_menu_item-/, '' ), 10 );
-						if ( ! menuItemId ) {
+						var menuItemId, menuItemControl, matches;
+						matches = menuItemContainerId.match( /^customize-control-nav_menu_item-(-?\d+)$/, '' );
+						if ( ! matches ) {
 							return;
 						}
+						menuItemId = parseInt( matches[1], 10 );
 						menuItemControl = api.control( 'nav_menu_item[' + String( menuItemId ) + ']' );
 						if ( menuItemControl ) {
 							menuItemControls.push( menuItemControl );
