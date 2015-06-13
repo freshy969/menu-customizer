@@ -64,7 +64,7 @@
 .wp-customizer .menu-item-settings .description-thin {
 	width: 100%;
 	height: auto;
-	margin: 0 0 12px 0;
+	margin: 0 0 8px 0;
 }
 
 .wp-customizer .menu-item-settings input[type="text"] {
@@ -280,6 +280,10 @@
 /* Duplicates `.nav-menus-php .menu-item-edit-active .item-edit:before {}` in common.css:2271. */
 .wp-customizer .menu-item .menu-item-edit-active .item-edit:before {
 	content: '\f142';
+}
+
+.wp-customizer .menu-item-settings p.description {
+	font-style: normal;
 }
 
 .wp-customizer .menu-settings dl {
