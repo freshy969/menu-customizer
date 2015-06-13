@@ -6,7 +6,7 @@
 	 * Set up wpNavMenu for drag and drop.
 	 */
 	wpNavMenu.originalInit = wpNavMenu.init;
-	wpNavMenu.options.menuItemDepthPerLevel = 15;
+	wpNavMenu.options.menuItemDepthPerLevel = 20;
 	wpNavMenu.options.sortableItems         = '.customize-control-nav_menu_item';
 	wpNavMenu.init = function() {
 		this.jQueryExtensions();
