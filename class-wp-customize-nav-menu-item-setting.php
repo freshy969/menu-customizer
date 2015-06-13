@@ -232,6 +232,12 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		$this->_previewed_blog_id = get_current_blog_id();
 
 		add_filter( 'wp_get_nav_menu_items', array( $this, 'filter_wp_get_nav_menu_items' ), 10, 3 );
+
+		$sort_callback = array( __CLASS__, 'sort_wp_get_nav_menu_items' );
+		if ( ! has_filter( 'wp_get_nav_menu_items', $sort_callback ) ) {
+			add_filter( 'wp_get_nav_menu_items', array( __CLASS__, 'sort_wp_get_nav_menu_items' ), 1000, 3 );
+		}
+
 		// @todo Add get_post_metadata filters for plugins to add their data.
 	}
 
@@ -297,27 +303,37 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 			// Not found so we have to append it..
 			if ( ! $mutated ) {
 				$items[] = $this->value_as_wp_post_nav_menu_item();
-				$mutated = true;
 			}
 		}
 
-		// Re-apply the tail logic also applied on $items by wp_get_nav_menu_items().
-		if ( $mutated ) {
-			// @todo We should probably re-apply some constraints imposed by $args.
-			unset( $args['include'] );
+		return $items;
+	}
 
-			// Remove invalid items only in frontend.
-			if ( ! is_admin() ) {
-				$items = array_filter( $items, '_is_valid_nav_menu_item' );
-			}
+	/**
+	 * Re-apply the tail logic also applied on $items by wp_get_nav_menu_items().
+	 *
+	 * @see wp_get_nav_menu_items()
+	 *
+	 * @param array  $items An array of menu item post objects.
+	 * @param object $menu  The menu object.
+	 * @param array  $args  An array of arguments used to retrieve menu item objects.
+	 * @return array
+	 */
+	static function sort_wp_get_nav_menu_items( $items, $menu, $args ) {
+		// @todo We should probably re-apply some constraints imposed by $args.
+		unset( $args['include'] );
 
-			if ( ARRAY_A === $args['output'] ) {
-				$GLOBALS['_menu_item_sort_prop'] = $args['output_key'];
-				usort( $items, '_sort_nav_menu_items' );
-				$i = 1;
-				foreach ( $items as $k => $item ) {
-					$items[ $k ]->$args['output_key'] = $i++;
-				}
+		// Remove invalid items only in frontend.
+		if ( ! is_admin() ) {
+			$items = array_filter( $items, '_is_valid_nav_menu_item' );
+		}
+
+		if ( ARRAY_A === $args['output'] ) {
+			$GLOBALS['_menu_item_sort_prop'] = $args['output_key'];
+			usort( $items, '_sort_nav_menu_items' );
+			$i = 1;
+			foreach ( $items as $k => $item ) {
+				$items[ $k ]->$args['output_key'] = $i++;
 			}
 		}
 
