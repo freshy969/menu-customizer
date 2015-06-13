@@ -555,6 +555,9 @@ class WP_Customize_Menus {
 		}
 		$taxonomies = get_taxonomies( array( 'show_in_nav_menus' => true ), 'objects' );
 		foreach ( $taxonomies as $slug => $taxonomy ) {
+			if ( 'post_format' === $taxonomy && ! current_theme_supports( 'post-formats' ) ) {
+				continue;
+			}
 			$items['taxonomies'][ $slug ] = array(
 				'label' => $taxonomy->labels->singular_name,
 			);
