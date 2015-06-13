@@ -90,6 +90,7 @@ class WP_Customize_Menus {
 					'id'          => 'home',
 					'title'       => _x( 'Home', 'nav menu home label' ),
 					'type'        => 'custom',
+					'type_label'  => __( 'Custom Link' ),
 					'object'      => '',
 					'url'         => home_url(),
 				);
@@ -108,6 +109,7 @@ class WP_Customize_Menus {
 					'id'         => "post-{$post->ID}",
 					'title'      => html_entity_decode( get_the_title( $post ), ENT_HTML401 | ENT_QUOTES, get_bloginfo( 'charset' ) ),
 					'type'       => 'post_type',
+					'type_label' => get_post_type_object( $post->post_type )->labels->singular_name,
 					'object'     => $post->post_type,
 					'object_id'  => (int) $post->ID,
 				);
@@ -135,6 +137,7 @@ class WP_Customize_Menus {
 					'id'         => "term-{$term->term_id}",
 					'title'      => $term->name,
 					'type'       => 'taxonomy',
+					'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
 					'object'     => $term->taxonomy,
 					'object_id'  => $term->term_id,
 				);
@@ -214,9 +217,10 @@ class WP_Customize_Menus {
 			$results[] = array(
 				'id'         => 'post-' . $post->ID,
 				'type'       => 'post_type',
+				'type_label' => $post_type_objects[ $post->post_type ]->labels->singular_name,
 				'object'     => $post->post_type,
 				'object_id'  => intval( $post->ID ),
-				'title'      => $post->post_title,
+				'title'      => html_entity_decode( get_the_title( $post ), ENT_HTML401 | ENT_QUOTES, get_bloginfo( 'charset' ) ),
 			);
 		}
 		// Query taxonomy terms.
@@ -230,6 +234,7 @@ class WP_Customize_Menus {
 			$results[] = array(
 				'id'         => 'term-' . $term->term_id,
 				'type'       => 'taxonomy',
+				'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
 				'object'     => $term->taxonomy,
 				'object_id'  => intval( $term->term_id ),
 				'title'      => $term->name,
