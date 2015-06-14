@@ -1,4 +1,10 @@
 <?php
+/**
+ * New Menu Customize Control Class
+ *
+ * @package WordPress
+ * @subpackage Customize
+ */
 
 /**
  * New Menu Customize Control Class
@@ -21,6 +27,6 @@ class WP_New_Menu_Customize_Control extends WP_Customize_Control {
 		?>
 		<button type="button" class="button button-primary" id="create-new-menu-submit"><?php _e( 'Create Menu' ); ?></button>
 		<span class="spinner"></span>
-	<?php
+		<?php
 	}
 }
