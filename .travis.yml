@@ -12,8 +12,8 @@ node_js:
     - 0.10
 
 env:
-    - WP_MULTISITE=0
-    - WP_MULTISITE=1
+    - WP_VERSION=trunk WP_MULTISITE=0
+    - WP_VERSION=trunk WP_MULTISITE=1
 
 branches:
     only:
