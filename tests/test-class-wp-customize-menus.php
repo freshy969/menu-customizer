@@ -87,34 +87,18 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 
 		// Create posts
 		$post_ids = array();
-		$post_ids[] = $this->factory->post->create( array(
-			'post_author' => get_current_user_id(),
-			'post_status' => 'publish',
-			'post_content' => rand_str(),
-			'post_title' => 'Search Test',
-			'post_type' => 'post'
-		) );
-		$post_ids[] = $this->factory->post->create( array(
-			'post_author' => get_current_user_id(),
-			'post_status' => 'publish',
-			'post_content' => rand_str(),
-			'post_title' => 'Some Other Title',
-			'post_type' => 'post'
-		) );
+		$post_ids[] = $this->factory->post->create( array( 'post_title' => 'Search Test' ) );
+		$post_ids[] = $this->factory->post->create( array( 'post_title' => 'Some Other Title' ) );
 		
 		// Create terms
 		$term_ids = array();
-		$term_ids[] = $this->factory->category->create( array(
-			'name' => 'Dogs Are Cool',
-		) );
-
-		$term_ids[] = $this->factory->category->create( array(
-			'name' => 'Cats Drool',
-		) );
+		$term_ids[] = $this->factory->category->create( array( 'name' => 'Dogs Are Cool' ) );
+		$term_ids[] = $this->factory->category->create( array( 'name' => 'Cats Drool' ) );
 		
 		// Test empty results
+		$expected = array();
 		$results = $menus->search_available_items_query( array( 'pagenum' => 1, 's' => 'This Does NOT Exist' ) );
-		$this->assertEquals( $results, array() );
+		$this->assertEquals( $expected, $results );
 
 		// Test posts
 		foreach ( $post_ids as $post_id ) {
