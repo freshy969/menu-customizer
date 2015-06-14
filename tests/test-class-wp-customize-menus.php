@@ -1,5 +1,17 @@
 <?php
+/**
+ * Tests WP_Customize_Menus.
+ *
+ * @package WordPress
+ * @subpackage Customize
+ * @since 4.3.0
+ */
 
+/**
+ * Tests WP_Customize_Menus.
+ *
+ * @see WP_Customize_Menus
+ */
 class Test_WP_Customize_Menus extends WP_UnitTestCase {
 
 	/**
