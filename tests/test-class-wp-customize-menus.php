@@ -205,7 +205,40 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 */
 	function test_available_item_types() {
 
-		$this->markTestIncomplete( 'This test has not been implemented.' );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
+		$expected = array(
+			'postTypes' => array(
+				'post' => array( 'label' => 'Post' ),
+				'page' => array( 'label' => 'Page' ),
+			),
+			'taxonomies' => array(
+				'category' => array( 'label' => 'Category' ),
+				'post_tag' => array( 'label' => 'Tag' ),
+			),
+		);
+		if ( current_theme_supports( 'post-formats' ) ) {
+			$expected['taxonomies']['post_format'] = array( 'label' => 'Format' );
+		}
+		$this->assertEquals( $expected, $menus->available_item_types() );
+		
+		register_taxonomy( 'wptests_tax', array( 'post' ), array( 'labels' => array( 'name' => 'Foo' ) ) );
+		$expected = array(
+			'postTypes' => array(
+				'post' => array( 'label' => 'Post' ),
+				'page' => array( 'label' => 'Page' ),
+			),
+			'taxonomies' => array(
+				'category' => array( 'label' => 'Category' ),
+				'post_tag' => array( 'label' => 'Tag' ),
+				'wptests_tax' => array( 'label' => 'Foo' ),
+			),
+		);
+		if ( current_theme_supports( 'post-formats' ) ) {
+			$wptests_tax = array_pop( $expected['taxonomies'] );
+			$expected['taxonomies']['post_format'] = array( 'label' => 'Format' );
+			$expected['taxonomies']['wptests_tax'] = $wptests_tax;
+		}
+		$this->assertEquals( $expected, $menus->available_item_types() );
 
 	}
 
