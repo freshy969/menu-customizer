@@ -108,7 +108,7 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 				'type_label' => get_post_type_object( 'post' )->labels->singular_name,
 				'object' => 'post',
 				'object_id' => intval( $post_id ),
-				'title' => html_entity_decode( get_the_title( $post_id ), ENT_HTML401 | ENT_QUOTES, get_bloginfo( 'charset' ) ),
+				'title' => html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, get_bloginfo( 'charset' ) ),
 			);
 			wp_set_object_terms( $post_id, $term_ids, 'category' );
 			$s = sanitize_text_field( wp_unslash( get_the_title( $post_id ) ) );
