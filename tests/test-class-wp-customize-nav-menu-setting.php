@@ -180,7 +180,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertEquals( 'Description 1', $value['description'] );
 		$this->assertEquals( 0, $value['parent'] );
 
-		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
+		$term = (array) wp_get_nav_menu_object( $menu_id );
 
 		$this->assertEqualSets(
 			wp_array_slice_assoc( $value, array( 'name', 'description', 'parent' ) ),
@@ -192,7 +192,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->assertEquals( 'Name 2', $value['name'] );
 		$this->assertEquals( 'Description 2', $value['description'] );
 		$this->assertEquals( 1, $value['parent'] );
-		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
+		$term = (array) wp_get_nav_menu_object( $menu_id );
 		$this->assertEqualSets( $value, wp_array_slice_assoc( $term, array_keys( $value ) ) );
 
 		$menu_object = wp_get_nav_menu_object( $menu_id );
@@ -226,7 +226,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$value = $setting->value();
 		$this->assertEquals( $post_value, $value );
 
-		$term = get_term( $menu_id, 'nav_menu', ARRAY_A );
+		$term = (array) wp_get_nav_menu_object( $menu_id );
 		$this->assertNotEmpty( $term );
 		$this->assertNotInstanceOf( 'WP_Error', $term );
 		$this->assertEqualSets( $post_value, wp_array_slice_assoc( $term, array_keys( $value ) ) );
@@ -266,10 +266,10 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$this->wp_customize->set_post_value( $setting_id, false );
 
 		$this->assertInternalType( 'array', $setting->value() );
-		$this->assertInternalType( 'array', get_term( $menu_id, 'nav_menu', ARRAY_A ) );
+		$this->assertInternalType( 'object', wp_get_nav_menu_object( $menu_id ) );
 		$setting->preview();
 		$this->assertFalse( $setting->value() );
-		$this->assertFalse( get_term( $menu_id, 'nav_menu', ARRAY_A ) );
+		$this->assertFalse( wp_get_nav_menu_object( $menu_id ) );
 
 		$nav_menu_options = $this->get_nav_menu_items_option();
 		$this->assertNotContains( $menu_id, $nav_menu_options['auto_add'] );
@@ -389,7 +389,7 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 		$nav_menu_options = $this->get_nav_menu_items_option();
 		$this->assertContains( $setting->term_id, $nav_menu_options['auto_add'] );
 
-		$menu = get_term( $setting->term_id, 'nav_menu' );
+		$menu = wp_get_nav_menu_object( $setting->term_id );
 		unset( $post_value['auto_add'] );
 		$this->assertEqualSets( $post_value, wp_array_slice_assoc( (array) $menu, array_keys( $post_value ) ) );
 

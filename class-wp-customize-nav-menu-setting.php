@@ -16,7 +16,6 @@
  * @since 4.3.0
  *
  * @see wp_get_nav_menu_object()
- * @see get_term()
  * @see WP_Customize_Setting
  */
 class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
@@ -37,9 +36,7 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	/**
 	 * Default setting value;
 	 *
-	 * @see get_term_by()
-	 *
-	 * @todo Include object_ids for the menu items associated with this nav_menu?
+	 * @see wp_get_nav_menu_object()
 	 *
 	 * @var array
 	 */
@@ -48,7 +45,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		'description' => '',
 		'parent' => 0,
 		'auto_add' => false,
-		// @todo theme_locations
 	);
 
 	/**
@@ -62,8 +58,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 * The term ID represented by this setting instance.
 	 *
 	 * A negative value represents a placeholder ID for a new menu not yet saved.
-	 *
-	 * @todo Should we use GUIDs instead of negative integers for placeholders?
 	 *
 	 * @var int
 	 */
@@ -199,87 +193,59 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 		$this->_original_value = $this->value();
 		$this->_previewed_blog_id = get_current_blog_id();
 
-		add_filter( 'pre_get_term', array( $this, 'filter_pre_get_term' ), 10, 2 );
+		add_filter( 'wp_get_nav_menu_object', array( $this, 'filter_wp_get_nav_menu_object' ), 10, 2 );
 		add_filter( 'default_option_nav_menu_options', array( $this, 'filter_nav_menu_options' ) );
 		add_filter( 'option_nav_menu_options', array( $this, 'filter_nav_menu_options' ) );
 	}
 
 	/**
-	 * Filter the get_term() result to supply the previewed menu object.
+	 * Filter the wp_get_nav_menu_object() result to supply the previewed menu object.
 	 *
-	 * @see get_term()
-	 * @param null|mixed $pre        Potential override of the normal return value for get_term().
-	 * @param array      $args       These arguments are defined on get_term().
-	 * @return bool|array|object
+	 * Requesting a nav_menu object by anything but ID is not supported.
+	 *
+	 * @see wp_get_nav_menu_object()
+	 * @param object|null $menu_obj   Object returned by wp_get_nav_menu_object().
+	 * @param string      $menu_id    ID of the nav_menu term. Requests by slug or name will be ignored.
+	 * @return object|null
 	 */
-	function filter_pre_get_term( $pre, $args ) {
+	function filter_wp_get_nav_menu_object( $menu_obj, $menu_id ) {
 		$ok = (
-			self::TAXONOMY === $args['taxonomy']
-			&&
 			get_current_blog_id() === $this->_previewed_blog_id
 			&&
-			$args['term'] === $this->term_id
+			is_int( $menu_id )
+			&&
+			$menu_id === $this->term_id
 		);
 		if ( ! $ok ) {
-			return $pre;
+			return $menu_obj;
 		}
 
-		$menu = $this->value();
+		$setting_value = $this->value();
 
 		// Handle deleted menus.
-		if ( false === $menu ) {
+		if ( false === $setting_value ) {
 			return false;
 		}
 
 		// Handle sanitization failure by preventing short-circuiting.
-		if ( null === $menu ) {
-			return $pre;
+		if ( null === $setting_value ) {
+			return $menu_obj;
 		}
 
-		$_term = (object) array_merge(
+		$menu_obj = (object) array_merge(
 			array(
 				'term_id' => $this->term_id,
 				'term_taxonomy_id' => $this->term_id,
-				'slug' => sanitize_title( $menu['name'] ),
+				'slug' => sanitize_title( $setting_value['name'] ),
 				'count' => 0,
 				'term_group' => 0,
 				'taxonomy' => self::TAXONOMY,
-				'filter' => $args['filter'],
+				'filter' => 'raw',
 			),
-			$menu
+			$setting_value
 		);
 
-		$taxonomy = $args['taxonomy'];
-		$filter = $args['filter'];
-		$output = $args['output'];
-
-		/*
-		 * The following lines are adapted from get_term().
-		 */
-
-		/** This filter is documented in wp-includes/taxonomy.php */
-		$_term = apply_filters( 'get_term', $_term, $args['taxonomy'] );
-
-		/** This filter is documented in wp-includes/taxonomy.php */
-		$_term = apply_filters( "get_$taxonomy", $_term, $taxonomy );
-
-		$_term = sanitize_term( $_term, $taxonomy, $filter );
-
-		// Placeholder (negative) term IDs get blown away by sanitize_term(), so we set them here.
-		$_term->term_id = $this->term_id;
-		$_term->term_taxonomy_id = $this->term_id;
-
-		if ( OBJECT === $output ) {
-			return $_term;
-		} elseif ( ARRAY_A === $output ) {
-			$__term = get_object_vars( $_term );
-			return $__term;
-		} elseif ( ARRAY_N === $output ) {
-			$__term = array_values( get_object_vars( $_term ) );
-			return $__term;
-		} else {
-			return $_term;
-		}
+		return $menu_obj;
 	}
 
 	/**
@@ -406,7 +372,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 				}
 				$auto_add = $value['auto_add'];
 			}
-			// @todo Send back the saved sanitized value to update the client?
 		}
 
 		if ( null !== $auto_add ) {
@@ -425,7 +390,6 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 					continue;
 				}
 				$post_value = $setting->post_value( null );
-				// @todo We need to make sure this change gets applied to the client as well.
 				if ( ! is_null( $post_value ) && $this->previous_term_id === intval( $post_value ) ) {
 					$this->manager->set_post_value( $setting->id, $this->term_id );
 					$setting->save();
