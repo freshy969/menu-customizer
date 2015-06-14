@@ -328,7 +328,7 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 			'classes' => 'hello " inject="',
 			'xfn' => 'hello " inject="',
 			'status' => 'forbidden',
-			'original_title' => '',
+			'original_title' => 'Hi<script>alert(1)</script>',
 			'nav_menu_term_id' => 'heilo',
 		);
 
@@ -348,6 +348,7 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 		$this->assertEquals( 'hello  inject', $sanitized['classes'] );
 		$this->assertEquals( 'hello  inject', $sanitized['xfn'] );
 		$this->assertEquals( 'publish', $sanitized['status'] );
+		$this->assertEquals( 'Hi', $sanitized['original_title'] );
 		$this->assertEquals( 0, $sanitized['nav_menu_term_id'] );
 	}
 
