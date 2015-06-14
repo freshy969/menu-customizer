@@ -1,9 +1,17 @@
 <?php
+/**
+ * Customize Menu Location Control Class
+ *
+ * @package WordPress
+ * @subpackage Customize
+ */
 
 /**
  * Customize Menu Location Control Class
  *
  * This custom control is only needed for JS.
+ *
+ * @since 4.3.0
  */
 class WP_Customize_Nav_Menu_Location_Control extends WP_Customize_Control {
 	/**

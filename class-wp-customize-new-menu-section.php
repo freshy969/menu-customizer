@@ -1,4 +1,10 @@
 <?php
+/**
+ * Customize Menu Section Class
+ *
+ * @package WordPress
+ * @subpackage Customize
+ */
 
 /**
  * Customize Menu Section Class
