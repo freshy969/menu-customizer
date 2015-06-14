@@ -137,11 +137,11 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test value method.
+	 * Test value method with post.
 	 *
 	 * @see WP_Customize_Nav_Menu_Item_Setting::value()
 	 */
-	function test_value() {
+	function test_value_type_post_type() {
 		do_action( 'customize_register', $this->wp_customize );
 
 		$post_id = $this->factory->post->create( array( 'post_title' => 'Hello World' ) );
@@ -168,6 +168,7 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 		$this->assertEquals( $menu_item->type, $value['type'] );
 		$this->assertEquals( $menu_item->object_id, $value['object_id'] );
 		$this->assertEquals( $menu_id, $value['nav_menu_term_id'] );
+		$this->assertEquals( 'Hello World', $value['original_title'] );
 
 		$other_menu_id = wp_create_nav_menu( 'Menu2' );
 		wp_update_nav_menu_item( $other_menu_id, $item_id, array(
@@ -176,6 +177,41 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 		$value = $setting->value();
 		$this->assertEquals( 'Hola', $value['title'] );
 		$this->assertEquals( $other_menu_id, $value['nav_menu_term_id'] );
+	}
+
+	/**
+	 * Test value method with taxonomy.
+	 *
+	 * @see WP_Customize_Nav_Menu_Item_Setting::value()
+	 */
+	function test_value_type_taxonomy() {
+		do_action( 'customize_register', $this->wp_customize );
+
+		$tax_id = $this->factory->category->create( array( 'name' => 'Salutations' ) );
+
+		$menu_id = wp_create_nav_menu( 'Menu' );
+		$item_title = 'Greetings';
+		$item_id = wp_update_nav_menu_item( $menu_id, 0, array(
+			'menu-item-type' => 'taxonomy',
+			'menu-item-object' => 'category',
+			'menu-item-object-id' => $tax_id,
+			'menu-item-title' => $item_title,
+			'menu-item-status' => 'publish',
+		) );
+
+		$post = get_post( $item_id );
+		$menu_item = wp_setup_nav_menu_item( $post );
+		$this->assertEquals( $item_title, $menu_item->title );
+
+		$setting_id = "nav_menu_item[$item_id]";
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, $setting_id );
+
+		$value = $setting->value();
+		$this->assertEquals( $menu_item->title, $value['title'] );
+		$this->assertEquals( $menu_item->type, $value['type'] );
+		$this->assertEquals( $menu_item->object_id, $value['object_id'] );
+		$this->assertEquals( $menu_id, $value['nav_menu_term_id'] );
+		$this->assertEquals( 'Salutations', $value['original_title'] );
 	}
 
 	/**

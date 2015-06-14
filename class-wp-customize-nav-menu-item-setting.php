@@ -194,6 +194,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 					);
 					$value['position'] = $item->menu_order;
 					$value['status'] = $item->post_status;
+					$value['original_title'] = '';
 					$menus = wp_get_post_terms( $post->ID, WP_Customize_Nav_Menu_Setting::TAXONOMY, array(
 						'fields' => 'ids',
 					) );
