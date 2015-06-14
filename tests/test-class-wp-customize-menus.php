@@ -185,7 +185,16 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 */
 	function test_intval_base10() {
 
-		$this->markTestIncomplete( 'This test has not been implemented.' );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
+
+		$this->assertEquals( 2, $menus->intval_base10( 2 ) );
+		$this->assertEquals( 4, $menus->intval_base10( 4.1 ) );
+		$this->assertEquals( 4, $menus->intval_base10( '4' ) );
+		$this->assertEquals( 4, $menus->intval_base10( '04' ) );
+		$this->assertEquals( 42, $menus->intval_base10( +42 ) );
+		$this->assertEquals( -42, $menus->intval_base10( -42 ) );
+		$this->assertEquals( 26, $menus->intval_base10( 0x1A ) );
+		$this->assertEquals( 0, $menus->intval_base10( array() ) );
 
 	}
 
