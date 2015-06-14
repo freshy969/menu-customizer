@@ -97,6 +97,24 @@ class Test_WP_Customize_Nav_Menu_Setting extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test empty constructor.
+	 */
+	function test_construct_empty_menus() {
+		do_action( 'customize_register', $this->wp_customize );
+		$_wp_customize = $this->wp_customize;
+		unset($_wp_customize->menus);
+
+		$exception = null;
+		try {
+			$bad_setting = new WP_Customize_Nav_Menu_Setting( $_wp_customize, 'nav_menu_item[123]' );
+			unset( $bad_setting );
+		} catch ( Exception $e ) {
+			$exception = $e;
+		}
+		$this->assertInstanceOf( 'Exception', $exception );
+	}
+
+	/**
 	 * Test constructor for placeholder (draft) menu.
 	 *
 	 * @see WP_Customize_Nav_Menu_Setting::__construct()
