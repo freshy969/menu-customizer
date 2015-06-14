@@ -191,6 +191,7 @@ class WP_Customize_Menus {
 	public function search_available_items_query( $args = array() ) {
 		$post_type_objects = get_post_types( array( 'show_in_nav_menus' => true ), 'objects' );
 		$post_type_names = array_keys( $post_type_objects );
+		$results = array();
 		$query = array(
 			'post_type' => $post_type_names,
 			'suppress_filters' => true,
@@ -204,42 +205,46 @@ class WP_Customize_Menus {
 			$query['s'] = $args['s'];
 		}
 		$query['offset'] = $args['pagenum'] > 1 ? $query['posts_per_page'] * ( $args['pagenum'] - 1 ) : 0;
-		// Do main query.
-		$get_posts = new WP_Query();
-		$posts = $get_posts->query( $query );
+
+		// Query posts.
+		$get_posts = new WP_Query( $query );
+
 		// Check if any posts were found.
-		if ( ! $get_posts->post_count ) {
-			return array();
+		if ( $get_posts->post_count ) {
+			foreach ( $get_posts->posts as $post ) {
+				$results[] = array(
+					'id'         => 'post-' . $post->ID,
+					'type'       => 'post_type',
+					'type_label' => $post_type_objects[ $post->post_type ]->labels->singular_name,
+					'object'     => $post->post_type,
+					'object_id'  => intval( $post->ID ),
+					'title'      => html_entity_decode( get_the_title( $post ), ENT_HTML401 | ENT_QUOTES, get_bloginfo( 'charset' ) ),
+				);
+			}
 		}
-		// Build results.
-		$results = array();
-		foreach ( $posts as $post ) {
-			$results[] = array(
-				'id'         => 'post-' . $post->ID,
-				'type'       => 'post_type',
-				'type_label' => $post_type_objects[ $post->post_type ]->labels->singular_name,
-				'object'     => $post->post_type,
-				'object_id'  => intval( $post->ID ),
-				'title'      => html_entity_decode( get_the_title( $post ), ENT_HTML401 | ENT_QUOTES, get_bloginfo( 'charset' ) ),
-			);
-		}
+
 		// Query taxonomy terms.
 		$taxonomies = get_taxonomies( array( 'show_in_nav_menus' => true ), 'names' );
 		$terms = get_terms( $taxonomies, array(
 			'name__like' => $args['s'],
 			'number' => 20,
 			'offset' => 20 * ($args['pagenum'] - 1),
-		));
-		foreach ( $terms as $term ) {
-			$results[] = array(
-				'id'         => 'term-' . $term->term_id,
-				'type'       => 'taxonomy',
-				'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
-				'object'     => $term->taxonomy,
-				'object_id'  => intval( $term->term_id ),
-				'title'      => $term->name,
-			);
+		) );
+
+		// Check if any taxonomies were found.
+		if ( ! empty( $terms ) ) {
+			foreach ( $terms as $term ) {
+				$results[] = array(
+					'id'         => 'term-' . $term->term_id,
+					'type'       => 'taxonomy',
+					'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
+					'object'     => $term->taxonomy,
+					'object_id'  => intval( $term->term_id ),
+					'title'      => $term->name,
+				);
+			}
 		}
+
 		return $results;
 	}
 
