@@ -5,7 +5,7 @@ Manage your Menus in the Customizer. WordPress core feature-plugin.
 
 **Contributors:** [celloexpressions](https://profiles.wordpress.org/celloexpressions), [wordpressdotorg](https://profiles.wordpress.org/wordpressdotorg)  
 **Tags:** [menus](https://wordpress.org/plugins/tags/menus), [custom menus](https://wordpress.org/plugins/tags/custom menus), [customizer](https://wordpress.org/plugins/tags/customizer), [theme customizer](https://wordpress.org/plugins/tags/theme customizer), [gsoc](https://wordpress.org/plugins/tags/gsoc)  
-**Requires at least:** 4.3-alpha  
+**Requires at least:** 4.3-alpha-32764  
 **Tested up to:** trunk  
 **Stable tag:** 0.5  
 **License:** GPLv2  
