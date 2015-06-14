@@ -36,11 +36,11 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * Test constructor.
 	 *
 	 * @see WP_Customize_Nav_Menu_Setting::__construct()
-	*/
+	 */
 	function test_construct() {
 		do_action( 'customize_register', $this->wp_customize );
 		$menus = new WP_Customize_Menus( $this->wp_customize );
-		$this->assertInstanceOf( 'WP_Customize_Menus', $menus->manager );
+		$this->assertInstanceOf( 'WP_Customize_Manager', $menus->manager );
 	}
 
 }
