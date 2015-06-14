@@ -425,7 +425,6 @@
 			this.currentMenuControl.addItemToMenu( menuItem );
 
 			// Reset the custom link form.
-			// @todo: decide whether this should be done as a callback after adding the item, as it is in nav-menu.js.
 			itemUrl.val( 'http://' );
 			itemName.val( '' );
 		},
@@ -1028,25 +1027,21 @@
 			template = wp.template( 'menu-item-reorder-nav' );
 
 			// Add the menu item reordering elements to the menu item control.
-			this.container.find( '.item-controls' ).after( template );
+			control.container.find( '.item-controls' ).after( template );
 
 			// Handle clicks for up/down/left-right on the reorder nav.
-			$reorderNav = this.container.find( '.menu-item-reorder-nav' );
+			$reorderNav = control.container.find( '.menu-item-reorder-nav' );
 			$reorderNav.find( '.menus-move-up, .menus-move-down, .menus-move-left, .menus-move-right' ).on( 'click keypress', function( event ) {
 				if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
 					return;
 				}
-				$( this ).focus();
+				var moveBtn = $( this );
+				moveBtn.focus();
 
-				var isMoveUp = $( this ).is( '.menus-move-up' ),
-					isMoveDown = $( this ).is( '.menus-move-down' ),
-					isMoveLeft = $( this ).is( '.menus-move-left' ),
-					isMoveRight = $( this ).is( '.menus-move-right' ),
-					i = control.getMenuItemPosition();
-
-				if ( ( isMoveUp && 0 === i ) || ( isMoveDown && i === control.getMenuControl().setting().length - 1 ) ) {
-					return;
-				}
+				var isMoveUp = moveBtn.is( '.menus-move-up' ),
+					isMoveDown = moveBtn.is( '.menus-move-down' ),
+					isMoveLeft = moveBtn.is( '.menus-move-left' ),
+					isMoveRight = moveBtn.is( '.menus-move-right' );
 
 				if ( isMoveUp ) {
 					control.moveUp();
@@ -1058,7 +1053,7 @@
 					control.moveRight();
 				}
 
-				$( this ).focus(); // Re-focus after the container was moved.
+				moveBtn.focus(); // Re-focus after the container was moved.
 			} );
 		},
 
@@ -1102,17 +1097,32 @@
 					control.container.remove();
 					// @todo this will need to now shift up any child menu items to take this parent's place, or the children should be deleted as well.
 				} else {
+					// Update the elements' values when the setting changes.
 					_.each( to, function( value, key ) {
-						if ( control.elements[key] ) {
-							control.elements[key].set( to[key] );
+						if ( control.elements[ key] ) {
+							control.elements[ key ].set( to[ key ] );
 						}
 					} );
 
+					// Handle UI updates when the position or depth (parent) change.
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
 						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
 						control.priority.set( 10 + control.setting().position );
 
+						/*
 						// @todo self._applyCardinalOrderClassNames();
+						// Get the updated depth
+						var newDepth = control.getDepth();
+
+						// Update the depth UI class
+						if ( newDepth !== depth ) {
+							control.container.data( 'item-depth', newDepth );
+							// @todo remove any existing menu-item-depth control.container.removeClass( 'menu-item-depth-' + String( depth ) );
+							control.container.addClass( 'menu-item-depth-' + String( newDepth ) );
+						}
+						*/
+
+						// @todo Make sure we apply whatever logic is present in sortstop.
 					}
 				}
 			});
@@ -1253,7 +1263,7 @@
 			control.params.xfn = settingValue.xfn;
 			control.params.description = settingValue.description;
 			control.params.parent = settingValue.menu_item_parent;
-			control.params.menu_item_id = control.getMenuItemPostId(); // @todo When the control.id changes, this needs to be updated.
+			control.params.menu_item_id = control.getMenuItemPostId();
 			control.params.original_title = settingValue.original_title || '';
 
 			control.container.data( 'item-depth', control.params.depth );
@@ -1391,55 +1401,25 @@
 		},
 
 		/**
-		 * Get the position (index) of the item in the containing menu.
-		 *
-		 * @returns {Number|null}
-		 */
-		getMenuItemPosition: function() {
-			var control = this;
-			return control.setting().position;
-		},
-
-		/**
 		 * Move menu item up one in the menu.
 		 */
 		moveUp: function() {
-			// Update menu control setting.
-			this._moveMenuItemByOne( -1 );
-			// Update UI.
-			var prev = $( this.container ).prev();
-			prev.before( $( this.container ) );
+			this._changePosition( -1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedUp );
-			// Maybe update parent & depth if it's a sub-item.
-			if ( 0 !== this.getDepth() ) {
-				// @todo
-			}
-			// @todo also move children
-			this.getMenuControl()._applyCardinalOrderClassNames();
 		},
 
 		/**
 		 * Move menu item up one in the menu.
 		 */
 		moveDown: function() {
-			// Update menu control setting.
-			this._moveMenuItemByOne( 1 );
-			// Update UI.
-			var next = $( this.container ).next();
-			next.after( $( this.container ) );
+			this._changePosition( 1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedDown );
-			// Maybe update parent & depth if it's a sub-item.
-			if ( 0 !== this.getDepth() ) {
-				// @todo
-			}
-			// @todo also move children
-			this.getMenuControl()._applyCardinalOrderClassNames();
 		},
 		/**
 		 * Move menu item and all children up one level of depth.
 		 */
 		moveLeft: function() {
-			this._moveMenuItemDepthByOne( -1 );
+			this._changeDepth( -1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedLeft );
 		},
 
@@ -1447,173 +1427,161 @@
 		 * Move menu item and children one level deeper, as a submenu of the previous item.
 		 */
 		moveRight: function() {
-			this._moveMenuItemDepthByOne( 1 );
+			this._changeDepth( 1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedRight );
 		},
 
 		/**
+		 * Note that this will trigger a UI update, causing child items to
+		 * move as well and cardinal order class names to be updated.
+		 *
 		 * @private
 		 *
 		 * @param {Number} offset 1|-1
 		 */
-		_moveMenuItemByOne: function( offset ) {
+		_changePosition: function( offset ) {
 			var control = this,
-				position = control.getMenuItemPosition(),
-				parent = control.setting().menu_item_parent,
-				depth = control.getDepth(),
-				clone = _.clone( control.setting() );
+				adjacentSetting,
+				settingValue = _.clone( control.setting() ),
+				siblingSettings = [],
+				realPosition;
 
-			// Update menu item position field or return.
-			if ( 1 === offset ) {
-				clone.position = position + 1;
-			} else if ( -1 === offset ) {
-				clone.position = position - 1;
-			} else {
+			if ( 1 !== offset && -1 !== offset ) {
+				throw new Error( 'Offset changes by 1 are only supported.' );
+			}
+
+			// Skip moving deleted items.
+			if ( ! control.setting() ) {
 				return;
 			}
 
-			// Fix the position of the adjacent menu item
-			_.each( control.getMenuControl().getMenuItemControls(), function( control ) {
-				if ( control.setting() && control.setting().position === clone.position ) {
-					var adjClone = _.clone( control.setting() );
-					adjClone.position = position;
-					control.setting.set( adjClone );
+			// Locate the other items under the same parent (siblings).
+			_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+				if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
+					siblingSettings.push( otherControl.setting );
 				}
 			});
+			siblingSettings.sort(function( a, b ) {
+				return a().position - b().position;
+			});
 
-			// @todo update menu item parents
-
-			// Update the control with our new settings.
-			control.setting.set( clone );
-
-			// Get the updated depth
-			var newDepth = control.getDepth();
-
-			// Update the depth UI class
-			if ( newDepth !== depth ) {
-				control.container.data( 'item-depth', newDepth );
-				control.container.removeClass( 'menu-item-depth-' + String( depth ) );
-				control.container.addClass( 'menu-item-depth-' + String( newDepth ) );
+			realPosition = _.indexOf( siblingSettings, control.setting );
+			if ( -1 === realPosition ) {
+				throw new Error( 'Expected setting to be among siblings.' );
 			}
+
+			// Skip doing anything if the item is already at the edge in the desired direction.
+			if ( ( realPosition === 0 && offset < 0 ) || ( realPosition === siblingSettings.length - 1 && offset > 0 ) ) {
+				return;
+			}
+
+			// Update any adjacent menu item setting to take on this item's position.
+			adjacentSetting = siblingSettings[ realPosition + offset ];
+			if ( adjacentSetting ) {
+				adjacentSetting.set( $.extend(
+					_.clone( adjacentSetting() ),
+					{
+						position: settingValue.position
+					}
+				) );
+			}
+
+			settingValue.position += offset;
+			control.setting.set( settingValue );
+
+			// @todo Should we allow a menu item to be moved up to break it out of a parent?
 		},
 
 		/**
+		 * Note that this will trigger a UI update, causing child items to
+		 * move as well and cardinal order class names to be updated.
+		 *
 		 * @private
 		 *
 		 * @param {Number} offset 1|-1
 		 */
-		_moveMenuItemDepthByOne: function( offset ) {
-			var depth, i, ii, parentId, parentControl, menuSetting, menuItemIds,
-				previousMenuItemId, previousMenuItem, previousItemDepth,
-				nextMenuItemId, nextMenuItem, nextItemDepth, childControl, childDepth,
-				control = this, menuItemSetting;
-
-			throw new Error( '_moveMenuItemDepthByOne needs to be updated to only look at the nav_menu_item settings and their position and menu_item_parent properties' );
-
-			depth = this.getDepth();
-			i = this.getMenuItemPosition();
-
-			if ( 0 === i ) {
-				// First item can never be moved into or out of a sub-menu.
-				return;
+		_changeDepth: function( offset ) {
+			if ( 1 !== offset && -1 !== offset ) {
+				throw new Error( 'Offset changes by 1 are only supported.' );
 			}
+			var control = this,
+				settingValue = _.clone( control.setting() ),
+				siblingControls = [],
+				realPosition,
+				siblingControl,
+				parentControl;
 
-			/* @todo This is now wrong as it is trying to work with a nav_menu setting consisting of IDs, as opposed to working with nav_menu_item settings that have positions and menu_item_parent properties
-			 * menuSetting = this.getMenuControl().setting;
-			 * menuItemIds = Array.prototype.slice.call( menuSetting() );
-			 * previousMenuItemId = menuItemIds[i - 1];
-			 * previousMenuItem = api.Menus.getMenuItemControl( previousMenuItemId );
-			 * previousItemDepth = previousMenuItem.params.depth;
-			 *
-			 * // Can we move this item in this direction?
-			 * if ( 1 === offset && previousItemDepth < depth ) {
-			 * 	// Already a sub-item of previous item.
-			 * 	return;
-			 * } else if ( -1 === offset && 0 === depth ) {
-			 * 	// Already at the top level.
-			 * 	return;
-			 * }
-			 *
-			 * // Get new menu item parent id.
-			 * if ( 1 === offset ) {
-			 * 	// Parent will be previous item if they have the same depth.
-			 * 	if ( previousItemDepth === depth ) {
-			 * 		parentId = previousMenuItemId;
-			 * 	} else {
-			 * 		// Find closest previous item of the same current depth.
-			 * 		ii = 1;
-			 * 		while ( ii <= i ) {
-			 * 			parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
-			 * 			if ( depth === parentControl.params.depth ) {
-			 * 				parentId = menuItemIds[i - ii];
-			 * 				break;
-			 * 			} else {
-			 * 				ii++;
-			 * 			}
-			 * 		}
-			 * 	}
-			 * } else {
-			 * 	if ( 1 === depth ) {
-			 * 		parentId = 0;
-			 * 	} else {
-			 * 		// Find closest previous item with depth of 2 less than the current depth.
-			 * 		ii = 1;
-			 * 		while ( ii <= i ) {
-			 * 			parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
-			 * 			if ( depth - 2 === parentControl.params.depth ) {
-			 * 				parentId = menuItemIds[i - ii];
-			 * 				break;
-			 * 			} else {
-			 * 				ii++;
-			 * 			}
-			 * 		}
-			 * 	}
-			 * }
-			 */
-
-			// Update menu item parent field.
-			menuItemSetting = _.clone( control.setting() );
-			menuItemSetting.menu_item_parent = parentId;
-			control.setting( menuItemSetting );
-
-			/*
-			 * @todo Note that all of the following should be done based on setting changes
-			 * The logic could be wrapped in:
-			 *
-			 * control.setting.bind( function( newMenuItem, oldMenuItem ){ if ( newMenuItem.menu_item_parent !==  oldMenuItem.menu_item_parent ) { Now refresh positions } } );
-			 *
-			 * See _setupUpdateUI() for the current stub code that this logic needs to be placed inside of.
-			 */
-
-			// Update depth class for UI.
-			this.container
-				.removeClass( 'menu-item-depth-' + depth )
-				.addClass( 'menu-item-depth-' + ( depth + offset ) );
-
-			// Does this item have any children?
-			if ( i + 1 === menuItemIds.length ) {
-				// Last item.
-				return;
-			}
-			nextMenuItemId = menuItemIds[i + 1];
-			nextMenuItem = api.Menus.getMenuItemControl( nextMenuItemId );
-			nextItemDepth = nextMenuItem.getDepth();
-			if ( depth < nextItemDepth ) {
-				ii = 1;
-				while ( ii + i < menuItemIds.length ) {
-					childControl = api.Menus.getMenuItemControl( menuItemIds[i + ii] );
-					childDepth = childControl.getDepth();
-					if ( depth === childDepth ) {
-						// No longer at a child control.
-						break;
-					} else {
-						// Update depth class for UI.
-						childControl.container.find( '.menu-item' )
-							.removeClass( 'menu-item-depth-' + childDepth )
-							.addClass( 'menu-item-depth-' + ( childDepth + offset ) );
-					}
-					ii++;
+			// Locate the other items under the same parent (siblings).
+			_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+				if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
+					siblingControls.push( otherControl );
 				}
+			});
+			siblingControls.sort(function( a, b ) {
+				return a.setting().position - b.setting().position;
+			});
+
+			realPosition = _.indexOf( siblingControls, control );
+			if ( -1 === realPosition ) {
+				throw new Error( 'Expected control to be among siblings.' );
+			}
+
+			if ( -1 === offset ) {
+				// Skip moving up an item that is already at the top level.
+				if ( ! settingValue.menu_item_parent ) {
+					return;
+				}
+
+				parentControl = api.control( 'nav_menu_item[' + settingValue.menu_item_parent + ']' );
+
+				// Increase the positions of the parent item's subsequent children to make room for this one.
+				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+					var otherControlSettingValue, isControlToBeShifted;
+					isControlToBeShifted = (
+						otherControl.setting().menu_item_parent === parentControl.setting().menu_item_parent &&
+						otherControl.setting().position > parentControl.setting().position
+					);
+					if ( isControlToBeShifted ) {
+						otherControlSettingValue = _.clone( otherControl.setting() );
+						otherControl.setting.set(
+							$.extend(
+								otherControlSettingValue,
+								{ position: otherControlSettingValue.position + 1 }
+							)
+						);
+					}
+				});
+
+				// Make this control the following sibling of its parent item.
+				settingValue.position = parentControl.setting().position + 1;
+				settingValue.menu_item_parent = parentControl.setting().menu_item_parent;
+				control.setting.set( settingValue );
+
+			} else if ( 1 === offset ) {
+				// Skip moving down an item that doesn't have a previous sibling.
+				if ( realPosition === 0 ) {
+					return;
+				}
+
+				// Make the control the first child of the previous sibling.
+				siblingControl = siblingControls[ realPosition - 1 ];
+				settingValue.menu_item_parent = siblingControl.getMenuItemPostId();
+				settingValue.position = 0;
+				control.setting.set( settingValue );
+
+				// Shift down all of the children items of the previous sibling
+				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+					var otherControlSettingValue;
+					if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
+						otherControlSettingValue = _.clone( otherControl.setting() );
+						otherControl.setting.set(
+							$.extend(
+								otherControlSettingValue,
+								{ position: otherControlSettingValue.position + 1 }
+							)
+						);
+					}
+				});
 			}
 		}
 	} );
@@ -2078,9 +2046,12 @@
 			var menuControl = this, customizeId, settingArgs, setting, menuItemControl, placeholderId, position = 0, priority = 10;
 
 			_.each( menuControl.getMenuItemControls(), function( control ) {
-				if ( control.setting() ) {
+				if ( false === control.setting() ) {
+					return;
+				}
+				priority = Math.max( priority, control.priority() );
+				if ( 0 === control.setting().menu_item_parent ) {
 					position = Math.max( position, control.setting().position );
-					priority = Math.max( priority, control.priority() );
 				}
 			});
 			position += 1;
