@@ -54,6 +54,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 		'classes' => '',
 		'xfn' => '',
 		'status' => 'publish',
+		'original_title' => '',
 		'nav_menu_term_id' => 0, // This will be supplied as the $menu_id arg for wp_update_nav_menu_item().
 		// @todo also expose invalid?
 	);
@@ -195,11 +196,22 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 					$value['status'] = $item->post_status;
 					$menus = wp_get_post_terms( $post->ID, WP_Customize_Nav_Menu_Setting::TAXONOMY, array(
 						'fields' => 'ids',
-					) );
+					) ); 
 					if ( ! empty( $menus ) ) {
 						$value['nav_menu_term_id'] = array_shift( $menus );
 					} else {
 						$value['nav_menu_term_id'] = 0;
+					}
+					if ( 'post_type' === $value['type'] ) {
+						$original_title = get_the_title( $value['object_id'] );
+					} else if (	'taxonomy' === $value['type'] ) {
+						$original_title = get_term_field( 'name', $value['object_id'], $value['object'], 'raw' );
+						if ( is_wp_error( $original_title ) ) {
+							$original_title = '';
+						}
+					}
+					if ( ! empty( $original_title ) ) {
+						$value['original_title'] = $original_title;
 					}
 				}
 			}
@@ -397,6 +409,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 			'classes' => '',
 			'xfn' => '',
 			'status' => 'publish',
+			'original_title' => '',
 			'nav_menu_term_id' => 0,
 		);
 		$menu_item_value = array_merge( $default, $menu_item_value );
@@ -416,7 +429,7 @@ class WP_Customize_Nav_Menu_Item_Setting extends WP_Customize_Setting {
 			}
 			$menu_item_value[ $key ] = implode( ' ', array_map( 'sanitize_html_class', $value ) );
 		}
-		foreach ( array( 'title', 'attr_title', 'description' ) as $key ) {
+		foreach ( array( 'title', 'attr_title', 'description', 'original_title' ) as $key ) {
 			// @todo Should esc_attr() the attr_title as well?
 			$menu_item_value[ $key ] = sanitize_text_field( $menu_item_value[ $key ] );
 		}

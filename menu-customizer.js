@@ -1254,7 +1254,7 @@
 			control.params.description = settingValue.description;
 			control.params.parent = settingValue.menu_item_parent;
 			control.params.menu_item_id = control.getMenuItemPostId(); // @todo When the control.id changes, this needs to be updated.
-			control.params.original_title = false; // @todo This is going to require Ajax.
+			control.params.original_title = settingValue.original_title || '';
 
 			control.container.data( 'item-depth', control.params.depth );
 			control.container.addClass( control.params.el_classes );
@@ -2092,6 +2092,7 @@
 				item,
 				{
 					nav_menu_term_id: menuControl.getMenuTermId(),
+					original_title: item.title,
 					position: position
 				}
 			);
