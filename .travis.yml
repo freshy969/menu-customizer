@@ -22,7 +22,6 @@ branches:
 before_script:
     - export DEV_LIB_PATH=dev-lib
     - if [ ! -e "$DEV_LIB_PATH" ] && [ -L .travis.yml ]; then export DEV_LIB_PATH=$( dirname $( readlink .travis.yml ) ); fi
-    - mkdir /tmp/wordpress && curl -L https://github.com/xwp/wordpress-develop/archive/feature/menu-customizer.tar.gz | tar --strip-components=1 -zx -C /tmp/wordpress
     - source $DEV_LIB_PATH/travis.before_script.sh
 
 script:
