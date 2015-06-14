@@ -83,14 +83,14 @@ class WP_Customize_Nav_Menu_Setting extends WP_Customize_Setting {
 	 *
 	 * @var bool
 	 */
-	public $is_previewed = false;
+	protected $is_previewed = false;
 
 	/**
 	 * Whether or not update() was called.
 	 *
 	 * @var bool
 	 */
-	public $is_updated = false;
+	protected $is_updated = false;
 
 	/**
 	 * Status for calling the update method, used in customize_save_response filter.

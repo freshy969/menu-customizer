@@ -66,7 +66,6 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 		$this->assertEquals( 'postMessage', $setting->transport );
 		$this->assertEquals( 123, $setting->post_id );
 		$this->assertNull( $setting->previous_post_id );
-		$this->assertFalse( $setting->is_previewed );
 		$this->assertNull( $setting->update_status );
 		$this->assertNull( $setting->update_error );
 		$this->assertInternalType( 'array', $setting->default );
