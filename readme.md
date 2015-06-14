@@ -7,7 +7,7 @@ Manage your Menus in the Customizer. WordPress core feature-plugin.
 **Tags:** [menus](https://wordpress.org/plugins/tags/menus), [custom menus](https://wordpress.org/plugins/tags/custom menus), [customizer](https://wordpress.org/plugins/tags/customizer), [theme customizer](https://wordpress.org/plugins/tags/theme customizer), [gsoc](https://wordpress.org/plugins/tags/gsoc)  
 **Requires at least:** 4.3-alpha-32764  
 **Tested up to:** trunk  
-**Stable tag:** 0.5  
+**Stable tag:** 0.6  
 **License:** GPLv2  
 
 [![Build Status](https://travis-ci.org/voldemortensen/menu-customizer.png?branch=master)](https://travis-ci.org/voldemortensen/menu-customizer) 
@@ -16,7 +16,7 @@ Manage your Menus in the Customizer. WordPress core feature-plugin.
 
 This plugin is a WordPress core feature-plugin and a former Google Summer of Code 2014 project. See the <a href="http://make.wordpress.org/core/tag/menu-customizer/">updates on Make WordPress Core</a> for more information.
 
-The Menu Customizer adds custom menu management to the Customizer. It is not fully functional and in alpha development until further notice; please don't try to run it on a production site. The plugin requires WordPress 4.1 or higher. It is mostly feature-complete and ready for testing, although there are known issues around working with submenus (try the reorder mode, not drag-and-drop for now).
+The Menu Customizer adds custom menu management to the Customizer. The plugin requires WordPress 4.3-alpha-32764 or higher and has been tentatively approved for merge into core for version 4.3.
 
 Menu Customizer fixes some significant problems with the existing approach to menu management in core, particularly around scaling. Note that its scope carefully excludes fundamental changes with the menus paradigms; rather, the goal of this project is to modernize the menu management experience so that the UX can be iterated on more reasonably. Most importantly, Menu Customizer allows you to live-preview changes to your menus before they're published.
 
@@ -27,7 +27,7 @@ Several improvements to the Customizer are also in the works as a part of this p
 
 ## Installation ##
 
-1. Take the easy route and install through the WordPress plugin adder OR
+1. Take the easy route and install through the WordPress plugin installer OR
 1. Download the .zip file and upload the unzipped folder to the `/wp-content/plugins/` directory
 1. Activate the plugin through the 'Plugins' menu in WordPress
 1. Visit the Customizer (Appearance -> Customize) to customize your menus with live previews.
@@ -35,9 +35,16 @@ Several improvements to the Customizer are also in the works as a part of this p
 ## Changelog ##
 
 See full details here: https://plugins.trac.wordpress.org/log/menu-customizer
+### 0.6 ###
+* Refactor internals to leverage Customizer settings for menu items and menus
+* Introduce drag & drop submenus
+* Add unit tests
+* Countless fixes for various details
+* Update 4.3 alpha/trunk to latest before updating the plugin
+
 ### 0.5 ###
 * Many, many fixes and improvements, see the full changelog and a summary on github: https://github.com/voldemortensen/menu-customizer/issues?q=is%3Aissue+is%3Aclosed+milestone%3A0.5
-* Note that WordPress 4.3 alpa is now required.
+* Note that WordPress 4.3 alpha is now required.
 
 ### 0.4 ###
 * In-Customizer previewing of “original” menu item links.
