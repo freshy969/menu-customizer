@@ -1,52 +1,62 @@
-/* global _wpCustomizeMenusSettings, confirm, alert */
-( function( wp, $ ) {
+/* global _wpCustomizeMenusSettings, confirm, wpNavMenu, console */
+( function( api, wp, $ ) {
 	'use strict';
 
-	if ( ! wp || ! wp.customize ) { return; }
-
-	// Set up our namespace.
-	var OldPreviewer, api = wp.customize;
+	/**
+	 * Set up wpNavMenu for drag and drop.
+	 */
+	wpNavMenu.originalInit = wpNavMenu.init;
+	wpNavMenu.options.menuItemDepthPerLevel = 20;
+	wpNavMenu.options.sortableItems         = '.customize-control-nav_menu_item';
+	wpNavMenu.init = function() {
+		this.jQueryExtensions();
+	};
 
 	api.Menus = api.Menus || {};
 
 	// Link settings.
-	api.Menus.data = _wpCustomizeMenusSettings || {};
+	api.Menus.data = {
+		nonce: '',
+		itemTypes: {
+			taxonomies: {},
+			postTypes: {}
+		},
+		l10n: {},
+		menuItemTransport: 'postMessage',
+		phpIntMax: 0,
+		defaultSettingValues: {
+			nav_menu: {},
+			nav_menu_item: {}
+		}
+	};
+	if ( 'undefined' !== typeof _wpCustomizeMenusSettings ) {
+		$.extend( api.Menus.data, _wpCustomizeMenusSettings );
+	}
 
 	/**
-	 * wp.customize.Menus.MenuItemModel
+	 * Newly-created Nav Menus and Nav Menu Items have negative integer IDs which
+	 * serve as placeholders until Save & Publish happens.
 	 *
-	 * A single menu item model.
-	 *
-	 * @constructor
-	 * @augments Backbone.Model
+	 * @return {number}
 	 */
-	api.Menus.MenuItemModel = Backbone.Model.extend({
-		transport: api.Menus.data.menuItemTransport,
-		params: [],
-		menu_item_id: null,
-		original_id: 0,
-		menu_id: 0,
-		depth: 0,
-		menu_item_parent_id: 0,
-		type: 'menu_item'
-	});
+	api.Menus.generatePlaceholderAutoIncrementId = function() {
+		return -Math.ceil( api.Menus.data.phpIntMax * Math.random() );
+	};
 
 	/**
 	 * wp.customize.Menus.AvailableItemModel
 	 *
-	 * A single available menu item model.
+	 * A single available menu item model. See PHP's WP_Customize_Nav_Menu_Item_Setting class.
 	 *
 	 * @constructor
 	 * @augments Backbone.Model
 	 */
-	api.Menus.AvailableItemModel = Backbone.Model.extend({
-		id: null,
-		name: null,
-		type: null,
-		type_label: null,
-		obj_type: null,
-		date: null
-	});
+	api.Menus.AvailableItemModel = Backbone.Model.extend( $.extend(
+		{
+			id: null // This is only used by Backbone.
+		},
+		api.Menus.data.defaultSettingValues.nav_menu_item
+	) );
 
 	/**
 	 * wp.customize.Menus.AvailableItemCollection
@@ -71,31 +81,6 @@
 		}
 	});
 	api.Menus.availableMenuItems = new api.Menus.AvailableItemCollection( api.Menus.data.availableMenuItems );
-
-	/**
-	 * wp.customize.Menus.MenuModel
-	 *
-	 * A single menu model.
-	 *
-	 * @constructor
-	 * @augments Backbone.Model
-	 */
-	api.Menus.MenuModel = Backbone.Model.extend({
-		id: null
-	});
-
-	/**
-	 * wp.customize.Menus.MenuCollection
-	 *
-	 * Collection for menu models.
-	 *
-	 * @constructor
-	 * @augments Backbone.Collection
-	 */
-	api.Menus.MenuCollection = Backbone.Collection.extend({
-		model: api.Menus.MenuModel
-	});
-	api.Menus.allMenus = new api.Menus.MenuCollection( api.Menus.data.allMenus );
 
 	/**
 	 * wp.customize.Menus.AvailableMenuItemsPanelView
@@ -186,7 +171,7 @@
 			});
 
 			// Close the panel if the URL in the preview changes
-			api.Menus.Previewer.bind( 'url', this.close );
+			api.previewer.bind( 'url', this.close );
 		},
 
 		// Search input change handler.
@@ -201,6 +186,9 @@
 				$( '#available-menu-items .accordion-section.open' ).removeClass( 'open' );
 				$( '#available-menu-items-search' ).addClass( 'open' );
 			}
+			if ( '' === event.target.value ) {
+				$( '#available-menu-items-search' ).removeClass( 'open' );
+			}
 			if ( this.searchTerm === event.target.value ) {
 				return;
 			}
@@ -212,64 +200,65 @@
 		// Get search results.
 		doSearch: function( page ) {
 			var self = this, params,
-				thisTerm = self.searchTerm,
-			    typeInner = $( '#available-menu-items-search .accordion-section-content' ),
+			    $section = $( '#available-menu-items-search' ),
+			    $content = $section.find( '.accordion-section-content' ),
 			    itemTemplate = wp.template( 'available-menu-item' );
 
-			if ( 0 > page ) {
+			if ( self.currentRequest ) {
+				self.currentRequest.abort();
+			}
+
+			if ( page < 0 ) {
 				return;
-			} else if ( 1 < page ) {
-				$( '#available-menu-items-search' ).addClass( 'loading-more' );
-			} else if ( '' === this.searchTerm ) {
-				typeInner.html( '' );
+			} else if ( page > 1 ) {
+				$section.addClass( 'loading-more' );
+			} else if ( '' === self.searchTerm ) {
+				$content.html( '' );
 				return;
 			}
-			$( '#available-menu-items-search' ).addClass( 'loading' );
+
+			$section.addClass( 'loading' );
 			self.loading = true;
 			params = {
-				'action': 'search-available-menu-items-customizer',
 				'customize-menus-nonce': api.Menus.data.nonce,
 				'wp_customize': 'on',
-				'search': thisTerm,
+				'search': self.searchTerm,
 				'page': page
 			};
-			$.post( wp.ajax.settings.url, params, function( response ) {
+
+			self.currentRequest = wp.ajax.post( 'search-available-menu-items-customizer', params );
+
+			self.currentRequest.done(function( data ) {
 				var items;
-				if ( self.searchTerm !== thisTerm ) {
-					// Term changed since ajax call was fired, wait for the next one.
-					if ( ! self.searchTerm ) {
-						$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
-						self.loading = false;
-					}
-					return;
-				}
 				if ( 1 === page ) {
 					// Clear previous results as it's a new search.
-					typeInner.html( '' );
+					$content.empty();
 				}
-				if ( response.data && response.data.message ) {
-					if ( 0 === typeInner.children().length ) {
-						// No results were found.
-						typeInner.html( '<p class="nothing-found">' + response.data.message + '</p>' );
-					}
-					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
-					self.loading = false;
-					self.pages.search = -1;
-				} else if ( response.success && response.data ) {
-					items = response.data.items;
-					$( '#available-menu-items-search' ).removeClass( 'loading loading-more' );
-					self.loading = false;
-					items = new api.Menus.AvailableItemCollection( items );
-					self.collection.add( items.models );
-					items.each( function( menuItem ) {
-						typeInner.append( itemTemplate( menuItem.attributes ) );
-					} );
-					if ( 20 > items.length ) {
-						self.pages.search = -1; // Up to 20 posts and 20 terms in results, if <20, no more results for either.
-					} else {
-						self.pages.search = self.pages.search + 1;
-					}
+				$section.removeClass( 'loading loading-more' );
+				$section.addClass( 'open' );
+				self.loading = false;
+				items = new api.Menus.AvailableItemCollection( data.items );
+				self.collection.add( items.models );
+				items.each( function( menuItem ) {
+					$content.append( itemTemplate( menuItem.attributes ) );
+				} );
+				if ( 20 > items.length ) {
+					self.pages.search = -1; // Up to 20 posts and 20 terms in results, if <20, no more results for either.
+				} else {
+					self.pages.search = self.pages.search + 1;
 				}
+			});
+
+			self.currentRequest.fail(function( data ) {
+				$content.empty().append( $( '<p class="nothing-found"></p>' ).text( data.message ) );
+				wp.a11y.speak( data.message );
+				self.pages.search = -1;
+			});
+
+			self.currentRequest.always(function() {
+				$section.removeClass( 'loading loading-more' );
+				self.loading = false;
+				self.currentRequest = null;
 			});
 		},
 
@@ -278,16 +267,23 @@
 			var self = this;
 
 			// Render the template for each item by type.
-			$.each( api.Menus.data.itemTypes, function( index, type ) {
-				self.pages[type.type] = 0;
-				self.loadItems( type.type, type.obj_type );
+			_.each( api.Menus.data.itemTypes, function( typeObjects, type ) {
+				_.each( typeObjects, function( typeObject, slug ) {
+					if ( 'postTypes' === type ) {
+						type = 'post_type';
+					} else if ( 'taxonomies' === type ) {
+						type = 'taxonomy';
+					}
+					self.pages[ slug ] = 0; // @todo should prefix with type
+					self.loadItems( slug, type );
+				} );
 			} );
 		},
 
 		// Load available menu items.
 		loadItems: function( type, obj_type ) {
-			var self = this, params,
-			    itemTemplate = wp.template( 'available-menu-item' );
+			var self = this, params, request, itemTemplate;
+			itemTemplate = wp.template( 'available-menu-item' );
 
 			if ( 0 > self.pages[type] ) {
 				return;
@@ -295,34 +291,37 @@
 			$( '#available-menu-items-' + type + ' .accordion-section-title' ).addClass( 'loading' );
 			self.loading = true;
 			params = {
-				'action': 'load-available-menu-items-customizer',
 				'customize-menus-nonce': api.Menus.data.nonce,
 				'wp_customize': 'on',
 				'type': type,
 				'obj_type': obj_type,
-				'page': self.pages[type]
+				'page': self.pages[ type ]
 			};
-			$.post( wp.ajax.settings.url, params, function( response ) {
+			request = wp.ajax.post( 'load-available-menu-items-customizer', params );
+
+			request.done(function( data ) {
 				var items, typeInner;
-				if ( response.data && response.data.message ) {
-					// Display error message
-					alert( response.data.message );
-				} else if ( response.success && response.data ) {
-					items = response.data.items;
-					$( '#available-menu-items-' + type + ' .accordion-section-title' ).removeClass( 'loading' );
-					self.loading = false;
-					if ( 0 === items.length ) {
-						self.pages[type] = -1;
-						return;
-					}
-					items = new api.Menus.AvailableItemCollection( items );
-					self.collection.add( items.models );
-					typeInner = $( '#available-menu-items-' + type + ' .accordion-section-content' );
-					items.each( function( menu_item ) {
-						typeInner.append( itemTemplate( menu_item.attributes ) );
-					} );
-					self.pages[type] = self.pages[type] + 1;
+				items = data.items;
+				if ( 0 === items.length ) {
+					self.pages[ type ] = -1;
+					return;
 				}
+				items = new api.Menus.AvailableItemCollection( items ); // @todo Why is this collection created and then thrown away?
+				self.collection.add( items.models );
+				typeInner = $( '#available-menu-items-' + type + ' .accordion-section-content' );
+				items.each(function( menu_item ) {
+					typeInner.append( itemTemplate( menu_item.attributes ) );
+				});
+				self.pages[ type ] = self.pages[ type ] + 1;
+			});
+			request.fail(function( data ) {
+				if ( typeof console !== 'undefined' && console.error ) {
+					console.error( data );
+				}
+			});
+			request.always(function() {
+				$( '#available-menu-items-' + type + ' .accordion-section-title' ).removeClass( 'loading' );
+				self.loading = false;
 			});
 		},
 
@@ -416,18 +415,16 @@
 			}
 
 			menuItem = {
-				'id': 0,
-				'name': itemName.val(),
+				'title': itemName.val(),
 				'url': itemUrl.val(),
 				'type': 'custom',
 				'type_label': api.Menus.data.l10n.custom_label,
-				'obj_type': 'custom'
+				'object': ''
 			};
 
 			this.currentMenuControl.addItemToMenu( menuItem );
 
 			// Reset the custom link form.
-			// @todo: decide whether this should be done as a callback after adding the item, as it is in nav-menu.js.
 			itemUrl.val( 'http://' );
 			itemName.val( '' );
 		},
@@ -651,7 +648,7 @@
 	 * wp.customize.Menus.MenuSection
 	 *
 	 * Customizer section for menus. This is used only for lazy-loading child controls.
-	 * Note that 'menu' must match the WP_Customize_Menu_Section::$type.
+	 * Note that 'nav_menu' must match the WP_Customize_Menu_Section::$type.
 	 *
 	 * @constructor
 	 * @augments wp.customize.Section
@@ -665,31 +662,165 @@
 		 * @param {Object} options
 		 */
 		initialize: function( id, options ) {
-			var container = this;
-			container.contentEmbedded = false;
-
-			api.Section.prototype.initialize.call( this, id, options );
+			var section = this;
+			api.Section.prototype.initialize.call( section, id, options );
+			section.deferred.initSortables = $.Deferred();
 		},
 
 		/**
-		 * Update UI to reflect expanded state.
 		 *
-		 * @since Menu Customizer 0.3
-		 *
-		 * @param {Boolean} expanded
-		 * @param {Object}  args
 		 */
+		ready: function() {
+			var section = this;
+
+			/*
+			 * Since newly created sections won't be registered in PHP, we need to prevent the
+			 * preview's sending of the activeSections to result in this control
+			 * being deactivated when the preview refreshes. So we can hook onto
+			 * the setting that has the same ID and its presence can dictate
+			 * whether the section is active.
+			 */
+			section.active.validate = function() {
+				if ( ! api.has( section.id ) ) {
+					return false;
+				}
+				return !! api( section.id ).get();
+			};
+
+			section.populateControls();
+
+			section.navMenuLocationSettings = {};
+			section.assignedLocations = new api.Value( [] );
+
+			api.each(function( setting, id ) {
+				var matches = id.match( /^nav_menu_locations\[(.+?)]/ );
+				if ( matches ) {
+					section.navMenuLocationSettings[ matches[1] ] = setting;
+					setting.bind( function() {
+						section.refreshAssignedLocations();
+					});
+				}
+			});
+
+			section.assignedLocations.bind(function( to ) {
+				section.updateAssignedLocationsInSectionTitle( to );
+			});
+
+			section.refreshAssignedLocations();
+		},
+
+		populateControls: function() {
+			var section = this, menuNameControlId, menuControl, menuNameControl;
+
+			// Add the control for managing the menu name.
+			menuNameControlId = section.id + '[name]';
+			menuNameControl = api.control( menuNameControlId );
+			if ( ! menuNameControl ) {
+				menuNameControl = new api.controlConstructor.nav_menu_name( menuNameControlId, {
+					params: {
+						type: 'nav_menu_name',
+						content: '<li id="customize-control-' + section.id.replace( '[', '-' ).replace( ']', '' ) + '-name" class="customize-control customize-control-nav_menu_name"></li>', // @todo core should do this for us
+						label: '',
+						active: true,
+						section: section.id,
+						priority: 0,
+						settings: {
+							'default': section.id
+						}
+					}
+				} );
+				api.control.add( menuNameControl.id, menuNameControl );
+				menuNameControl.active.set( true );
+			}
+
+			// Add the menu control.
+			menuControl = api.control( section.id );
+			if ( ! menuControl ) {
+				menuControl = new api.controlConstructor.nav_menu( section.id, {
+					params: {
+						type: 'nav_menu',
+						content: '<li id="customize-control-' + section.id.replace( '[', '-' ).replace( ']', '' ) + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
+						section: section.id,
+						priority: 999,
+						active: true,
+						settings: {
+							'default': section.id
+						}
+					}
+				} );
+				api.control.add( menuControl.id, menuControl );
+				menuControl.active.set( true );
+			}
+
+		},
+
+		/**
+		 *
+		 */
+		refreshAssignedLocations: function() {
+			var section = this,
+				menuTermId = section.getMenuTermId(),
+				currentAssignedLocations = [];
+			_.each( section.navMenuLocationSettings, function( setting, themeLocation ) {
+				if ( setting() === menuTermId ) {
+					currentAssignedLocations.push( themeLocation );
+				}
+			});
+			section.assignedLocations.set( currentAssignedLocations );
+		},
+
+		/**
+		 * @param {array} themeLocations
+		 */
+		updateAssignedLocationsInSectionTitle: function( themeLocations ) {
+			var section = this,
+				$title;
+
+			$title = section.container.find( '.accordion-section-title:first' );
+			$title.find( '.menu-in-location' ).remove();
+			_.each( themeLocations, function( themeLocation ) {
+				var $label = $( '<span class="menu-in-location"></span>' );
+				$label.text( api.Menus.data.l10n.menuLocation.replace( '%s', themeLocation ) );
+				$title.append( $label );
+			});
+
+			section.container.toggleClass( 'assigned-to-menu-location', 0 !== themeLocations.length );
+
+		},
+
+		/**
+		 *
+		 * @returns {Number}
+		 */
+		getMenuTermId: function() {
+			var matches = this.id.match( /^nav_menu\[(.+?)]/ ),
+				menuTermId = parseInt( matches[1], 10 );
+			return menuTermId;
+		},
+
 		onChangeExpanded: function( expanded, args ) {
 			var section = this;
-			if ( expanded && ! section.contentEmbedded ) {
-				_.each( wp.customize.section( section.id ).controls(), function( control ) {
-					if ( 'menu_item' === control.params.type ) {
+
+			if ( expanded ) {
+				wpNavMenu.menuList = section.container.find( '.accordion-section-content:first' );
+				wpNavMenu.targetList = wpNavMenu.menuList;
+
+				// Add attributes needed by wpNavMenu
+				$( '#menu-to-edit' ).removeAttr( 'id' );
+				wpNavMenu.menuList.attr( 'id', 'menu-to-edit' ).addClass( 'menu' );
+
+				_.each( api.section( section.id ).controls(), function( control ) {
+					if ( 'nav_menu_item' === control.params.type ) {
 						control.actuallyEmbed();
 					}
 				} );
-				section.contentEmbedded = true;
+
+				if ( 'resolved' !== section.deferred.initSortables.state() ) {
+					wpNavMenu.initSortables(); // Depends on menu-to-edit ID being set above.
+					section.deferred.initSortables.resolve( wpNavMenu.menuList ); // Now MenuControl can extend the sortable.
+				}
 			}
-			api.Section.prototype.onChangeExpanded.call( this, expanded, args );
+			api.Section.prototype.onChangeExpanded.call( section, expanded, args );
 		}
 	});
 
@@ -753,114 +884,63 @@
 	 * wp.customize.Menus.MenuLocationControl
 	 *
 	 * Customizer control for menu locations (rendered as a <select>).
-	 * Note that 'menu_location' must match the WP_Customize_Menu_Location_Control::$type.
+	 * Note that 'nav_menu_location' must match the WP_Customize_Nav_Menu_Location_Control::$type.
 	 *
 	 * @constructor
 	 * @augments wp.customize.Control
 	 */
 	api.Menus.MenuLocationControl = api.Control.extend({
-		ready: function() {
-			var self = this;
+		initialize: function( id, options ) {
+			var control = this,
+				matches = id.match( /^nav_menu_locations\[(.+?)]/ );
+			control.themeLocation = matches[1];
+			api.Control.prototype.initialize.call( control, id, options );
+		},
 
-			// Update sections when value changes.
-			this.setting.bind( function( to, from ) {
-				if ( ! _( from ).isEqual( to ) ) {
-					self.updateLocationInMenu( to, from );
-					self.updateMenuLocationCheckboxes( to, from );
+		ready: function() {
+			var control = this, navMenuIdRegex = /^nav_menu\[(-?\d+)]/;
+
+			// @todo It would be better if this was added directly on the setting itself, as opposed to the control.
+			control.setting.validate = function( value ) {
+				return parseInt( value, 10 );
+			};
+
+			// Add/remove menus from the available options when they are added and removed.
+			api.bind( 'add', function( setting ) {
+				var option, menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches || false === setting() ) {
+					return;
 				}
-			} );
-			api.panel( 'menus' ).container.bind( 'expanded', function() {
-				if ( ! self.loaded ) {
-					self.updateLocationInMenu( self.setting.get(), '' );
-					self.updateMenuLocationCheckboxes( self.setting.get(), '' );
-					self.loaded = true;
+				menuId = matches[1];
+				option = new Option( setting().name, menuId );
+				control.container.find( 'select' ).append( option );
+			});
+			api.bind( 'remove', function( setting ) {
+				var menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches ) {
+					return;
+				}
+				menuId = parseInt( matches[1], 10 );
+				if ( control.setting() === menuId ) {
+					control.setting.set( '' );
+				}
+				control.container.find( 'option[value=' + menuId + ']' ).remove();
+			});
+			api.bind( 'change', function( setting ) {
+				var menuId, matches = setting.id.match( navMenuIdRegex );
+				if ( ! matches ) {
+					return;
+				}
+				menuId = parseInt( matches[1], 10 );
+				if ( false === setting() ) {
+					if ( control.setting() === menuId ) {
+						control.setting.set( '' );
+					}
+					control.container.find( 'option[value=' + menuId + ']' ).remove();
+				} else {
+					control.container.find( 'option[value=' + menuId + ']' ).text( setting().name );
 				}
 			});
-		},
-
-		// Add the menu location name to the menu title.
-		updateLocationInMenu: function( to, from ) {
-			if ( ! to ) {
-				if ( from ) {
-					this.updateLocationsInMenu( api.section( 'nav_menus[' + from + ']' ).container );
-				}
-				return;
-			}
-
-			var $section = api.section( 'nav_menus[' + to + ']' ).container,
-				$title = $section.find( '.accordion-section-title' ),
-				$location = $( '<span class="menu-in-location" id="assigned-to-menu-location-' + this.params.locationId + '">' + api.Menus.data.l10n.menuLocation.replace( '%s', this.params.label ) + '</span>' );
-
-			$( '#assigned-to-menu-location-' + this.params.locationId ).remove();
-			$location.appendTo( $title );
-
-			// Toggle active section class
-			$section.addClass( 'assigned-to-menu-location' );
-
-			// Multiple menu location
-			this.updateLocationsInMenu( $section );
-			if ( from ) {
-				this.updateLocationsInMenu( api.section( 'nav_menus[' + from + ']' ).container );
-			}
-		},
-
-		// Handles menus that are set to multiple menu locations. @todo handle removal when theme location is set to blank.
-		updateLocationsInMenu: function( $section ) {
-			var $title = $section.find( '.accordion-section-title' ),
-				$location = $section.find( '.menu-in-location' );
-
-			if ( 1 > $location.length ) {
-				$section.removeClass( 'assigned-to-menu-location' );
-			}
-
-			if ( 1 >= $location.length ) {
-				$section.find( '.menu-in-locations' ).remove();
-				$section.find( '.menu-in-location' ).show();
-			} else {
-				var $locations = $section.find( '.menu-in-locations' ),
-					locations = [], tmpString, tmpPos, string;
-
-				$location.each( function() {
-					tmpString = api.Menus.data.l10n.menuLocation.replace( /\(|\)|%(s)/g, '' );
-					string = $( this ).text().replace( /\(|\)/g, '' ).replace( tmpString, '' );
-					locations.push( string );
-				} );
-
-				tmpString = locations.join( ', ' );
-				tmpPos = tmpString.lastIndexOf( ',' );
-				string = tmpString.substring( 0, tmpPos + 1 ) + ' &' + tmpString.substring( tmpPos + 1 );
-				string = api.Menus.data.l10n.menuLocation.replace( '%s', string );
-
-				if ( $locations.length ) {
-					$locations.text( string );
-				} else {
-					$( '<span class="menu-in-locations">' + string + '</span>' ).appendTo( $title );
-				}
-
-				$section.find( '.menu-in-location' ).hide();
-			}
-		},
-
-		// Update theme location checkboxes.
-		updateMenuLocationCheckboxes: function( to, from ) {
-			var locationNames = $( '.current-menu-location-name-' + this.params.locationId ),
-				setTo = locationNames.parent(),
-				oldBox = $( '#menu-locations-' + from + '-' + this.params.locationId ),
-				newBox = $( '#menu-locations-' + to + '-' + this.params.locationId ),
-				menuName;
-			if ( 0 === to ) {
-				setTo.hide();
-				oldBox.prop( 'checked', false );
-			} else if ( ! to ) {
-				setTo.hide();
-			} else {
-				menuName = api.section( 'nav_menus[' + to + ']' ).container.find( '.live-update-section-title' ).val();
-				setTo.show();
-				locationNames.text( menuName );
-				oldBox.prop( 'checked', false );
-				newBox.prop( 'checked', true );
-				newBox.parent().find( '.theme-location-set' ).hide();
-			}
 		}
 	});
 
@@ -875,57 +955,66 @@
 	 */
 	api.Menus.MenuItemControl = api.Control.extend({
 		/**
+		 * @since Menu Customizer 0.3
+		 *
+		 * Override the embed() method to do nothing,
+		 * so that the control isn't embedded on load,
+		 * unless the containing section is already expanded.
+		 */
+		embed: function() {
+			var control = this,
+				sectionId = control.section(),
+				section;
+			if ( ! sectionId ) {
+				return;
+			}
+			section = api.section( sectionId );
+			if ( section && section.expanded() ) {
+				control.actuallyEmbed();
+			}
+		},
+
+		/**
+		 * This function is called in Section.onChangeExpanded() so the control
+		 * will only get embedded when the Section is first expanded.
+		 *
+		 * @since Menu Customizer 0.3
+		 */
+		actuallyEmbed: function() {
+			var control = this;
+			if ( 'resolved' === control.deferred.embedded.state() ) {
+				return;
+			}
+			control.renderContent();
+			control.deferred.embedded.resolve(); // This triggers control.ready().
+		},
+
+		/**
 		 * Set up the control.
 		 */
-		actuallyReady: function() {
-			this._setupModel();
+		ready: function() {
 			this._setupControlToggle();
 			this._setupReorderUI();
 			this._setupUpdateUI();
 			this._setupRemoveUI();
 			this._setupLinksUI();
-		},
-
-		/**
-		 * Handle changes to the setting.
-		 */
-		_setupModel: function() {
-			var self = this, rememberSavedMenuItemId;
-
-			api.Menus.savedMenuItemIds = api.Menus.savedMenuItemIds || [];
-
-			// Remember saved menu items so that we know which to delete.
-			rememberSavedMenuItemId = function() {
-				api.Menus.savedMenuItemIds[self.params.menu_item_id] = true;
-			};
-			api.bind( 'ready', rememberSavedMenuItemId );
-			api.bind( 'saved', rememberSavedMenuItemId );
-
-			this._updateCount = 0;
-			this.isMenuItemUpdating = false;
-
-			// Update menu item whenever model changes.
-			this.setting.bind( function( to, from ) {
-				if ( ! _( from ).isEqual( to ) && ! self.isMenuItemUpdating ) {
-					self.updateMenuItem( { instance: to } );
-				}
-			} );
+			this._setupTitleUI();
 		},
 
 		/**
 		 * Show/hide the settings when clicking on the menu item handle.
 		 */
 		_setupControlToggle: function() {
-			var self = this;
+			var control = this;
 
 			this.container.find( '.menu-item-handle' ).on( 'click', function( e ) {
 				e.preventDefault();
 				e.stopPropagation();
-				var menuControl = self.getMenuControl();
-				if ( menuControl.isReordering ) {
+				var menuControl = control.getMenuControl();
+				if ( menuControl.isReordering || menuControl.isSorting ) {
 					return;
 				}
-				self.toggleForm();
+				control.toggleForm();
 			} );
 		},
 
@@ -933,46 +1022,38 @@
 		 * Set up the menu-item-reorder-nav
 		 */
 		_setupReorderUI: function() {
-			var self = this, template, $reorderNav;
+			var control = this, template, $reorderNav;
 
 			template = wp.template( 'menu-item-reorder-nav' );
 
-			/**
-			 * Add the menu item reordering elements to the menu item control.
-			 */
-			this.container.find( '.item-controls' ).after( template );
+			// Add the menu item reordering elements to the menu item control.
+			control.container.find( '.item-controls' ).after( template );
 
-			/**
-			 * Handle clicks for up/down/left-right on the reorder nav.
-			 */
-			$reorderNav = this.container.find( '.menu-item-reorder-nav' );
+			// Handle clicks for up/down/left-right on the reorder nav.
+			$reorderNav = control.container.find( '.menu-item-reorder-nav' );
 			$reorderNav.find( '.menus-move-up, .menus-move-down, .menus-move-left, .menus-move-right' ).on( 'click keypress', function( event ) {
 				if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
 					return;
 				}
-				$( this ).focus();
+				var moveBtn = $( this );
+				moveBtn.focus();
 
-				var isMoveUp = $( this ).is( '.menus-move-up' ),
-					isMoveDown = $( this ).is( '.menus-move-down' ),
-					isMoveLeft = $( this ).is( '.menus-move-left' ),
-					isMoveRight = $( this ).is( '.menus-move-right' ),
-					i = self.getMenuItemPosition();
-
-				if ( ( isMoveUp && 0 === i ) || ( isMoveDown && i === self.getMenuControl().setting().length - 1 ) ) {
-					return;
-				}
+				var isMoveUp = moveBtn.is( '.menus-move-up' ),
+					isMoveDown = moveBtn.is( '.menus-move-down' ),
+					isMoveLeft = moveBtn.is( '.menus-move-left' ),
+					isMoveRight = moveBtn.is( '.menus-move-right' );
 
 				if ( isMoveUp ) {
-					self.moveUp();
+					control.moveUp();
 				} else if ( isMoveDown ) {
-					self.moveDown();
+					control.moveDown();
 				} else if ( isMoveLeft ) {
-					self.moveLeft();
+					control.moveLeft();
 				} else if ( isMoveRight ) {
-					self.moveRight();
+					control.moveRight();
 				}
 
-				$( this ).focus(); // Re-focus after the container was moved.
+				moveBtn.focus(); // Re-focus after the container was moved.
 			} );
 		},
 
@@ -980,84 +1061,106 @@
 		 * Set up event handlers for menu item updating.
 		 */
 		_setupUpdateUI: function() {
-			var self = this, $menuItemRoot, $menuItemContent;
+			var control = this,
+				settingValue = control.setting();
 
-			$menuItemRoot = this.container.find( '.menu-item:first' );
-			$menuItemContent = $menuItemRoot.find( '.menu-item-settings:first' );
+			control.elements = {};
+			control.elements.url = new api.Element( control.container.find( '.edit-menu-item-url' ) );
+			control.elements.title = new api.Element( control.container.find( '.edit-menu-item-title' ) );
+			control.elements.attr_title = new api.Element( control.container.find( '.edit-menu-item-attr-title' ) );
+			control.elements.target = new api.Element( control.container.find( '.edit-menu-item-target' ) );
+			control.elements.classes = new api.Element( control.container.find( '.edit-menu-item-classes' ) );
+			control.elements.xfn = new api.Element( control.container.find( '.edit-menu-item-xfn' ) );
+			control.elements.description = new api.Element( control.container.find( '.edit-menu-item-description' ) );
+			// @todo allow other elements, added by plugins, to be automatically picked up here; allow additional values to be added to setting array.
 
-			// Trigger menu item update when hitting Enter within an input.
-			$menuItemContent.on( 'keydown', 'input', function( e ) {
-				if ( 13 === e.which ) { // Enter
-					e.preventDefault();
-					self.updateMenuItem();
+			_.each( control.elements, function( element, property ) {
+				element.bind(function( value ) {
+					if ( element.element.is( 'input[type=checkbox]' ) ) {
+						value = ( value ) ? element.element.val() : '';
+					}
+
+					var settingValue = control.setting();
+					if ( settingValue && settingValue[ property ] !== value ) {
+						settingValue = _.clone( settingValue );
+						settingValue[ property ] = value;
+						control.setting.set( settingValue );
+					}
+				});
+				if ( settingValue ) {
+					element.set( settingValue[ property ] );
 				}
-			} );
+			});
 
-			// Regular menu item update triggering - on change.
-			$menuItemContent.on( 'change input propertychange', ':input', _.debounce( function() {
-				self.updateMenuItem();
-			}, 500 ) );
+			control.setting.bind(function( to, from ) {
+				if ( false === to ) {
+					control.container.remove();
+					// @todo this will need to now shift up any child menu items to take this parent's place, or the children should be deleted as well.
+				} else {
+					// Update the elements' values when the setting changes.
+					_.each( to, function( value, key ) {
+						if ( control.elements[ key] ) {
+							control.elements[ key ].set( to[ key ] );
+						}
+					} );
 
-			// When saving, update original_id to menu_item_id, initiating new clones as needed.
-			api.bind( 'save', function() {
-				self.params.original_id = self.params.menu_item_id;
-			} );
+					// Handle UI updates when the position or depth (parent) change.
+					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
+						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
+						control.priority.set( 10 + control.setting().position );
+
+						/*
+						// @todo self._applyCardinalOrderClassNames();
+						// Get the updated depth
+						var newDepth = control.getDepth();
+
+						// Update the depth UI class
+						if ( newDepth !== depth ) {
+							control.container.data( 'item-depth', newDepth );
+							// @todo remove any existing menu-item-depth control.container.removeClass( 'menu-item-depth-' + String( depth ) );
+							control.container.addClass( 'menu-item-depth-' + String( newDepth ) );
+						}
+						*/
+
+						// @todo Make sure we apply whatever logic is present in sortstop.
+					}
+				}
+			});
 		},
 
 		/**
 		 * Set up event handlers for menu item deletion.
 		 */
 		_setupRemoveUI: function() {
-			var self = this, $removeBtn, spinner;
+			var control = this, $removeBtn;
 
 			// Configure delete button.
-			$removeBtn = this.container.find( '.item-delete' );
-			spinner = this.container.find( '.item-title .spinner' );
+			$removeBtn = control.container.find( '.item-delete' );
 
 			$removeBtn.on( 'click', function( e ) {
 				e.preventDefault();
 
-				// Show spinner.
-				spinner.show();
-				spinner.css( 'visibility', 'visible' );
-
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
-				if ( self.container.next().is( '.customize-control-menu_item' ) ) {
+				if ( control.container.next().is( '.customize-control-nav_menu_item' ) ) {
 					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
-						$adjacentFocusTarget = self.container.next().find( '.item-edit:first' );
+						$adjacentFocusTarget = control.container.next().find( '.item-edit:first' );
 					} else {
-						$adjacentFocusTarget = self.container.next().find( '.item-delete:first' );
+						$adjacentFocusTarget = control.container.next().find( '.item-delete:first' );
 					}
-				} else if ( self.container.prev().is( '.customize-control-menu_item' ) ) {
+				} else if ( control.container.prev().is( '.customize-control-nav_menu_item' ) ) {
 					if ( ! $( 'body' ).hasClass( 'adding-menu-items' ) ) {
-						$adjacentFocusTarget = self.container.prev().find( '.item-edit:first' );
+						$adjacentFocusTarget = control.container.prev().find( '.item-edit:first' );
 					} else {
-						$adjacentFocusTarget = self.container.prev().find( '.item-delete:first' );
+						$adjacentFocusTarget = control.container.prev().find( '.item-delete:first' );
 					}
 				} else {
-					$adjacentFocusTarget = self.container.next( '.customize-control-nav_menu' ).find( '.add-new-menu-item' );
+					$adjacentFocusTarget = control.container.next( '.customize-control-nav_menu' ).find( '.add-new-menu-item' );
 				}
 
-				self.container.slideUp( function() {
-					var menuControl, menuItemIds, i;
-					menuControl = api.Menus.getMenuControl( self.params.menu_id );
-
-					if ( ! menuControl ) {
-						return;
-					}
-
-					menuItemIds = menuControl.setting().slice();
-					i = _.indexOf( menuItemIds, self.params.menu_item_id );
-					if ( -1 === i ) {
-						return;
-					}
-
-					menuItemIds.splice( i, 1 );
-					menuControl.setting( menuItemIds );
-
+				control.container.slideUp( function() {
+					control.setting.set( false );
 					wp.a11y.speak( api.Menus.data.l10n.itemDeleted );
-					self.container.remove();
 					$adjacentFocusTarget.focus(); // keyboard accessibility
 				} );
 			} );
@@ -1079,19 +1182,94 @@
 		},
 
 		/**
-		 * @since Menu Customizer 0.3
-		 *
-		 * Override the embed() method to do nothing,
-		 * so that the control isn't embedded on load.
+		 * Update item handle title when changed.
 		 */
-		embed: function() {},
+		_setupTitleUI: function() {
+			var control = this;
+
+			control.setting.bind( function( item ) {
+				if ( ! item ) {
+					return;
+				}
+
+				var titleEl = control.container.find( '.menu-item-title' );
+
+				// Don't update to an empty title.
+				if ( item.title ) {
+					titleEl
+						.text( item.title )
+						.removeClass( 'no-title' );
+				} else {
+					titleEl
+						.text( api.Menus.data.l10n.untitled )
+						.addClass( 'no-title' );
+				}
+			} );
+		},
 
 		/**
-		 * @since Menu Customizer 0.3
+		 *
+		 * @returns {number}
 		 */
-		actuallyEmbed: function() {
-			this.renderContent();
-			this.actuallyReady();
+		getDepth: function() {
+			var control = this, setting = control.setting(), depth = 0;
+			if ( ! setting ) {
+				return 0;
+			}
+			while ( setting && setting.menu_item_parent ) {
+				depth += 1;
+				control = api.control( 'nav_menu_item[' + setting.menu_item_parent + ']' );
+				if ( ! control ) {
+					break;
+				}
+				setting = control.setting();
+			}
+			return depth;
+		},
+
+		/**
+		 * Amend the control's params with the data necessary for the JS template just in time.
+		 */
+		renderContent: function() {
+			var control = this,
+				settingValue = control.setting(),
+				containerClasses;
+
+			control.params.title = settingValue.title || '';
+			control.params.depth = control.getDepth();
+			containerClasses = [
+				'menu-item',
+				'menu-item-depth-' + String( control.params.depth ),
+				'menu-item-' + settingValue.object,
+				'menu-item-edit-inactive'
+			];
+
+			if ( settingValue.invalid ) {
+				containerClasses.push( 'invalid' );
+				control.params.title = api.Menus.data.invalidTitleTpl.replace( '%s', control.params.title );
+			} else if ( 'draft' === settingValue.status ) {
+				containerClasses.push( 'pending' );
+				control.params.title = api.Menus.data.pendingTitleTpl.replace( '%s', control.params.title );
+			}
+
+			control.params.el_classes = containerClasses.join( ' ' );
+			control.params.item_type_label = api.Menus.getTypeLabel( settingValue.type, settingValue.object );
+			control.params.item_type = settingValue.type;
+			control.params.url = settingValue.url;
+			control.params.target = settingValue.target;
+			control.params.attr_title = settingValue.attr_title;
+			control.params.classes = _.isArray( settingValue.classes ) ? settingValue.classes.join( ' ' ) : settingValue.classes;
+			control.params.attr_title = settingValue.attr_title;
+			control.params.xfn = settingValue.xfn;
+			control.params.description = settingValue.description;
+			control.params.parent = settingValue.menu_item_parent;
+			control.params.menu_item_id = control.getMenuItemPostId();
+			control.params.original_title = settingValue.original_title || '';
+
+			control.container.data( 'item-depth', control.params.depth );
+			control.container.addClass( control.params.el_classes );
+
+			api.Control.prototype.renderContent.call( control );
 		},
 
 		/***********************************************************************
@@ -1099,114 +1277,23 @@
 		 **********************************************************************/
 
 		/**
-		 * @return {wp.customize.controlConstructor.menus[]}
+		 * @return {wp.customize.controlConstructor.nav_menu|null}
 		 */
 		getMenuControl: function() {
-			var settingId, menuControl;
-
-			settingId = 'nav_menu_' + this.params.menu_id;
-			menuControl = api.control( settingId );
-
-			if ( ! menuControl ) {
-				return;
+			var control = this, settingValue = control.setting();
+			if ( settingValue && settingValue.nav_menu_term_id ) {
+				return api.control( 'nav_menu[' + settingValue.nav_menu_term_id + ']' );
+			} else {
+				return null;
 			}
-
-			return menuControl;
 		},
 
-		/**
-		 * Submit the menu item form via Ajax and get back the updated instance,
-		 * along with the new menu item control form to render.
-		 *
-		 * @param {object} [args]
-		 */
-		updateMenuItem: function( args ) {
-			var self = this, clone = 0, processing, inputs, item, params, spinner;
-			// Check whether this menu item is cloned already; if not, let's clone it.
-			if ( this.params.original_id === this.params.menu_item_id ) {
-				clone = 1;
+		getMenuItemPostId: function() {
+			var matches = this.id.match( /^nav_menu_item\[(.+?)]/ );
+			if ( ! matches ) {
+				throw new Error( 'Failed to parse ID out setting ID: ' + this.id );
 			}
-
-			spinner = $( self.container ).find( '.menu-item-actions .spinner' );
-
-			// Show spinner.
-			spinner.css( 'visibility', 'visible' );
-
-			// Trigger processing states.
-			self.container.addClass( 'saving' );
-			processing = api.state( 'processing' );
-			processing( processing() + 1 );
-
-			// Get item.
-			item = {};
-			if ( 'undefined' === typeof args ) {
-				inputs = $( self.container ).find( ':input[name]' );
-				inputs.each( function() {
-					var name = this.name;
-					item[name] = $( this ).val();
-				} );
-			} else {
-				item = args;
-			}
-
-			params = {
-				'action': 'update-menu-item-customizer',
-				'wp_customize': 'on',
-				'clone': clone,
-				'item_id': self.params.menu_item_id,
-				'menu-item': item,
-				'customize-menu-item-nonce': api.Menus.data.nonce
-			};
-
-			// @todo replace this with wp.ajax.post()
-			$.post( wp.ajax.settings.url, params, function( response ) {
-				var id, menuControl, menuItemIds, i;
-				if ( response.data && response.data.message ) {
-					// Display error message
-					alert( response.data.message );
-				} else if ( response.success && response.data ) {
-					id = response.data;
-
-					// Update item control accordingly with new id.
-					// Note that the id is only updated where necessary - the original id
-					// is still maintained for the setting and in the UI.
-					id = parseInt( id, 10 );
-					self.params.menu_item_id = id;
-					self.id = 'nav_menus[' + self.params.menu_id + '][' + id + ']';
-
-					// Replace original id of this item with cloned id in the menu setting.
-					menuControl = api.Menus.getMenuControl( self.params.menu_id );
-
-					if ( clone ) {
-
-						menuItemIds = menuControl.setting().slice();
-						i = _.indexOf( menuItemIds, self.params.original_id );
-
-						menuItemIds[i] = id;
-						menuControl.setting( menuItemIds );
-
-						// Update parent id for direct children items.
-						api.control.each( function( control ) {
-							if ( 'menu_item' === control.params.type && self.params.original_id === parseInt( control.params.menu_item_parent_id, 10 ) ) {
-								control.params.menu_item_parent_id = id;
-								control.container.find( '.menu-item-parent-id' ).val( id );
-								control.updateMenuItem(); // @todo this requires cloning all direct children, which will in turn recursively clone all submenu items - works, but is there a better approach?
-							}
-						} );
-					} else {
-						// There would be no change to the value, so just re-trigger a preview
-						// @todo There should really be Customizer settings that contain all of the menu item fields
-						menuControl.setting.preview();
-					}
-				}
-
-				// Remove processing states.
-				self.container.removeClass( 'saving' );
-				processing( processing() - 1 );
-
-				// Hide spinner.
-				spinner.css( 'visibility', 'hidden' );
-			} );
+			return parseInt( matches[1], 10 );
 		},
 
 		/**
@@ -1242,7 +1329,7 @@
 		toggleForm: function( showOrHide ) {
 			var self = this, $menuitem, $inside, complete;
 
-			$menuitem = this.container.find( 'div.menu-item:first' );
+			$menuitem = this.container;
 			$inside = $menuitem.find( '.menu-item-settings:first' );
 			if ( 'undefined' === typeof showOrHide ) {
 				showOrHide = ! $inside.is( ':visible' );
@@ -1314,72 +1401,25 @@
 		},
 
 		/**
-		 * Get the position (index) of the item in the containing menu.
-		 *
-		 * @returns {Number|null}
-		 */
-		getMenuItemPosition: function() {
-			var menuItemIds, position;
-
-			menuItemIds = this.getMenuControl().setting();
-			position = _.indexOf( menuItemIds, this.params.menu_item_id );
-
-			if ( position === -1 ) {
-				return null;
-			}
-
-			return position;
-		},
-
-		/**
-		 * Get the position (index) of the item in the containing menu.
-		 *
-		 * @returns {Number}
-		 */
-		getMenuItemDepth: function() {
-			return this.params.depth;
-		},
-
-		/**
 		 * Move menu item up one in the menu.
 		 */
 		moveUp: function() {
-			// Update menu control setting.
-			this._moveMenuItemByOne( -1 );
-			// Update UI.
-			var prev = $( this.container ).prev();
-			prev.before( $( this.container ) );
+			this._changePosition( -1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedUp );
-			// Maybe update parent & depth if it's a sub-item.
-			if ( 0 !== this.params.depth ) {
-				// @todo
-			}
-			// @todo also move children
-			this.getMenuControl()._applyCardinalOrderClassNames();
 		},
 
 		/**
 		 * Move menu item up one in the menu.
 		 */
 		moveDown: function() {
-			// Update menu control setting.
-			this._moveMenuItemByOne( 1 );
-			// Update UI.
-			var next = $( this.container ).next();
-			next.after( $( this.container ) );
+			this._changePosition( 1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedDown );
-			// Maybe update parent & depth if it's a sub-item.
-			if ( 0 !== this.params.depth ) {
-				// @todo
-			}
-			// @todo also move children
-			this.getMenuControl()._applyCardinalOrderClassNames();
 		},
 		/**
 		 * Move menu item and all children up one level of depth.
 		 */
 		moveLeft: function() {
-			this._moveMenuItemDepthByOne( -1 );
+			this._changeDepth( -1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedLeft );
 		},
 
@@ -1387,144 +1427,210 @@
 		 * Move menu item and children one level deeper, as a submenu of the previous item.
 		 */
 		moveRight: function() {
-			this._moveMenuItemDepthByOne( 1 );
+			this._changeDepth( 1 );
 			wp.a11y.speak( api.Menus.data.l10n.movedRight );
 		},
 
 		/**
+		 * Note that this will trigger a UI update, causing child items to
+		 * move as well and cardinal order class names to be updated.
+		 *
 		 * @private
 		 *
 		 * @param {Number} offset 1|-1
 		 */
-		_moveMenuItemByOne: function( offset ) {
-			var i, menuSetting, menuItemIds, adjacentMenuItemId;
+		_changePosition: function( offset ) {
+			var control = this,
+				adjacentSetting,
+				settingValue = _.clone( control.setting() ),
+				siblingSettings = [],
+				realPosition;
 
-			i = this.getMenuItemPosition();
+			if ( 1 !== offset && -1 !== offset ) {
+				throw new Error( 'Offset changes by 1 are only supported.' );
+			}
 
-			menuSetting = this.getMenuControl().setting;
-			menuItemIds = Array.prototype.slice.call( menuSetting() ); // clone
-			adjacentMenuItemId = menuItemIds[i + offset];
-			menuItemIds[i + offset] = this.params.menu_item_id;
-			menuItemIds[i] = adjacentMenuItemId;
+			// Skip moving deleted items.
+			if ( ! control.setting() ) {
+				return;
+			}
 
-			menuSetting( menuItemIds );
+			// Locate the other items under the same parent (siblings).
+			_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+				if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
+					siblingSettings.push( otherControl.setting );
+				}
+			});
+			siblingSettings.sort(function( a, b ) {
+				return a().position - b().position;
+			});
 
-			// @todo update menu item parents and depth if necessary based on new previous item.
+			realPosition = _.indexOf( siblingSettings, control.setting );
+			if ( -1 === realPosition ) {
+				throw new Error( 'Expected setting to be among siblings.' );
+			}
+
+			// Skip doing anything if the item is already at the edge in the desired direction.
+			if ( ( realPosition === 0 && offset < 0 ) || ( realPosition === siblingSettings.length - 1 && offset > 0 ) ) {
+				return;
+			}
+
+			// Update any adjacent menu item setting to take on this item's position.
+			adjacentSetting = siblingSettings[ realPosition + offset ];
+			if ( adjacentSetting ) {
+				adjacentSetting.set( $.extend(
+					_.clone( adjacentSetting() ),
+					{
+						position: settingValue.position
+					}
+				) );
+			}
+
+			settingValue.position += offset;
+			control.setting.set( settingValue );
+
+			// @todo Should we allow a menu item to be moved up to break it out of a parent?
 		},
 
 		/**
+		 * Note that this will trigger a UI update, causing child items to
+		 * move as well and cardinal order class names to be updated.
+		 *
 		 * @private
 		 *
 		 * @param {Number} offset 1|-1
 		 */
-		_moveMenuItemDepthByOne: function( offset ) {
-			var depth, i, ii, parentId, parentControl, menuSetting, menuItemIds,
-				previousMenuItemId, previousMenuItem, previousItemDepth,
-				nextMenuItemId, nextMenuItem, nextItemDepth, childControl, childDepth;
-
-			depth = this.getMenuItemDepth();
-			i = this.getMenuItemPosition();
-
-			if ( 0 === i ) {
-				// First item can never be moved into or out of a sub-menu.
-				return;
+		_changeDepth: function( offset ) {
+			if ( 1 !== offset && -1 !== offset ) {
+				throw new Error( 'Offset changes by 1 are only supported.' );
 			}
+			var control = this,
+				settingValue = _.clone( control.setting() ),
+				siblingControls = [],
+				realPosition,
+				siblingControl,
+				parentControl;
 
-			menuSetting = this.getMenuControl().setting;
-			menuItemIds = Array.prototype.slice.call( menuSetting() );
-			previousMenuItemId = menuItemIds[i - 1];
-			previousMenuItem = api.Menus.getMenuItemControl( previousMenuItemId );
-			previousItemDepth = previousMenuItem.params.depth;
-
-			// Can we move this item in this direction?
-			if ( 1 === offset && previousItemDepth < depth ) {
-				// Already a sub-item of previous item.
-				return;
-			} else if ( -1 === offset && 0 === depth ) {
-				// Already at the top level.
-				return;
-			}
-
-			// Get new menu item parent id.
-			if ( 1 === offset ) {
-				// Parent will be previous item if they have the same depth.
-				if ( previousItemDepth === depth ) {
-					parentId = previousMenuItemId;
-				} else {
-					// Find closest previous item of the same current depth.
-					ii = 1;
-					while ( ii <= i ) {
-						parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
-						if ( depth === parentControl.params.depth ) {
-							parentId = menuItemIds[i - ii];
-							break;
-						} else {
-							ii++;
-						}
-					}
+			// Locate the other items under the same parent (siblings).
+			_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+				if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
+					siblingControls.push( otherControl );
 				}
-			} else {
-				if ( 1 === depth ) {
-					parentId = 0;
-				} else {
-					// Find closest previous item with depth of 2 less than the current depth.
-					ii = 1;
-					while ( ii <= i ) {
-						parentControl = api.Menus.getMenuItemControl( menuItemIds[i - ii] );
-						if ( depth - 2 === parentControl.params.depth ) {
-							parentId = menuItemIds[i - ii];
-							break;
-						} else {
-							ii++;
-						}
-					}
-				}
+			});
+			siblingControls.sort(function( a, b ) {
+				return a.setting().position - b.setting().position;
+			});
+
+			realPosition = _.indexOf( siblingControls, control );
+			if ( -1 === realPosition ) {
+				throw new Error( 'Expected control to be among siblings.' );
 			}
 
-			// Update menu item parent field.
-			this.container.find( '.menu-item-parent-id' ).val( parentId );
-
-			// Trigger menu item update.
-			this.updateMenuItem();
-
-			// Update depth parameter;
-			this.params.depth = depth + offset;
-
-			// Update depth class for UI.
-			this.container.find( '.menu-item' )
-				.removeClass( 'menu-item-depth-' + depth )
-				.addClass( 'menu-item-depth-' + ( depth + offset ) );
-
-			// Does this item have any children?
-			if ( i + 1 === menuItemIds.length ) {
-				// Last item.
-				return;
-			}
-			nextMenuItemId = menuItemIds[i + 1];
-			nextMenuItem = api.Menus.getMenuItemControl( nextMenuItemId );
-			nextItemDepth = nextMenuItem.params.depth;
-			if ( depth < nextItemDepth ) {
-				ii = 1;
-				while ( ii + i < menuItemIds.length ) {
-					childControl = api.Menus.getMenuItemControl( menuItemIds[i + ii] );
-					childDepth = childControl.params.depth;
-					if ( depth === childDepth ) {
-						// No longer at a child control.
-						break;
-					} else {
-						// Update depth parameter;
-						childControl.params.depth = childDepth + offset;
-
-						// Update depth class for UI.
-						childControl.container.find( '.menu-item' )
-							.removeClass( 'menu-item-depth-' + childDepth )
-							.addClass( 'menu-item-depth-' + ( childDepth + offset ) );
-					}
-					ii++;
+			if ( -1 === offset ) {
+				// Skip moving up an item that is already at the top level.
+				if ( ! settingValue.menu_item_parent ) {
+					return;
 				}
+
+				parentControl = api.control( 'nav_menu_item[' + settingValue.menu_item_parent + ']' );
+
+				// Increase the positions of the parent item's subsequent children to make room for this one.
+				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+					var otherControlSettingValue, isControlToBeShifted;
+					isControlToBeShifted = (
+						otherControl.setting().menu_item_parent === parentControl.setting().menu_item_parent &&
+						otherControl.setting().position > parentControl.setting().position
+					);
+					if ( isControlToBeShifted ) {
+						otherControlSettingValue = _.clone( otherControl.setting() );
+						otherControl.setting.set(
+							$.extend(
+								otherControlSettingValue,
+								{ position: otherControlSettingValue.position + 1 }
+							)
+						);
+					}
+				});
+
+				// Make this control the following sibling of its parent item.
+				settingValue.position = parentControl.setting().position + 1;
+				settingValue.menu_item_parent = parentControl.setting().menu_item_parent;
+				control.setting.set( settingValue );
+
+			} else if ( 1 === offset ) {
+				// Skip moving down an item that doesn't have a previous sibling.
+				if ( realPosition === 0 ) {
+					return;
+				}
+
+				// Make the control the first child of the previous sibling.
+				siblingControl = siblingControls[ realPosition - 1 ];
+				settingValue.menu_item_parent = siblingControl.getMenuItemPostId();
+				settingValue.position = 0;
+				control.setting.set( settingValue );
+
+				// Shift down all of the children items of the previous sibling
+				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
+					var otherControlSettingValue;
+					if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
+						otherControlSettingValue = _.clone( otherControl.setting() );
+						otherControl.setting.set(
+							$.extend(
+								otherControlSettingValue,
+								{ position: otherControlSettingValue.position + 1 }
+							)
+						);
+					}
+				});
 			}
 		}
 	} );
+
+	/**
+	 * wp.customize.Menus.MenuNameControl
+	 *
+	 * Customizer control for a nav menu's name.
+	 *
+	 * @constructor
+	 * @augments wp.customize.Control
+	 */
+	api.Menus.MenuNameControl = api.Control.extend({
+
+		ready: function() {
+			var control = this,
+				settingValue = control.setting();
+
+			/*
+			 * Since the control is not registered in PHP, we need to prevent the
+			 * preview's sending of the activeControls to result in this control
+			 * being deactivated.
+			 */
+			control.active.validate = function() {
+				return api.section( control.section() ).active();
+			};
+
+			control.nameElement = new api.Element( control.container.find( '.menu-name-field' ) );
+
+			control.nameElement.bind(function( value ) {
+				var settingValue = control.setting();
+				if ( settingValue && settingValue.name !== value ) {
+					settingValue = _.clone( settingValue );
+					settingValue.name = value;
+					control.setting.set( settingValue );
+				}
+			});
+			if ( settingValue ) {
+				control.nameElement.set( settingValue.name );
+			}
+
+			control.setting.bind(function( object ) {
+				if ( object ) {
+					control.nameElement.set( object.name );
+				}
+			});
+		}
+
+	});
 
 	/**
 	 * wp.customize.Menus.MenuControl
@@ -1540,217 +1646,158 @@
 		 * Set up the control.
 		 */
 		ready: function() {
-			this.$controlSection = this.container.closest( '.control-section' );
-			this.$sectionContent = this.container.closest( '.accordion-section-content' );
+			var control = this,
+				menuId = control.getMenuTermId();
+
+			/*
+			 * Since the control is not registered in PHP, we need to prevent the
+			 * preview's sending of the activeControls to result in this control
+			 * being deactivated.
+			 */
+			control.active.validate = function() {
+				return api.section( control.section() ).active();
+			};
+
+			control.$controlSection = control.container.closest( '.control-section' );
+			control.$sectionContent = control.container.closest( '.accordion-section-content' );
 
 			this._setupModel();
-			this._setupSortable();
+
+			api.section( control.section(), function( section ) {
+				section.deferred.initSortables.done(function( menuList ) {
+					control._setupSortable( menuList );
+				});
+			} );
+
 			this._setupAddition();
 			this._applyCardinalOrderClassNames();
 			this._setupLocations();
+			this._setupTitle();
+
+			// Add menu to Custom Menu widgets.
+			if ( control.setting() ) {
+				api.control.each( function( widgetControl ) {
+					if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+						return;
+					}
+					var select = widgetControl.container.find( 'select' );
+					if ( select.find( 'option[value=' + String( menuId ) + ']' ).length === 0 ) {
+						select.append( new Option( control.setting().name, menuId ) );
+					}
+				} );
+				$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first' ).append( new Option( control.setting().name, menuId ) );
+			}
 		},
 
 		/**
 		 * Update ordering of menu item controls when the setting is updated.
 		 */
 		_setupModel: function() {
-			var self = this;
+			var control = this,
+				menuId = control.getMenuTermId();
 
-			this.setting.bind( function( newMenuItemIds, oldMenuItemIds ) {
-				var menuItemControls, $menuAddControl, finalControlContainers, removedMenuItemIds;
+			control.elements = {};
+			control.elements.auto_add = new api.Element( control.container.find( 'input[type=checkbox].auto_add' ) );
 
-				removedMenuItemIds = _( oldMenuItemIds ).difference( newMenuItemIds );
+			control.elements.auto_add.bind(function( auto_add ) {
+				var settingValue = control.setting();
+				if ( settingValue && settingValue.auto_add !== auto_add ) {
+					settingValue = _.clone( settingValue );
+					settingValue.auto_add = auto_add;
+					control.setting.set( settingValue );
+				}
+			});
+			control.elements.auto_add.set( control.setting().auto_add );
+			control.setting.bind(function( object ) {
+				if ( ! object ) {
+					return;
+				}
+				control.elements.auto_add.set( object.auto_add );
+			});
 
-				menuItemControls = _( newMenuItemIds ).map( function( menuItemId ) {
-					var menuItemControl = api.Menus.getMenuItemControl( menuItemId );
-
-					return menuItemControl;
-				} );
-
-				// Sort menu item controls to their new positions.
-				menuItemControls.sort( function( a, b ) {
-					if ( ! a || ! b ) {
-						return;
-					}
-					var aIndex = _.indexOf( newMenuItemIds, a.params.menu_item_id ),
-						bIndex = _.indexOf( newMenuItemIds, b.params.menu_item_id );
-
-					if ( aIndex === bIndex ) {
-						return 0;
-					}
-
-					return aIndex < bIndex ? -1 : 1;
-				} );
-
-				// Append the controls to put them in the right order
-				finalControlContainers = _( menuItemControls ).map( function( menuItemControl ) {
-					return menuItemControl.container;
-				} );
-
-				$menuAddControl = self.$sectionContent.find( '.customize-control-menu' );
-				$menuAddControl.before( finalControlContainers );
-
-				// Re-sort menu item controls.
-				self._applyCardinalOrderClassNames();
-
-				// Cleanup after menu item removal.
-				_( removedMenuItemIds ).each( function( removedMenuItemId ) {
-					var removedControl = api.Menus.getMenuItemControl( removedMenuItemId );
-
-					// Delete any menu item controls for removed items.
-					if ( removedControl ) {
-						api.control.remove( removedControl.id );
-						removedControl.container.remove();
-					}
-				} );
+			control.setting.bind( function( to ) {
+				if ( false === to ) {
+					control._handleDeletion();
+				} else {
+					// Update names in the Custom Menu widgets.
+					api.control.each( function( widgetControl ) {
+						if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+							return;
+						}
+						var select = widgetControl.container.find( 'select' );
+						select.find( 'option[value=' + String( menuId ) + ']' ).text( to.name );
+					});
+					$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).text( to.name );
+				}
 			} );
+
+			control.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
+				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
+					return;
+				}
+				event.stopPropagation();
+				event.preventDefault();
+				control.confirmDelete();
+			});
 		},
 
 		/**
 		 * Allow items in each menu to be re-ordered, and for the order to be previewed.
+		 *
+		 * Notice that the UI aspects here are handled by wpNavMenu.initSortables()
+		 * which is called in MenuSection.onChangeExpanded()
+		 *
+		 * @param {object} menuList - The element that has sortable().
 		 */
-		_setupSortable: function() {
-			var self = this;
+		_setupSortable: function( menuList ) {
+			var control = this;
 
-			this.isReordering = false;
+			if ( ! menuList.is( control.$sectionContent ) ) {
+				throw new Error( 'Unexpected menuList.' );
+			}
 
-			/**
-			 * Update menu item order setting when controls are re-ordered.
-			 */
-			this.$sectionContent.sortable( {
-				items: '> .customize-control-menu_item',
-				handle: '.menu-item-handle',
-				placeholder: 'sortable-placeholder',
-				connectWith: '.accordion-section-content:has(.customize-control-menu_item)',
-				update: function() {
-					var menuItemContainerIds = self.$sectionContent.sortable( 'toArray' ), menuItemIds;
+			menuList.on( 'sortstart', function() {
+				control.isSorting = true;
+			});
 
-					menuItemIds = $.map( menuItemContainerIds, function( menuItemContainerId ) {
-						return parseInt( menuItemContainerId.replace( 'customize-control-nav_menus-' + self.params.menu_id + '-', '' ), 10 );
+			menuList.on( 'sortstop', function() {
+				setTimeout( function() { // Next tick.
+					var menuItemContainerIds = control.$sectionContent.sortable( 'toArray' ),
+						menuItemControls = [],
+						position = 0,
+						priority = 10;
+
+					control.isSorting = false;
+
+					_.each( menuItemContainerIds, function( menuItemContainerId ) {
+						var menuItemId, menuItemControl, matches;
+						matches = menuItemContainerId.match( /^customize-control-nav_menu_item-(-?\d+)$/, '' );
+						if ( ! matches ) {
+							return;
+						}
+						menuItemId = parseInt( matches[1], 10 );
+						menuItemControl = api.control( 'nav_menu_item[' + String( menuItemId ) + ']' );
+						if ( menuItemControl ) {
+							menuItemControls.push( menuItemControl );
+						}
 					} );
 
-					self.setting( menuItemIds );
-				}
-/*
-
-			@TODO: logic from nav-menu.js for sub-menu depths, etc. Needs to be adapted to work here.
-				start: function( e, ui ) {
-					var height, width, parent, children, tempHolder;
-
-					// handle placement for rtl orientation
-					if ( api.isRTL ) { // @todo Customizer RTL.
-						ui.item[0].style.right = 'auto';
-					}
-
-					transport = ui.item.children('.menu-item-transport');
-
-					// Set depths. currentDepth must be set before children are located.
-					originalDepth = ui.item.find( '.menu-item' ).data( 'item-depth' );
-					currentDepth = originalDepth;
-
-					// Attach child elements to parent
-					// Skip the placeholder
-					parent = ( ui.item.next()[0] == ui.placeholder[0] ) ? ui.item.next() : ui.item;
-					children = parent.getItemChildMenuItems();
-					transport.append( children );
-
-					// Update the height of the placeholder to match the moving item.
-					height = transport.outerHeight();
-					// If there are children, account for distance between top of children and parent
-					height += ( height > 0 ) ? (ui.placeholder.css('margin-top').slice(0, -2) * 1) : 0;
-					height += ui.helper.outerHeight();
-					helperHeight = height;
-					height -= 2; // Subtract 2 for borders
-					ui.placeholder.height(height);
-
-					// Update the width of the placeholder to match the moving item.
-					maxChildDepth = originalDepth;
-					children.each(function(){
-						var depth = $(this).menuItemDepth();
-						maxChildDepth = (depth > maxChildDepth) ? depth : maxChildDepth;
+					_.each( menuItemControls, function( menuItemControl ) {
+						var setting = _.clone( menuItemControl.setting() );
+						position += 1;
+						priority += 1;
+						setting.position = position;
+						setting.menu_item_parent = parseInt( menuItemControl.container.find( '.menu-item-data-parent-id' ).val(), 10 );
+						if ( ! setting.menu_item_parent ) {
+							setting.menu_item_parent = 0;
+						}
+						menuItemControl.setting.set( setting );
+						menuItemControl.priority( priority );
 					});
-					width = ui.helper.find('.menu-item-handle').outerWidth(); // Get original width
-					width += api.depthToPx(maxChildDepth - originalDepth); // Account for children
-					width -= 2; // Subtract 2 for borders
-					ui.placeholder.width(width);
+				});
+			});
 
-					// Update the list of menu items.
-					tempHolder = ui.placeholder.next();
-					tempHolder.css( 'margin-top', helperHeight + 'px' ); // Set the margin to absorb the placeholder
-					ui.placeholder.detach(); // detach or jQuery UI will think the placeholder is a menu item
-					$(this).sortable( 'refresh' ); // The children aren't sortable. We should let jQ UI know.
-					ui.item.after( ui.placeholder ); // reattach the placeholder.
-					tempHolder.css('margin-top', 0); // reset the margin
-
-					// Now that the element is complete, we can update...
-					updateSharedVars(ui);
-				},
-				stop: function(e, ui) {
-					var children, subMenuTitle,
-						depthChange = currentDepth - originalDepth;
-
-					// Return child elements to the list
-					children = transport.children().insertAfter(ui.item);
-
-					// Add "sub menu" description
-					subMenuTitle = ui.item.find( '.item-title .is-submenu' );
-					if ( 0 < currentDepth )
-						subMenuTitle.show();
-					else
-						subMenuTitle.hide();
-
-					// Update depth classes
-					if ( 0 !== depthChange ) {
-						ui.item.updateDepthClass( currentDepth );
-						children.shiftDepthClass( depthChange );
-						updateMenuMaxDepth( depthChange );
-					}
-					// Register a change
-					api.registerChange();
-					// Update the item data.
-					ui.item.updateParentMenuItemDBId();
-
-					// address sortable's incorrectly-calculated top in opera
-					ui.item[0].style.top = 0;
-
-					// handle drop placement for rtl orientation
-					if ( api.isRTL ) {
-						ui.item[0].style.left = 'auto';
-						ui.item[0].style.right = 0;
-					}
-
-					api.refreshKeyboardAccessibility();
-					api.refreshAdvancedAccessibility();
-				},
-				change: function(e, ui) {
-					// Make sure the placeholder is inside the menu.
-					// Otherwise fix it, or we're in trouble.
-					if( ! ui.placeholder.parent().hasClass('menu') )
-						(prev.length) ? prev.after( ui.placeholder ) : api.menuList.prepend( ui.placeholder );
-
-					updateSharedVars(ui);
-				},
-				sort: function(e, ui) {
-					var offset = ui.helper.offset(),
-						edge = api.isRTL ? offset.left + ui.helper.width() : offset.left,
-						depth = api.negateIfRTL * api.pxToDepth( edge - menuEdge );
-					// Check and correct if depth is not within range.
-					// Also, if the dragged element is dragged upwards over
-					// an item, shift the placeholder to a child position.
-					if ( depth > maxDepth || offset.top < prevBottom ) depth = maxDepth;
-					else if ( depth < minDepth ) depth = minDepth;
-
-					if( depth != currentDepth )
-						updateCurrentDepth(ui, depth);
-
-					// If we overlap the next element, manually shift downwards
-					if( nextThreshold && offset.top + helperHeight > nextThreshold ) {
-						next.after( ui.placeholder );
-						updateSharedVars( ui );
-						$( this ).sortable( 'refreshPositions' );
-					}
-				}*/
-			} );
+			control.isReordering = false;
 
 			/**
 			 * Keyboard-accessible reordering.
@@ -1760,7 +1807,7 @@
 					return;
 				}
 
-				self.toggleReordering( ! self.isReordering );
+				control.toggleReordering( ! control.isReordering );
 			} );
 		},
 
@@ -1788,44 +1835,167 @@
 			} );
 		},
 
+		_handleDeletion: function() {
+			var control = this,
+				section,
+				menuId = control.getMenuTermId(),
+				removeSection;
+			section = api.section( control.section() );
+			removeSection = function() {
+				section.container.remove();
+				api.section.remove( section.id );
+			};
+
+			if ( section && section.expanded() ) {
+				section.collapse({
+					completeCallback: function() {
+						removeSection();
+						wp.a11y.speak( api.Menus.data.l10n.menuDeleted );
+						api.panel( 'menus' ).focus();
+					}
+				});
+			} else {
+				removeSection();
+			}
+
+			// Remove the menu from any Custom Menu widgets.
+			api.control.each(function( widgetControl ) {
+				if ( ! widgetControl.extended( api.controlConstructor.widget_form ) || 'nav_menu' !== widgetControl.params.widget_id_base ) {
+					return;
+				}
+				var select = widgetControl.container.find( 'select' );
+				if ( select.val() === String( menuId ) ) {
+					select.prop( 'selectedIndex', 0 ).trigger( 'change' );
+				}
+				select.find( 'option[value=' + String( menuId ) + ']' ).remove();
+			});
+			$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).remove();
+		},
+
 		/**
 		 * Add classes to the menu item controls to assist with styling.
 		 */
 		_applyCardinalOrderClassNames: function() {
-			this.$sectionContent.find( '.customize-control-menu_item' )
+			this.$sectionContent.find( '.customize-control-nav_menu_item' )
 				.removeClass( 'first-item' )
 				.removeClass( 'last-item' )
 				.find( '.menus-move-down, .menus-move-up' ).prop( 'tabIndex', 0 );
 
-			this.$sectionContent.find( '.customize-control-menu_item:first' )
+			this.$sectionContent.find( '.customize-control-nav_menu_item:first' )
 				.addClass( 'first-item' )
 				.find( '.menus-move-up' ).prop( 'tabIndex', -1 );
 
-			this.$sectionContent.find( '.customize-control-menu_item:last' )
+			this.$sectionContent.find( '.customize-control-nav_menu_item:last' )
 				.addClass( 'last-item' )
 				.find( '.menus-move-down' ).prop( 'tabIndex', -1 );
 		},
 
 		// Setup theme location checkboxes.
 		_setupLocations: function() {
-			var boxes = this.container.find( '.customize-control-checkbox input' );
-			boxes.on( 'change', function() {
-				var $this = $( this ), locationId, menuId, locationControl;
-				locationId = $this.data( 'location-id' );
-				menuId = $this.data( 'menu-id' );
-				locationControl = api.control( 'nav_menu_locations[' + locationId + ']' );
-				if ( $this.prop( 'checked' ) ) {
-					locationControl.setting( menuId );
-				} else {
-					locationControl.setting( 0 );
-				}
-				// Note: the setting change binding on the location control handle UI updates.
+			var control = this;
+
+			control.container.find( '.assigned-menu-location' ).each(function() {
+				var container = $( this ),
+					checkbox = container.find( 'input[type=checkbox]' ),
+					element,
+					updateSelectedMenuLabel,
+					navMenuLocationSetting = api( 'nav_menu_locations[' + checkbox.data( 'location-id' ) + ']' );
+
+				updateSelectedMenuLabel = function( selectedMenuId ) {
+					var menuSetting = api( 'nav_menu[' + String( selectedMenuId ) + ']' );
+					if ( ! selectedMenuId || ! menuSetting || ! menuSetting() ) {
+						container.find( '.theme-location-set' ).hide();
+					} else {
+						container.find( '.theme-location-set' ).show().find( 'span' ).text( menuSetting().name );
+					}
+				};
+
+				element = new api.Element( checkbox );
+				element.set( navMenuLocationSetting.get() === control.getMenuTermId() );
+
+				checkbox.on( 'change', function() {
+					// Note: We can't use element.bind( function( checked ){ ... } ) here because it will trigger a change as well.
+					navMenuLocationSetting.set( this.checked ? control.getMenuTermId() : 0 );
+				} );
+
+				navMenuLocationSetting.bind(function( selectedMenuId ) {
+					element.set( selectedMenuId === control.getMenuTermId() );
+					updateSelectedMenuLabel( selectedMenuId );
+				});
+				updateSelectedMenuLabel( navMenuLocationSetting.get() );
+
 			});
+		},
+
+		/**
+		 * Update Section Title as menu name is changed.
+		 */
+		_setupTitle: function() {
+			var control = this;
+
+			control.setting.bind( function( menu ) {
+				if ( ! menu ) {
+					return;
+				}
+
+				// Empty names are not allowed (will not be saved), don't update to one.
+				if ( menu.name ) {
+					var section = control.container.closest( '.accordion-section' ),
+						menuId = control.getMenuTermId(),
+						controlTitle = section.find( '.accordion-section-title' ),
+						sectionTitle = section.find( '.customize-section-title h3' ),
+						location = section.find( '.menu-in-location' ),
+						action = sectionTitle.find( '.customize-action' );
+
+					// Update the control title
+					controlTitle.text( menu.name );
+					if ( location.length ) {
+						location.appendTo( controlTitle );
+					}
+
+					// Update the section title
+					sectionTitle.text( menu.name );
+					if ( action.length ) {
+						action.prependTo( sectionTitle );
+					}
+
+					// Update the nav menu name in location selects.
+					api.control.each( function( control ) {
+						if ( /^nav_menu_locations\[/.test( control.id ) ) {
+							control.container.find( 'option[value=' + menuId + ']' ).text( menu.name );
+						}
+					} );
+
+					// Update the nav menu name in all location checkboxes.
+					section.find( '.customize-control-checkbox input' ).each( function() {
+						if ( $( this ).prop( 'checked' ) ) {
+							$( '.current-menu-location-name-' + $( this ).data( 'location-id' ) ).text( menu.name );
+						}
+					} );
+				}
+			} );
 		},
 
 		/***********************************************************************
 		 * Begin public API methods
 		 **********************************************************************/
+
+		/**
+		 *
+		 * @returns {Number}
+		 */
+		getMenuTermId: function() {
+			var matches = this.setting.id.match( /^nav_menu\[(.+?)]/ ),
+				menuTermId = parseInt( matches[1], 10 );
+			return menuTermId;
+		},
+
+		confirmDelete: function() {
+			var control = this;
+			if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
+				control.setting.set( false );
+			}
+		},
 
 		/**
 		 * Enable/disable the reordering UI
@@ -1853,115 +2023,84 @@
 		 * @return {wp.customize.controlConstructor.menu_item[]}
 		 */
 		getMenuItemControls: function() {
-			var self = this, formControls;
+			var menuControl = this,
+				menuItemControls = [],
+				menuTermId = menuControl.getMenuTermId();
 
-			formControls = _( this.setting() ).map( function( menuItemId ) {
-				var settingId = menuItemIdToSettingId( menuItemId, self.params.menu_id ),
-					formControl = api.control( settingId );
-
-				if ( ! formControl ) {
-					return;
+			api.control.each(function( control ) {
+				if ( /^nav_menu_item\[/.test( control.id ) && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
+					menuItemControls.push( control );
 				}
+			});
 
-				return formControl;
-			} );
-
-			return formControls;
+			return menuItemControls;
 		},
 
 		/**
 		 * Add a new item to this menu.
 		 *
-		 * @param {number}   item - Object ID.
-		 * @param {function} [callback] - Callback to fire when item is added.
-		 * @returns {object|false} menu_item control instance, or false on error.
+		 * @param {object} item - Value for the nav_menu_item setting to be created.
+		 * @returns {wp.customize.Menus.controlConstructor.nav_menu_item} The newly-created nav_menu_item control instance.
 		 */
-		addItemToMenu: function( item, callback ) {
-			var self = this, placeholderTemplate, params, placeholderContainer, processing,
-				menuId = self.params.menu_id,
-				menuControl = $( '#customize-control-nav_menu_' + menuId );
+		addItemToMenu: function( item ) {
+			var menuControl = this, customizeId, settingArgs, setting, menuItemControl, placeholderId, position = 0, priority = 10;
 
-			placeholderTemplate = wp.template( 'loading-menu-item' );
-
-			// Insert a placeholder menu item into the menu.
-			menuControl.before( placeholderTemplate( item ) );
-
-			placeholderContainer = menuControl.prev( '.nav-menu-inserted-item-loading' );
-
-			callback = callback || function() {};
-
-			// Trigger customizer processing state.
-			processing = wp.customize.state( 'processing' );
-			processing( processing() + 1 );
-
-			params = {
-				'action': 'add-menu-item-customizer',
-				'wp_customize': 'on',
-				'customize-menu-item-nonce': api.Menus.data.nonce,
-				'menu': menuId,
-				'menu-item': item,
-				'priority': self.setting._value.length + 10
-			};
-
-			$.post( wp.ajax.settings.url, params, function( response ) {
-				if ( response.data && response.data.message ) {
-					// Display error message
-					alert( response.data.message );
-				} else if ( response.success && response.data ) {
-					var dbid, settingId, settingArgs, ControlConstructor, menuItemControl, menuItems;
-
-					response.data.priority = parseInt( response.data.priority, 10 );
-					response.data.original_id = 0; // Set to 0 to avoid cloning when updated before publish.
-
-					dbid = response.data.menu_item_id;
-
-					// Register the new setting.
-					settingId = 'nav_menus[' + menuId + '][' + dbid + ']';
-					settingArgs = {
-						transport: api.Menus.data.menuItemTransport,
-						previewer: self.setting.previewer
-					};
-					api.create( settingId, settingId, '', settingArgs );
-					api( settingId ).set( {} ); // Change from '' to {} to mark as dirty
-					// @todo: Instead of {}, the initial setting should have an ID, title, and menu_item_parent
-
-					// Register the new control.
-					ControlConstructor = api.controlConstructor.menu_item;
-					menuItemControl = new ControlConstructor( settingId, {
-						params: response.data,
-						active: true,
-						type: 'menu_item',
-						depth: 0,
-						section: 'nav_menus[' + menuId + ']',
-						previewer: self.setting.previewer
-					} );
-					api.control.add( settingId, menuItemControl );
-					api.control( settingId ).actuallyEmbed();
-
-					// Make sure the panel hasn't been closed in the meantime.
-					if ( $( 'body' ).hasClass( 'adding-menu-items' ) ) {
-						api.control( settingId ).toggleDeletePosition( true );
-					}
-
-					// Add item to this menu.
-					menuItems = self.setting().slice();
-					if ( -1 === _.indexOf( menuItems, dbid ) ) {
-						menuItems.push( dbid );
-						self.setting( menuItems );
-					}
-
-					$( document ).trigger( 'menu-item-added', [ item ] );
-					wp.a11y.speak( api.Menus.data.l10n.itemAdded );
-
-					callback();
+			_.each( menuControl.getMenuItemControls(), function( control ) {
+				if ( false === control.setting() ) {
+					return;
 				}
-				// Remove the placeholder.
-				placeholderContainer.remove();
-
-				// Remove this level of the customizer processing state.
-				processing( processing() - 1 );
+				priority = Math.max( priority, control.priority() );
+				if ( 0 === control.setting().menu_item_parent ) {
+					position = Math.max( position, control.setting().position );
+				}
 			});
+			position += 1;
+			priority += 1;
 
+			item = $.extend(
+				{},
+				api.Menus.data.defaultSettingValues.nav_menu_item,
+				item,
+				{
+					nav_menu_term_id: menuControl.getMenuTermId(),
+					original_title: item.title,
+					position: position
+				}
+			);
+			delete item.id; // only used by Backbone
+
+			placeholderId = api.Menus.generatePlaceholderAutoIncrementId();
+			customizeId = 'nav_menu_item[' + String( placeholderId ) + ']';
+			settingArgs = {
+				type: 'nav_menu_item',
+				transport: 'postMessage',
+				previewer: api.previewer
+			};
+			setting = api.create( customizeId, customizeId, {}, settingArgs );
+			setting.set( item ); // Change from initial empty object to actual item to mark as dirty.
+
+			// Add the menu item control.
+			menuItemControl = new api.controlConstructor.nav_menu_item( customizeId, {
+				params: {
+					type: 'nav_menu_item',
+					content: '<li id="customize-control-nav_menu_item-' + String( placeholderId ) + '" class="customize-control customize-control-nav_menu_item"></li>',
+					menu_id: placeholderId,
+					section: menuControl.id,
+					priority: priority,
+					active: true,
+					settings: {
+						'default': customizeId
+					}
+				},
+				previewer: api.previewer
+			} );
+
+			menuItemControl.toggleDeletePosition( true );
+
+			api.control.add( customizeId, menuItemControl );
+			setting.preview();
+
+			return menuItemControl;
 		}
 	} );
 
@@ -1999,174 +2138,63 @@
 				event.stopPropagation();
 				event.preventDefault();
 			} );
-			$( '#accordion-panel-menus' ).on( 'click keydown', '.menu-delete', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
-				self.submitDelete( event.target );
-				event.stopPropagation();
-				event.preventDefault();
-			} );
 		},
 
+		/**
+		 * Create the new menu with the name supplied.
+		 *
+		 * @returns {boolean}
+		 */
 		submit: function() {
-			var self = this,
-				processing,
-				params,
-				container = this.container.closest( '.accordion-section-new-menu' ),
-				name = container.find( '.menu-name-field' ).first(),
-				spinner = container.find( '.spinner' );
 
-			// Show spinner.
-			spinner.css( 'visibility', 'visible' );
+			var control = this,
+				container = control.container.closest( '.accordion-section-new-menu' ),
+				nameInput = container.find( '.menu-name-field' ).first(),
+				name = nameInput.val(),
+				menuSection,
+				customizeId,
+				placeholderId = api.Menus.generatePlaceholderAutoIncrementId();
 
-			// Trigger customizer processing state.
-			processing = wp.customize.state( 'processing' );
-			processing( processing() + 1 );
+			customizeId = 'nav_menu[' + String( placeholderId ) + ']';
 
-			params = {
-				'action': 'add-nav-menu-customizer',
-				'wp_customize': 'on',
-				'menu-name': name.val(),
-				'customize-nav-menu-nonce': api.Menus.data.nonce
-			};
-
-			$.post( wp.ajax.settings.url, params, function( response ) {
-				if ( response.data && response.data.message ) {
-					// Display error message
-					alert( response.data.message );
-
-					// Remove this level of the customizer processing state.
-					processing( processing() - 1 );
-
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-				} else if ( response.success && response.data && response.data.id && response.data.name ) {
-					var priority, sectionId, SectionConstructor, menuSection,
-						menuSettingId, settingArgs, ControlConstructor, menuControl,
-						sectionParams, option;
-					response.data.id = parseInt( response.data.id, 10 );
-					sectionId = 'nav_menus[' + response.data.id + ']';
-					sectionParams = {
-						id: sectionId,
-						panel: 'menus',
-						title: response.data.name,
-						customizeAction: api.Menus.data.l10n.customizingMenus,
-						type: 'menu',
-						priority: priority
-					};
-
-					// Add the menu section.
-					SectionConstructor = api.Section;
-					menuSection = new SectionConstructor( sectionId, {
-						params: sectionParams
-					} );
-					api.section.add( sectionId, menuSection );
-
-					// Register the menu control setting.
-					menuSettingId = 'nav_menu_' + response.data.id;
-					settingArgs = {
-						type: 'nav_menu',
-						transport: 'refresh',
-						previewer: self.setting.previewer
-					};
-					api.create( menuSettingId, menuSettingId, '', settingArgs );
-					api( menuSettingId ).set( [] ); // Change to mark as dirty.
-
-					// Add the menu control.
-					ControlConstructor = api.controlConstructor.nav_menu;
-					menuControl = new ControlConstructor( menuSettingId, {
-						params: {
-							type: 'nav_menu',
-							content: '<li id="customize-control-nav_menu_' + response.data.id + '" class="customize-control customize-control-nav_menu"></li>', // @todo core should do this for us
-							menu_id: response.data.id,
-							section: sectionId,
-							priority: 998,
-							active: true,
-							settings: {
-								'default': menuSettingId
-							}
-						},
-						previewer: self.setting.previewer
-					} );
-					api.control.add( menuSettingId, menuControl );
-
-					// @todo: nemu name and auto-add new items controls
-					// requires @link https://core.trac.wordpress.org/ticket/30738 at a minimum to be reasonable
-
-					// Add the new menu as an option to each theme location control.
-					option = '<option value="' + response.data.id + '">' + response.data.name + '</option>';
-					$( '#accordion-section-menu_locations .customize-control select' ).append( option );
-
-					// Remove this level of the customizer processing state.
-					processing( processing() - 1 );
-
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
-
-					// Clear name field.
-					name.val( '' );
-
-					wp.a11y.speak( api.Menus.data.l10n.menuAdded );
-
-					// Focus on the new menu section.
-					api.section( sectionId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
+			// Register the menu control setting.
+			api.create( customizeId, customizeId, {}, {
+				type: 'nav_menu',
+				transport: 'postMessage',
+				previewer: api.previewer
+			} );
+			api( customizeId ).set( $.extend(
+				{},
+				api.Menus.data.defaultSettingValues.nav_menu,
+				{
+					name: name
 				}
-			});
+			) );
 
-			return false;
-		},
-
-		// Deletes a menu (pending user confirmation).
-		submitDelete: function( el ) {
-			var params, dropdowns,
-				menuId = $( el ).attr( 'id' ).replace( 'delete-menu-', '' ),
-				section = $( el ).closest( '.accordion-section' ),
-				spinner = section.find( '.add-menu-item-loading.spinner' );
-
-			if ( menuId ) {
-				// Show spinner.
-				spinner.css( 'visibility', 'visible' );
-
-				// Prompt user with an AYS.
-				if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
-					section.addClass( 'deleting' );
-
-					// Delete the menu.
-					params = {
-						'action': 'delete-menu-customizer',
-						'wp_customize': 'on',
-						'menu': menuId,
-						'customize-nav-menu-nonce': api.Menus.data.nonce
-					};
-					$.post( wp.ajax.settings.url, params, function( response ) {
-						if ( response.data && response.data.message ) {
-							// Display error message
-							alert( response.data.message );
-
-							// Remove the CSS class
-							section.removeClass( 'deleting' );
-						} else if ( response.success ) {
-							api.section( 'nav_menus[' + menuId + ']' ).collapse();
-							section.remove(); // @todo core there should be API methods for deleting sections.
-
-							// Focus the menu panel.
-							api.panel( 'menus' ).focus();
-
-							// Remove the option from the theme location dropdowns.
-							dropdowns = $( '#accordion-section-menu_locations .customize-control select' );
-							dropdowns.find( 'option[value=' + menuId + ']' ).remove();
-
-							wp.a11y.speak( api.Menus.data.l10n.menuDeleted );
-						}
-						// Hide spinner.
-						spinner.css( 'visibility', 'hidden' );
-					} );
-				} else {
-					// Hide spinner.
-					spinner.css( 'visibility', 'hidden' );
+			/*
+			 * Add the menu section (and its controls).
+			 * Note that this will automatically create the required controls
+			 * inside via the Section's ready method.
+			 */
+			menuSection = new api.Menus.MenuSection( customizeId, {
+				params: {
+					id: customizeId,
+					panel: 'menus',
+					title: name,
+					customizeAction: api.Menus.data.l10n.customizingMenus,
+					type: 'menu',
+					priority: 10
 				}
-			}
+			} );
+			api.section.add( customizeId, menuSection );
+
+			// Clear name field.
+			nameInput.val( '' );
+
+			wp.a11y.speak( api.Menus.data.l10n.menuAdded );
+
+			// Focus on the new menu section.
+			api.section( customizeId ).focus(); // @todo should we focus on the new menu's control and open the add-items panel? Thinking user flow...
 		}
 	});
 
@@ -2175,9 +2203,10 @@
 	 * menu_location, menu_item, nav_menu, and new_menu.
 	 */
 	$.extend( api.controlConstructor, {
-		menu_location: api.Menus.MenuLocationControl,
-		menu_item: api.Menus.MenuItemControl,
+		nav_menu_location: api.Menus.MenuLocationControl,
+		nav_menu_item: api.Menus.MenuItemControl,
 		nav_menu: api.Menus.MenuControl,
+		nav_menu_name: api.Menus.MenuNameControl,
 		new_menu: api.Menus.NewMenuControl
 	});
 
@@ -2192,31 +2221,198 @@
 	 * Extends wp.customize.sectionConstructor with section constructor for menu.
 	 */
 	$.extend( api.sectionConstructor, {
-		menu: api.Menus.MenuSection,
+		nav_menu: api.Menus.MenuSection,
 		new_menu: api.Menus.NewMenuSection
 	});
-
-	/**
-	 * Capture the instance of the Previewer since it is private.
-	 */
-	OldPreviewer = api.Previewer;
-	api.Previewer = OldPreviewer.extend( {
-		initialize: function( params, options ) {
-			api.Menus.Previewer = this;
-			OldPreviewer.prototype.initialize.call( this, params, options );
-			this.bind( 'refresh', this.refresh );
-		}
-	} );
 
 	/**
 	 * Init Customizer for menus.
 	 */
 	api.bind( 'ready', function() {
+
 		// Set up the menu items panel.
 		api.Menus.availableMenuItemsPanel = new api.Menus.AvailableMenuItemsPanelView({
 			collection: api.Menus.availableMenuItems
 		});
+
+		api.bind( 'saved', function( data ) {
+			if ( data.nav_menu_updates || data.nav_menu_item_updates ) {
+				api.Menus.applySavedData( data );
+			}
+		} );
+
+		api.previewer.bind( 'refresh', function() {
+			api.previewer.refresh();
+		});
 	} );
+
+	/**
+	 * When customize_save comes back with a success, make sure any inserted
+	 * nav menus and items are properly re-added with their newly-assigned IDs.
+	 *
+	 * @param {object} data
+	 * @param {array} data.nav_menu_updates
+	 * @param {array} data.nav_menu_item_updates
+	 */
+	api.Menus.applySavedData = function( data ) {
+
+		var insertedMenuIdMapping = {};
+
+		_( data.nav_menu_updates ).each(function( update ) {
+			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, oldSection, newSection;
+			if ( 'inserted' === update.status ) {
+				if ( ! update.previous_term_id ) {
+					throw new Error( 'Expected previous_term_id' );
+				}
+				if ( ! update.term_id ) {
+					throw new Error( 'Expected term_id' );
+				}
+				oldCustomizeId = 'nav_menu[' + String( update.previous_term_id ) + ']';
+				if ( ! api.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected setting to exist: ' + oldCustomizeId );
+				}
+				oldSetting = api( oldCustomizeId );
+				if ( ! api.section.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected control to exist: ' + oldCustomizeId );
+				}
+				oldSection = api.section( oldCustomizeId );
+
+				settingValue = oldSetting.get();
+				if ( ! settingValue ) {
+					throw new Error( 'Did not expect setting to be empty (deleted).' );
+				}
+				settingValue = _.clone( settingValue );
+
+				insertedMenuIdMapping[ update.previous_term_id ] = update.term_id;
+				newCustomizeId = 'nav_menu[' + String( update.term_id ) + ']';
+				newSetting = api.create( newCustomizeId, newCustomizeId, settingValue, {
+					type: 'nav_menu',
+					transport: 'postMessage',
+					previewer: api.previewer
+				} );
+
+				if ( oldSection.expanded() ) {
+					oldSection.collapse();
+				}
+
+				// Add the menu section.
+				newSection = new api.Menus.MenuSection( newCustomizeId, {
+					params: {
+						id: newCustomizeId,
+						panel: 'menus',
+						title: settingValue.name,
+						customizeAction: api.Menus.data.l10n.customizingMenus,
+						type: 'menu',
+						priority: oldSection.priority.get(),
+						active: true
+					}
+				} );
+
+				// Remove old setting and control.
+				oldSection.container.remove();
+				api.section.remove( oldCustomizeId );
+
+				// Add new control to take its place.
+				api.section.add( newCustomizeId, newSection );
+
+				// Delete the placeholder and preview the new setting.
+				oldSetting.callbacks.disable(); // Prevent setting triggering Customizer dirty state when set.
+				oldSetting.set( false );
+				oldSetting.preview();
+				newSetting.preview();
+
+				// Update nav_menu_locations to reference the new ID.
+				api.each( function( setting ) {
+					var wasSaved = api.state( 'saved' ).get();
+					if ( /^nav_menu_locations\[/.test( setting.id ) && setting.get() === update.previous_term_id ) {
+						setting.set( update.term_id );
+						setting._dirty = false; // Not dirty because this is has also just been done on server in WP_Customize_Nav_Menu_Setting::update().
+						api.state( 'saved' ).set( wasSaved );
+						setting.preview();
+					}
+				} );
+
+				if ( oldSection.expanded.get() ) {
+					// @todo This doesn't seem to be working.
+					newSection.expand();
+				}
+
+				// @todo Update the Custom Menu selects, ensuring the newly-inserted IDs are used for any that have selected a placeholder menu.
+			}
+		} );
+
+		_( data.nav_menu_item_updates ).each(function( update ) {
+			var oldCustomizeId, newCustomizeId, oldSetting, newSetting, settingValue, oldControl, newControl;
+			if ( 'inserted' === update.status ) {
+				if ( ! update.previous_post_id ) {
+					throw new Error( 'Expected previous_post_id' );
+				}
+				if ( ! update.post_id ) {
+					throw new Error( 'Expected post_id' );
+				}
+				oldCustomizeId = 'nav_menu_item[' + String( update.previous_post_id ) + ']';
+				if ( ! api.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected setting to exist: ' + oldCustomizeId );
+				}
+				oldSetting = api( oldCustomizeId );
+				if ( ! api.control.has( oldCustomizeId ) ) {
+					throw new Error( 'Expected control to exist: ' + oldCustomizeId );
+				}
+				oldControl = api.control( oldCustomizeId );
+
+				settingValue = oldSetting.get();
+				if ( ! settingValue ) {
+					throw new Error( 'Did not expect setting to be empty (deleted).' );
+				}
+				settingValue = _.clone( settingValue );
+
+				// If the menu was also inserted, then make sure it uses the new menu ID for nav_menu_term_id.
+				if ( insertedMenuIdMapping[ settingValue.nav_menu_term_id ] ) {
+					settingValue.nav_menu_term_id = insertedMenuIdMapping[ settingValue.nav_menu_term_id ];
+				}
+
+				newCustomizeId = 'nav_menu_item[' + String( update.post_id ) + ']';
+				newSetting = api.create( newCustomizeId, newCustomizeId, settingValue, {
+					type: 'nav_menu_item',
+					transport: 'postMessage',
+					previewer: api.previewer
+				} );
+
+				// Add the menu control.
+				newControl = new api.controlConstructor.nav_menu_item( newCustomizeId, {
+					params: {
+						type: 'nav_menu_item',
+						content: '<li id="customize-control-nav_menu_item-' + String( update.post_id ) + '" class="customize-control customize-control-nav_menu_item"></li>',
+						menu_id: update.post_id,
+						section: 'nav_menu[' + String( settingValue.nav_menu_term_id ) + ']',
+						priority: oldControl.priority.get(),
+						active: true,
+						settings: {
+							'default': newCustomizeId
+						}
+					},
+					previewer: api.previewer
+				} );
+
+				// Remove old setting and control.
+				oldControl.container.remove();
+				api.control.remove( oldCustomizeId );
+
+				// Add new control to take its place.
+				api.control.add( newCustomizeId, newControl );
+
+				// Delete the placeholder and preview the new setting.
+				oldSetting.callbacks.disable(); // Prevent setting triggering Customizer dirty state when set.
+				oldSetting.set( false );
+				oldSetting.preview();
+				newSetting.preview();
+
+				newControl.container.toggleClass( 'menu-item-edit-inactive', oldControl.container.hasClass( 'menu-item-edit-inactive' ) );
+			}
+		});
+
+		// @todo trigger change event for each Custom Menu widget that was modified.
+	};
 
 	/**
 	 * Focus a menu item control.
@@ -2232,37 +2428,43 @@
 	};
 
 	/**
-	 * @param menu_id
+	 * Get the control for a given menu.
+	 *
+	 * @param menuId
 	 * @return {wp.customize.controlConstructor.menus[]}
 	 */
-	api.Menus.getMenuControl = function( menu_id ) {
-		var settingId, menuControl;
-
-		settingId = 'nav_menu_' + menu_id;
-		menuControl = api.control( settingId );
-
-		if ( ! menuControl ) {
-			return;
-		}
-
-		return menuControl;
+	api.Menus.getMenuControl = function( menuId ) {
+		return api.control( 'nav_menu[' + menuId + ']' );
 	};
 
 	/**
-	 * Given a menu item id, find the menu control that contains it.
-	 * @param {string} menuItemId
-	 * @return {object|null}
+	 * Given a menu item type & object, get the label associated with it.
+	 *
+	 * @param {string} type
+	 * @param {string} object
+	 * @return {string}
 	 */
-	api.Menus.getMenuControlContainingItem = function( menuItemId ) {
-		var foundControl = null;
+	api.Menus.getTypeLabel = function( type, object ) {
+		var label,
+			data = api.Menus.data;
 
-		api.control.each( function( control ) {
-			if ( 'menu' === control.params.type && -1 !== _.indexOf( control.setting(), menuItemId ) ) {
-				foundControl = control;
+		if ( 'post_type' === type ) {
+			if ( data.itemTypes.postTypes[ object ] ) {
+				label = data.itemTypes.postTypes[ object ].label;
+			} else {
+				label = data.l10n.postTypeLabel;
 			}
-		} );
+		} else if ( 'taxonomy' === type ) {
+			if ( data.itemTypes.taxonomies[ object ] ) {
+				label = data.itemTypes.taxonomies[ object ].label;
+			} else {
+				label = data.l10n.taxonomyTermLabel;
+			}
+		} else {
+			label = data.l10n.custom_label;
+		}
 
-		return foundControl;
+		return label;
 	};
 
 	/**
@@ -2272,80 +2474,14 @@
 	 * @return {object|null}
 	 */
 	api.Menus.getMenuItemControl = function( menuItemId ) {
-		var foundControl = null;
-
-		api.control.each( function( control ) {
-			if ( 'menu_item' === control.params.type && control.params.menu_item_id === menuItemId ) {
-				foundControl = control;
-			}
-		} );
-
-		return foundControl;
+		return api.control( menuItemIdToSettingId( menuItemId ) );
 	};
 
 	/**
 	 * @param {String} menuItemId
-	 * @returns {String} settingId
 	 */
-	function menuItemIdToSettingId( menuItemId, menuId ) {
-		return 'nav_menus[' + menuId + '][' + menuItemId + ']';
+	function menuItemIdToSettingId( menuItemId ) {
+		return 'nav_menu_item[' + menuItemId + ']';
 	}
 
-	/**
-	 * Update Section Title as menu name is changed and item handle title when label is changed.
-	 */
-	function setupUIPreviewing() {
-		$( '#accordion-panel-menus' ).on( 'input', '.live-update-section-title', function( e ) {
-			var input = $( e.currentTarget ),
-				section = input.closest( '.accordion-section' ),
-				name = input.val(),
-				title = section.find( '.accordion-section-title' ),
-				title2 = section.find( '.customize-section-title h3' ),
-				id = section.attr( 'id' ),
-				location = section.find( '.menu-in-location' ),
-				action = title2.find( '.customize-action' );
-			// Empty names are not allowed (will not be saved), don't update to one.
-			if ( name ) {
-				title.html( name );
-				if ( location.length ) {
-					location.appendTo( title );
-				}
-				title2.text( name );
-				if ( action.length ) {
-					action.prependTo( title2 );
-				}
-				id = id.replace( 'accordion-section-nav_menus[', '' );
-				id = id.replace( ']', '' );
-				$( '#accordion-section-menu_locations .customize-control select option[value=' + id + ']' ).text( name );
-
-				// Update menu name in other location checkboxes.
-				section.find( '.customize-control-checkbox input' ).each( function() {
-					var locationId = $( this ).data( 'location-id' );
-					if ( $( this ).prop( 'checked' ) ) {
-						$( '.current-menu-location-name-' + locationId ).text( name );
-					}
-				} );
-			}
-		} );
-		$( '#accordion-panel-menus' ).on( 'input', '.edit-menu-item-title', function( e ) {
-			var input = $( e.currentTarget ), title, titleEl;
-			title = input.val();
-			titleEl = input.closest( '.menu-item' ).find( '.menu-item-title' );
-			// Don't update to empty title.
-			if ( title ) {
-				titleEl
-					.text( title )
-					.removeClass( 'no-title' );
-			} else {
-				titleEl
-					.text( api.Menus.data.l10n.untitled )
-					.addClass( 'no-title' );
-			}
-		} );
-	}
-
-	$( document ).ready( function() {
-		setupUIPreviewing();
-	} );
-
-} )( window.wp, jQuery );
+})( wp.customize, wp, jQuery );

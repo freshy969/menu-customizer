@@ -1,7 +1,7 @@
 === Menu Customizer ===
 Contributors: celloexpressions, wordpressdotorg
 Tags: menus, custom menus, customizer, theme customizer, gsoc
-Requires at least: 4.3-alpha
+Requires at least: 4.3-alpha-32764
 Tested up to: trunk
 Stable tag: 0.5
 License: GPLv2

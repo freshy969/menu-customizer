@@ -31,15 +31,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * @subpackage Customize
  */
 
-require_once( plugin_dir_path( __FILE__ ) . 'class-wp-customize-menus.php' );
-
 /**
  * Initialize the Customizer Menus
  *
- * @param object $wp_customize An instance of the WP_Customize_Manager class.
+ * @param WP_Customize_Manager $wp_customize An instance of the WP_Customize_Manager class.
  */
 function menu_customizer_init( $wp_customize ) {
-	// All our sections, settings, and controls will be added here.
-	$menu_customizer = new WP_Customize_Menus( $wp_customize );
+	require_once ABSPATH . WPINC . '/class-wp-customize-setting.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-menus.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-new-menu-section.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-new-menu-control.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-setting.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-item-setting.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-menus-panel.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-control.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-item-control.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-name-control.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-section.php';
+	require_once plugin_dir_path( __FILE__ ) . 'class-wp-customize-nav-menu-location-control.php';
+
+	$wp_customize->menus = new WP_Customize_Menus( $wp_customize );
 }
-add_action( 'customize_register', 'menu_customizer_init' );
+add_action( 'customize_register', 'menu_customizer_init', 1 );

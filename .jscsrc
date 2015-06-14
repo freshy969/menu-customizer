@@ -2,6 +2,7 @@
 	"preset": "wordpress",
 	"requirePaddingNewLinesBeforeLineComments": null,
 	"requireCamelCaseOrUpperCaseIdentifiers": null,
+	"requireYodaConditions": null,
 	"excludeFiles": [
 		"**/vendor/**",
 		"**/*.min.js",
