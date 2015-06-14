@@ -35,7 +35,7 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	/**
 	 * Test constructor.
 	 *
-	 * @see WP_Customize_Nav_Menu_Setting::__construct()
+	 * @see WP_Customize_Menus::__construct()
 	 */
 	function test_construct() {
 		do_action( 'customize_register', $this->wp_customize );
@@ -44,7 +44,29 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test search_available_items_query method.
+	 * Test the test_load_available_items_ajax method.
+	 *
+	 * @see WP_Customize_Menus::load_available_items_ajax()
+	 */
+	function test_load_available_items_ajax() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the search_available_items_ajax method.
+	 *
+	 * @see WP_Customize_Menus::search_available_items_ajax()
+	 */
+	function test_search_available_items_ajax() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the search_available_items_query method.
 	 *
 	 * @see WP_Customize_Menus::search_available_items_query()
 	 */
@@ -114,6 +136,171 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 			$this->assertEquals( $expected, $results[0] );
 		}
 		
+	}
+
+	/**
+	 * Test the enqueue method.
+	 *
+	 * @see WP_Customize_Menus::enqueue()
+	 */
+	function test_enqueue() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the filter_dynamic_setting_args method.
+	 *
+	 * @see WP_Customize_Menus::filter_dynamic_setting_args()
+	 */
+	function test_filter_dynamic_setting_args() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the filter_dynamic_setting_class method.
+	 *
+	 * @see WP_Customize_Menus::filter_dynamic_setting_class()
+	 */
+	function test_filter_dynamic_setting_class() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the customize_register method.
+	 *
+	 * @see WP_Customize_Menus::customize_register()
+	 */
+	function test_customize_register() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the intval_base10 method.
+	 *
+	 * @see WP_Customize_Menus::intval_base10()
+	 */
+	function test_intval_base10() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the available_item_types method.
+	 *
+	 * @see WP_Customize_Menus::available_item_types()
+	 */
+	function test_available_item_types() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the print_templates method.
+	 *
+	 * @see WP_Customize_Menus::print_templates()
+	 */
+	function test_print_templates() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the available_items_template method.
+	 *
+	 * @see WP_Customize_Menus::available_items_template()
+	 */
+	function test_available_items_template() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the customize_preview_init method.
+	 *
+	 * @see WP_Customize_Menus::customize_preview_init()
+	 */
+	function test_customize_preview_init() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the filter_wp_nav_menu_args method.
+	 *
+	 * @see WP_Customize_Menus::filter_wp_nav_menu_args()
+	 */
+	function test_filter_wp_nav_menu_args() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the filter_wp_nav_menu method.
+	 *
+	 * @see WP_Customize_Menus::filter_wp_nav_menu()
+	 */
+	function test_filter_wp_nav_menu() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the hash_nav_menu_args method.
+	 *
+	 * @see WP_Customize_Menus::hash_nav_menu_args()
+	 */
+	function test_hash_nav_menu_args() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the customize_preview_enqueue_deps method.
+	 *
+	 * @see WP_Customize_Menus::customize_preview_enqueue_deps()
+	 */
+	function test_customize_preview_enqueue_deps() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the export_preview_data method.
+	 *
+	 * @see WP_Customize_Menus::export_preview_data()
+	 */
+	function test_export_preview_data() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
+	}
+
+	/**
+	 * Test the render_menu method.
+	 *
+	 * @see WP_Customize_Menus::render_menu()
+	 */
+	function test_render_menu() {
+
+		$this->markTestIncomplete( 'This test has not been implemented.' );
+
 	}
 
 }
