@@ -215,6 +215,47 @@ class Test_WP_Customize_Nav_Menu_Item_Setting extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test value method returns zero for nav_menu_term_id when previewing a new menu.
+	 *
+	 * @see WP_Customize_Nav_Menu_Item_Setting::value()
+	 */
+	function test_value_nav_menu_term_id_returns_zero() {
+		do_action( 'customize_register', $this->wp_customize );
+
+		$menu_id = -123;
+		$post_value = array(
+			'name' => 'Secondary',
+			'description' => '',
+			'parent' => 0,
+			'auto_add' => false,
+		);
+		$setting_id = "nav_menu[$menu_id]";
+		$menu = new WP_Customize_Nav_Menu_Setting( $this->wp_customize, $setting_id );
+
+		$this->wp_customize->set_post_value( $menu->id, $post_value );
+		$menu->preview();
+		$value = $menu->value();
+		$this->assertEquals( $post_value, $value );
+
+		$post_id = $this->factory->post->create( array( 'post_title' => 'Hello World' ) );
+		$item_id = wp_update_nav_menu_item( $menu_id, 0, array(
+			'menu-item-type' => 'post_type',
+			'menu-item-object' => 'post',
+			'menu-item-object-id' => $post_id,
+			'menu-item-title' => 'Hello World',
+			'menu-item-status' => 'publish',
+		) );
+
+		$post = get_post( $item_id );
+		$menu_item = wp_setup_nav_menu_item( $post );
+
+		$setting_id = "nav_menu_item[$item_id]";
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, $setting_id );
+		$value = $setting->value();
+		$this->assertEquals( 0, $value['nav_menu_term_id'] );
+	}
+
+	/**
 	 * Test preview method for updated menu.
 	 *
 	 * @see WP_Customize_Nav_Menu_Item_Setting::preview()
