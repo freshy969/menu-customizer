@@ -87,7 +87,7 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 
 		// Create posts
 		$post_ids = array();
-		$post_ids[] = $this->factory->post->create( array( 'post_title' => 'Search Test' ) );
+		$post_ids[] = $this->factory->post->create( array( 'post_title' => 'Search & Test' ) );
 		$post_ids[] = $this->factory->post->create( array( 'post_title' => 'Some Other Title' ) );
 		
 		// Create terms
@@ -111,7 +111,8 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 				'title' => html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, get_bloginfo( 'charset' ) ),
 			);
 			wp_set_object_terms( $post_id, $term_ids, 'category' );
-			$s = sanitize_text_field( wp_unslash( get_the_title( $post_id ) ) );
+			$search = $post_id === $post_ids[0] ? 'test & search' : 'other title';
+			$s = sanitize_text_field( wp_unslash( $search ) );
 			$results = $menus->search_available_items_query( array( 'pagenum' => 1, 's' => $s ) );
 			$this->assertEquals( $expected, $results[0] );
 		}
