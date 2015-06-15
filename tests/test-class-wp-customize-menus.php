@@ -332,7 +332,7 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 		$results = $menus->filter_wp_nav_menu_args( array(
 			'echo'            => false,
 			'fallback_cb'     => 'wp_page_menu',
-			'walker'          => new Walker_Nav_Menu,
+			'walker'          => new Walker_Nav_Menu(),
 		) );
 		$this->assertEqualSets( $expected, array_keys( $results ) );
 		$this->assertEquals( 0, $results['can_partial_refresh'] );
