@@ -63,7 +63,7 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 						<span class="menu-item-title">{{ data.title }}</span>
 					</span>
 					<span class="item-controls">
-						<a class="item-edit" id="edit-{{ data.menu_item_id }}" title="<?php esc_attr_e( 'Edit Menu Item' ); ?>" href="#"><?php _e( 'Edit Menu Item' ); ?></a>
+						<button type="button" class="not-a-button item-edit" id="edit-{{ data.menu_item_id }}"><span class="screen-reader-text"><?php _e( 'Edit Menu Item' ); ?></span></button>
 					</span>
 				</dt>
 			</dl>
