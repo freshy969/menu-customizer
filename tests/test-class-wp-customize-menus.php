@@ -188,9 +188,20 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::customize_register()
 	 */
 	function test_customize_register() {
-
-		$this->markTestIncomplete( 'This test has not been implemented.' );
-
+		do_action( 'customize_register', $this->wp_customize );
+		$menu_id = wp_create_nav_menu( 'Primary' );
+		$post_id = $this->factory->post->create( array( 'post_title' => 'Hello World' ) );
+		$item_id = wp_update_nav_menu_item( $menu_id, 0, array(
+			'menu-item-type' => 'post_type',
+			'menu-item-object' => 'post',
+			'menu-item-object-id' => $post_id,
+			'menu-item-title' => 'Hello World',
+			'menu-item-status' => 'publish',
+		) );
+		$setting = new WP_Customize_Nav_Menu_Item_Setting( $this->wp_customize, "nav_menu_item[$item_id]" );
+		do_action( 'customize_register', $this->wp_customize );
+		$this->assertEquals( 'Primary', $this->wp_customize->get_section( "nav_menu[$menu_id]" )->title );
+		$this->assertEquals( 'Hello World', $this->wp_customize->get_control( "nav_menu_item[$item_id]" )->label );
 	}
 
 	/**
