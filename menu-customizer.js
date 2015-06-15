@@ -548,7 +548,7 @@
 				content = panelMeta.find( '.customize-panel-description' ),
 				options = $( '#screen-options-wrap' ),
 				button = panelMeta.find( '.customize-screen-options-toggle' );
-			button.on( 'click keydown', function( event ) {
+			button.on( 'click', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -575,7 +575,7 @@
 			} );
 
 			// Help toggle
-			help.on( 'click keydown', function( event ) {
+			help.on( 'click', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -842,7 +842,7 @@
 		 */
 		attachEvents: function() {
 			var section = this;
-			this.container.on( 'click keydown', '.add-menu-toggle', function( event ) {
+			this.container.on( 'click', '.add-menu-toggle', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -1172,7 +1172,7 @@
 			// Configure original link.
 			$origBtn = this.container.find( 'a.original-link' );
 
-			$origBtn.on( 'click keydown', function( e ) {
+			$origBtn.on( 'click', function( e ) {
 				if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
 					return;
 				}
@@ -1731,7 +1731,7 @@
 				}
 			} );
 
-			control.container.find( '.menu-delete' ).on( 'click keydown', function( event ) {
+			control.container.find( '.menu-delete' ).on( 'click', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
@@ -1806,11 +1806,7 @@
 			/**
 			 * Keyboard-accessible reordering.
 			 */
-			this.container.find( '.reorder-toggle' ).on( 'click keydown', function( event ) {
-				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
-					return;
-				}
-
+			this.container.find( '.reorder-toggle' ).on( 'click', function() {
 				control.toggleReordering( ! control.isReordering );
 			} );
 		},
@@ -1821,11 +1817,7 @@
 		_setupAddition: function() {
 			var self = this;
 
-			this.container.find( '.add-new-menu-item' ).on( 'click keydown', function( event ) {
-				if ( 'keydown' === event.type && ! ( 13 === event.which || 32 === event.which ) ) { // Enter or Spacebar
-					return;
-				}
-
+			this.container.find( '.add-new-menu-item' ).on( 'click', function( event ) {
 				if ( self.$sectionContent.hasClass( 'reordering' ) ) {
 					return;
 				}
@@ -2134,7 +2126,7 @@
 					self.submit();
 				}
 			} );
-			submit.on( 'click keydown', function( event ) {
+			submit.on( 'click', function( event ) {
 				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
 					return;
 				}
