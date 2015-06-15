@@ -156,12 +156,12 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 		$menus = new WP_Customize_Menus( $this->wp_customize );
 
 		$expected = array( 'type' => 'nav_menu_item' );
-		$setting = $menus->filter_dynamic_setting_args( $this->wp_customize, 'nav_menu_item[123]' );
-		$this->assertEquals( $expected, $setting );
+		$results = $menus->filter_dynamic_setting_args( $this->wp_customize, 'nav_menu_item[123]' );
+		$this->assertEquals( $expected, $results );
 
-		$setting = $menus->filter_dynamic_setting_args( $this->wp_customize, 'nav_menu[123]' );
 		$expected = array( 'type' => 'nav_menu' );
-		$this->assertEquals( $expected, $setting );
+		$results = $menus->filter_dynamic_setting_args( $this->wp_customize, 'nav_menu[123]' );
+		$this->assertEquals( $expected, $results );
 	}
 
 	/**
@@ -170,9 +170,16 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::filter_dynamic_setting_class()
 	 */
 	function test_filter_dynamic_setting_class() {
+		do_action( 'customize_register', $this->wp_customize );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
 
-		$this->markTestIncomplete( 'This test has not been implemented.' );
+		$expected = 'WP_Customize_Nav_Menu_Item_Setting';
+		$results = $menus->filter_dynamic_setting_class( 'WP_Customize_Setting', 'nav_menu_item[123]', array( 'type' => 'nav_menu_item' ) );
+		$this->assertEquals( $expected, $results );
 
+		$expected = 'WP_Customize_Nav_Menu_Setting';
+		$results = $menus->filter_dynamic_setting_class( 'WP_Customize_Setting', 'nav_menu[123]', array( 'type' => 'nav_menu' ) );
+		$this->assertEquals( $expected, $results );
 	}
 
 	/**
