@@ -620,10 +620,6 @@ button.not-a-button {
 	margin: 0;
 }
 
-#available-menu-items .accordion-section-title button {
-	font-size: 0;
-}
-
 #available-menu-items .accordion-section-title button:focus:before {
 	display: block;
 	content: "";
