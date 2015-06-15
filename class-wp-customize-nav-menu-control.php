@@ -19,6 +19,13 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 	public $type = 'nav_menu';
 
 	/**
+	 * The nav menu setting
+	 *
+	 * @var WP_Customize_Nav_Menu_Setting
+	 */
+	public $setting;
+
+	/**
 	 * Don't render the control's content - it uses a JS template instead.
 	 *
 	 * @since Menu Customizer 0.0
@@ -71,6 +78,17 @@ class WP_Customize_Nav_Menu_Control extends WP_Customize_Control {
 				<?php _e( 'Automatically add new top-level pages to this menu.' ) ?>
 			</label>
 		</p>
-	<?php
+		<?php
+	}
+
+	/**
+	 * Return params for this control.
+	 *
+	 * @return array
+	 */
+	function json() {
+		$exported = parent::json();
+		$exported['menu_id'] = $this->setting->term_id;
+		return $exported;
 	}
 }

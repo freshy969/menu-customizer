@@ -673,6 +673,10 @@
 		ready: function() {
 			var section = this;
 
+			if ( 'undefined' === typeof section.params.menu_id ) {
+				throw new Error( 'params.menu_id was not defined' );
+			}
+
 			/*
 			 * Since newly created sections won't be registered in PHP, we need to prevent the
 			 * preview's sending of the activeSections to result in this control
@@ -745,7 +749,8 @@
 						active: true,
 						settings: {
 							'default': section.id
-						}
+						},
+						menu_id: section.params.menu_id
 					}
 				} );
 				api.control.add( menuControl.id, menuControl );
@@ -759,7 +764,7 @@
 		 */
 		refreshAssignedLocations: function() {
 			var section = this,
-				menuTermId = section.getMenuTermId(),
+				menuTermId = section.params.menu_id,
 				currentAssignedLocations = [];
 			_.each( section.navMenuLocationSettings, function( setting, themeLocation ) {
 				if ( setting() === menuTermId ) {
@@ -786,16 +791,6 @@
 
 			section.container.toggleClass( 'assigned-to-menu-location', 0 !== themeLocations.length );
 
-		},
-
-		/**
-		 *
-		 * @returns {Number}
-		 */
-		getMenuTermId: function() {
-			var matches = this.id.match( /^nav_menu\[(.+?)]/ ),
-				menuTermId = parseInt( matches[1], 10 );
-			return menuTermId;
 		},
 
 		onChangeExpanded: function( expanded, args ) {
@@ -993,6 +988,10 @@
 		 * Set up the control.
 		 */
 		ready: function() {
+			if ( 'undefined' === typeof this.params.menu_item_id ) {
+				throw new Error( 'params.menu_item_id was not defined' );
+			}
+
 			this._setupControlToggle();
 			this._setupReorderUI();
 			this._setupUpdateUI();
@@ -1093,7 +1092,7 @@
 			});
 
 			control.setting.bind(function( to, from ) {
-				var itemId = control.getMenuItemPostId(),
+				var itemId = control.params.menu_item_id,
 					followingSiblingItemControls = [],
 					childrenItemControls = [];
 
@@ -1289,7 +1288,6 @@
 			control.params.xfn = settingValue.xfn;
 			control.params.description = settingValue.description;
 			control.params.parent = settingValue.menu_item_parent;
-			control.params.menu_item_id = control.getMenuItemPostId();
 			control.params.original_title = settingValue.original_title || '';
 
 			control.container.data( 'item-depth', control.params.depth );
@@ -1596,7 +1594,7 @@
 
 				// Make the control the first child of the previous sibling.
 				siblingControl = siblingControls[ realPosition - 1 ];
-				settingValue.menu_item_parent = siblingControl.getMenuItemPostId();
+				settingValue.menu_item_parent = siblingControl.params.menu_item_id;
 				settingValue.position = 0;
 				control.setting.set( settingValue );
 
@@ -1678,7 +1676,11 @@
 		 */
 		ready: function() {
 			var control = this,
-				menuId = control.getMenuTermId();
+				menuId = control.params.menu_id;
+
+			if ( 'undefined' === typeof this.params.menu_id ) {
+				throw new Error( 'params.menu_id was not defined' );
+			}
 
 			/*
 			 * Since the control is not registered in PHP, we need to prevent the
@@ -1725,7 +1727,7 @@
 		 */
 		_setupModel: function() {
 			var control = this,
-				menuId = control.getMenuTermId();
+				menuId = control.params.menu_id;
 
 			control.elements = {};
 			control.elements.auto_add = new api.Element( control.container.find( 'input[type=checkbox].auto_add' ) );
@@ -1869,7 +1871,7 @@
 		_handleDeletion: function() {
 			var control = this,
 				section,
-				menuId = control.getMenuTermId(),
+				menuId = control.params.menu_id,
 				removeSection;
 			section = api.section( control.section() );
 			removeSection = function() {
@@ -1942,15 +1944,15 @@
 				};
 
 				element = new api.Element( checkbox );
-				element.set( navMenuLocationSetting.get() === control.getMenuTermId() );
+				element.set( navMenuLocationSetting.get() === control.params.menu_id );
 
 				checkbox.on( 'change', function() {
 					// Note: We can't use element.bind( function( checked ){ ... } ) here because it will trigger a change as well.
-					navMenuLocationSetting.set( this.checked ? control.getMenuTermId() : 0 );
+					navMenuLocationSetting.set( this.checked ? control.params.menu_id : 0 );
 				} );
 
 				navMenuLocationSetting.bind(function( selectedMenuId ) {
-					element.set( selectedMenuId === control.getMenuTermId() );
+					element.set( selectedMenuId === control.params.menu_id );
 					updateSelectedMenuLabel( selectedMenuId );
 				});
 				updateSelectedMenuLabel( navMenuLocationSetting.get() );
@@ -1972,7 +1974,7 @@
 				// Empty names are not allowed (will not be saved), don't update to one.
 				if ( menu.name ) {
 					var section = control.container.closest( '.accordion-section' ),
-						menuId = control.getMenuTermId(),
+						menuId = control.params.menu_id,
 						controlTitle = section.find( '.accordion-section-title' ),
 						sectionTitle = section.find( '.customize-section-title h3' ),
 						location = section.find( '.menu-in-location' ),
@@ -2011,18 +2013,6 @@
 		 * Begin public API methods
 		 **********************************************************************/
 
-		/**
-		 * @todo This is inefficient. We don't need to parse the ID anymore to get the term ID, since it is not going to change. Let the ID be included in params.
-		 * @deprecated
-		 *
-		 * @returns {Number}
-		 */
-		getMenuTermId: function() {
-			var matches = this.setting.id.match( /^nav_menu\[(.+?)]/ ),
-				menuTermId = parseInt( matches[1], 10 );
-			return menuTermId;
-		},
-
 		confirmDelete: function() {
 			var control = this;
 			if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
@@ -2058,7 +2048,7 @@
 		getMenuItemControls: function() {
 			var menuControl = this,
 				menuItemControls = [],
-				menuTermId = menuControl.getMenuTermId();
+				menuTermId = menuControl.params.menu_id;
 
 			api.control.each(function( control ) {
 				if ( /^nav_menu_item\[/.test( control.id ) && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
@@ -2095,7 +2085,7 @@
 				api.Menus.data.defaultSettingValues.nav_menu_item,
 				item,
 				{
-					nav_menu_term_id: menuControl.getMenuTermId(),
+					nav_menu_term_id: menuControl.params.menu_id,
 					original_title: item.title,
 					position: position
 				}
@@ -2117,13 +2107,13 @@
 				params: {
 					type: 'nav_menu_item',
 					content: '<li id="customize-control-nav_menu_item-' + String( placeholderId ) + '" class="customize-control customize-control-nav_menu_item"></li>',
-					menu_id: placeholderId,
 					section: menuControl.id,
 					priority: priority,
 					active: true,
 					settings: {
 						'default': customizeId
-					}
+					},
+					menu_item_id: placeholderId
 				},
 				previewer: api.previewer
 			} );
@@ -2216,7 +2206,8 @@
 					title: name,
 					customizeAction: api.Menus.data.l10n.customizingMenus,
 					type: 'menu',
-					priority: 10
+					priority: 10,
+					menu_id: placeholderId
 				}
 			} );
 			api.section.add( customizeId, menuSection );
@@ -2337,7 +2328,8 @@
 						customizeAction: api.Menus.data.l10n.customizingMenus,
 						type: 'menu',
 						priority: oldSection.priority.get(),
-						active: true
+						active: true,
+						menu_id: update.term_id
 					}
 				} );
 
@@ -2422,7 +2414,8 @@
 						active: true,
 						settings: {
 							'default': newCustomizeId
-						}
+						},
+						menu_item_id: update.post_id
 					},
 					previewer: api.previewer
 				} );

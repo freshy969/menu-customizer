@@ -128,6 +128,17 @@ class WP_Customize_Nav_Menu_Item_Control extends WP_Customize_Control {
 				<input type="hidden" name="menu-item-parent-id[{{ data.menu_item_id }}]" class="menu-item-data-parent-id" value="{{ data.parent }}" />
 			</div><!-- .menu-item-settings-->
 			<ul class="menu-item-transport"></ul>
-	<?php
+		<?php
+	}
+
+	/**
+	 * Return params for this control.
+	 *
+	 * @return array
+	 */
+	function json() {
+		$exported = parent::json();
+		$exported['menu_item_id'] = $this->setting->post_id;
+		return $exported;
 	}
 }
