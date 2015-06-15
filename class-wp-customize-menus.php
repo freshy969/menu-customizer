@@ -135,7 +135,7 @@ class WP_Customize_Menus {
 			foreach ( $terms as $term ) {
 				$items[] = array(
 					'id'         => "term-{$term->term_id}",
-					'title'      => $term->name,
+					'title'      => html_entity_decode( $term->name, ENT_QUOTES, get_bloginfo( 'charset' ) ),
 					'type'       => 'taxonomy',
 					'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
 					'object'     => $term->taxonomy,
@@ -240,7 +240,7 @@ class WP_Customize_Menus {
 					'type_label' => get_taxonomy( $term->taxonomy )->labels->singular_name,
 					'object'     => $term->taxonomy,
 					'object_id'  => intval( $term->term_id ),
-					'title'      => $term->name,
+					'title'      => html_entity_decode( $term->name, ENT_QUOTES, get_bloginfo( 'charset' ) ),
 				);
 			}
 		}
