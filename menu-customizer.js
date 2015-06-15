@@ -2108,6 +2108,8 @@
 			api.control.add( customizeId, menuItemControl );
 			setting.preview();
 
+			wp.a11y.speak( api.Menus.data.l10n.itemAdded );
+
 			return menuItemControl;
 		}
 	} );
