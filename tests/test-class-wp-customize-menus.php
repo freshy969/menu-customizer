@@ -313,9 +313,29 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::filter_wp_nav_menu_args()
 	 */
 	function test_filter_wp_nav_menu_args() {
+		do_action( 'customize_register', $this->wp_customize );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
 
-		$this->markTestIncomplete( 'This test has not been implemented.' );
-
+		$results = $menus->filter_wp_nav_menu_args( array(
+			'echo'            => true,
+			'fallback_cb'     => 'wp_page_menu',
+			'walker'          => '',
+		) );
+		$this->assertEquals( 1, $results['can_partial_refresh'] );
+		
+		$expected = array(
+			'echo',
+			'args_hash',
+			'can_partial_refresh',
+			'instance_number',
+		);
+		$results = $menus->filter_wp_nav_menu_args( array(
+			'echo'            => false,
+			'fallback_cb'     => 'wp_page_menu',
+			'walker'          => new Walker_Nav_Menu,
+		) );
+		$this->assertEqualSets( $expected, array_keys( $results ) );
+		$this->assertEquals( 0, $results['can_partial_refresh'] );
 	}
 
 	/**
