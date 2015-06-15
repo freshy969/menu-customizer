@@ -301,7 +301,7 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 		$menus->customize_preview_init();
 		$this->assertEquals( 10, has_action( 'template_redirect', array( $menus, 'render_menu' ) ) );
 		$this->assertEquals( 10, has_action( 'wp_enqueue_scripts', array( $menus, 'customize_preview_enqueue_deps' ) ) );
-		if ( ! isset( $_REQUEST[ $menus::RENDER_QUERY_VAR ] ) ) {
+		if ( ! isset( $_REQUEST[ WP_Customize_Menus::RENDER_QUERY_VAR ] ) ) {
 			$this->assertEquals( 1000, has_filter( 'wp_nav_menu_args', array( $menus, 'filter_wp_nav_menu_args' ) ) );
 			$this->assertEquals( 10, has_filter( 'wp_nav_menu', array( $menus, 'filter_wp_nav_menu' ) ) );
 		}
