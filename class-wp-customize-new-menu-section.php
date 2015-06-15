@@ -28,8 +28,7 @@ class WP_Customize_New_Menu_Section extends WP_Customize_Section {
 	protected function render() {
 		?>
 		<li id="accordion-section-<?php echo esc_attr( $this->id ); ?>" class="accordion-section-new-menu">
-
-			<button class="button-secondary add-new-menu-item add-menu-toggle" tabindex="0">
+			<button type="button" class="button-secondary add-new-menu-item add-menu-toggle">
 				<?php echo esc_html( $this->title ); ?>
 				<span class="screen-reader-text"><?php _e( 'Press return or enter to open' ); ?></span>
 			</button>

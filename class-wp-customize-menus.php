@@ -629,7 +629,7 @@ class WP_Customize_Menus {
 		?>
 		<div id="available-menu-items" class="accordion-container">
 			<div class="customize-section-title">
-				<button class="customize-section-back" tabindex="-1">
+				<button type="button" class="customize-section-back" tabindex="-1">
 					<span class="screen-reader-text"><?php _e( 'Back' ); ?></span>
 				</button>
 				<h3>
