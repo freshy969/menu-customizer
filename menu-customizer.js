@@ -548,11 +548,7 @@
 				content = panelMeta.find( '.customize-panel-description' ),
 				options = $( '#screen-options-wrap' ),
 				button = panelMeta.find( '.customize-screen-options-toggle' );
-			button.on( 'click', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
-
+			button.on( 'click', function() {
 				// Hide description
 				if ( content.not( ':hidden' ) ) {
 					content.slideUp( 'fast' );
@@ -575,11 +571,7 @@
 			} );
 
 			// Help toggle
-			help.on( 'click', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
-
+			help.on( 'click', function() {
 				if ( 'true' === button.attr( 'aria-expanded' ) ) {
 					button.attr( 'aria-expanded', 'false' );
 					help.attr( 'aria-expanded', 'true' );
@@ -841,10 +833,7 @@
 		attachEvents: function() {
 			var section = this;
 			this.container.on( 'click', '.add-menu-toggle', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
-				event.preventDefault(); // Keep this AFTER the key filter above
+				event.preventDefault();
 
 				if ( section.expanded() ) {
 					section.collapse();
@@ -1202,9 +1191,6 @@
 			$origBtn = this.container.find( 'a.original-link' );
 
 			$origBtn.on( 'click', function( e ) {
-				if ( api.utils.isKeydownButNotEnterEvent( e ) ) {
-					return;
-				}
 				e.preventDefault();
 				api.previewer.previewUrl( e.target.toString() );
 			} );
@@ -1762,9 +1748,6 @@
 			} );
 
 			control.container.find( '.menu-delete' ).on( 'click', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
 				event.stopPropagation();
 				event.preventDefault();
 				control.confirmDelete();
@@ -2222,9 +2205,6 @@
 				}
 			} );
 			submit.on( 'click', function( event ) {
-				if ( api.utils.isKeydownButNotEnterEvent( event ) ) {
-					return;
-				}
 				self.submit();
 				event.stopPropagation();
 				event.preventDefault();
