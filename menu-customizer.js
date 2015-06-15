@@ -813,6 +813,9 @@
 				if ( 'resolved' !== section.deferred.initSortables.state() ) {
 					wpNavMenu.initSortables(); // Depends on menu-to-edit ID being set above.
 					section.deferred.initSortables.resolve( wpNavMenu.menuList ); // Now MenuControl can extend the sortable.
+
+					// @todo Note that wp.customize.reflowPaneContents() is debounced, so this immediate change will show a slight flicker while priorities get updated.
+					api.control( 'nav_menu[' + String( section.params.menu_id ) + ']' ).reflowMenuItems();
 				}
 			}
 			api.Section.prototype.onChangeExpanded.call( section, expanded, args );
@@ -1133,7 +1136,7 @@
 
 					// Handle UI updates when the position or depth (parent) change.
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
-						control.getMenuControl().reflowMenuItems();
+						control.getMenuControl().debouncedReflowMenuItems();
 					}
 				}
 			});
@@ -2036,11 +2039,6 @@
 
 		/**
 		 * Make sure that each menu item control has the proper depth.
-		 *
-		 * Note that this function gets debounced so that when a lot of setting
-		 * changes are made at once, for instance when moving a menu item that
-		 * has child items, this function will only be called once all of the
-		 * settings have been updated.
 		 */
 		reflowMenuItems: _.debounce( function() {
 			var menuControl = this,
@@ -2109,6 +2107,16 @@
 			menuSection.container.find( '.menu-item.move-left-disabled .menus-move-left' ).prop( 'tabIndex', -1 );
 			menuSection.container.find( '.menu-item.move-right-disabled .menus-move-right' ).prop( 'tabIndex', -1 );
 		}, 0 ),
+
+		/**
+		 * Note that this function gets debounced so that when a lot of setting
+		 * changes are made at once, for instance when moving a menu item that
+		 * has child items, this function will only be called once all of the
+		 * settings have been updated.
+		 */
+		debouncedReflowMenuItems: _.debounce( function() {
+			this.reflowMenuItems.apply( this, arguments );
+		}, 10 ),
 
 		/**
 		 * Add a new item to this menu.
