@@ -884,6 +884,9 @@ li.assigned-to-menu-location .add-new-menu-item {
 .menu-item-handle {
 	margin-top: -1px;
 }
+.ui-sortable-disabled .menu-item-handle {
+	cursor: default;
+}
 
 .menu-item-handle:hover {
 	position: relative;

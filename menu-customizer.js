@@ -1689,7 +1689,6 @@
 			} );
 
 			this._setupAddition();
-			this._applyCardinalOrderClassNames();
 			this._setupLocations();
 			this._setupTitle();
 
@@ -1898,24 +1897,6 @@
 			$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).remove();
 		},
 
-		/**
-		 * Add classes to the menu item controls to assist with styling.
-		 */
-		_applyCardinalOrderClassNames: function() {
-			this.$sectionContent.find( '.customize-control-nav_menu_item' )
-				.removeClass( 'first-item' )
-				.removeClass( 'last-item' )
-				.find( '.menus-move-down, .menus-move-up' ).prop( 'tabIndex', 0 );
-
-			this.$sectionContent.find( '.customize-control-nav_menu_item:first' )
-				.addClass( 'first-item' )
-				.find( '.menus-move-up' ).prop( 'tabIndex', -1 );
-
-			this.$sectionContent.find( '.customize-control-nav_menu_item:last' )
-				.addClass( 'last-item' )
-				.find( '.menus-move-down' ).prop( 'tabIndex', -1 );
-		},
-
 		// Setup theme location checkboxes.
 		_setupLocations: function() {
 			var control = this;
@@ -2027,6 +2008,7 @@
 
 			this.isReordering = showOrHide;
 			this.$sectionContent.toggleClass( 'reordering', showOrHide );
+			this.$sectionContent.sortable( this.isReordering ? 'disable' : 'enable' );
 
 			if ( showOrHide ) {
 				_( this.getMenuItemControls() ).each( function( formControl ) {
