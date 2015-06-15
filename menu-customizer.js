@@ -2018,7 +2018,7 @@
 		},
 
 		/**
-		 * @return {wp.customize.controlConstructor.menu_item[]}
+		 * @return {wp.customize.controlConstructor.nav_menu_item[]}
 		 */
 		getMenuItemControls: function() {
 			var menuControl = this,
@@ -2026,7 +2026,7 @@
 				menuTermId = menuControl.params.menu_id;
 
 			api.control.each(function( control ) {
-				if ( /^nav_menu_item\[/.test( control.id ) && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
+				if ( 'nav_menu_item' === control.params.type && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
 					menuItemControls.push( control );
 				}
 			});
