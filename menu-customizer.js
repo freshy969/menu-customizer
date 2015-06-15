@@ -1302,20 +1302,6 @@
 		},
 
 		/**
-		 * @todo This is inefficient. We don't need to parse the ID anymore to get the post ID, since it is not going to change. Let the ID be included in params.
-		 * @deprecated
-		 *
-		 * @returns {Number}
-		 */
-		getMenuItemPostId: function() {
-			var matches = this.id.match( /^nav_menu_item\[(.+?)]/ );
-			if ( ! matches ) {
-				throw new Error( 'Failed to parse ID out setting ID: ' + this.id );
-			}
-			return parseInt( matches[1], 10 );
-		},
-
-		/**
 		 * Expand the accordion section containing a control
 		 */
 		expandControlSection: function() {
