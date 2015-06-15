@@ -1404,8 +1404,10 @@
 			actions = this.container.find( '.menu-item-actions' );
 
 			if ( top ) {
+				button.find( 'span' ).addClass( 'screen-reader-text' );
 				handle.append( button );
 			} else {
+				button.find( 'span' ).removeClass( 'screen-reader-text' );
 				actions.append( button );
 			}
 		},
