@@ -2036,9 +2036,15 @@
 
 		/**
 		 * Make sure that each menu item control has the proper depth.
+		 *
+		 * Note that this function gets debounced so that when a lot of setting
+		 * changes are made at once, for instance when moving a menu item that
+		 * has child items, this function will only be called once all of the
+		 * settings have been updated.
 		 */
 		reflowMenuItems: _.debounce( function() {
 			var menuControl = this,
+				menuSection = api.section( 'nav_menu[' + String( menuControl.params.menu_id ) + ']' ),
 				menuItemControls = menuControl.getMenuItemControls(),
 				reflowRecursively;
 
@@ -2047,7 +2053,7 @@
 				_.each( menuItemControls, function( menuItemControl ) {
 					if ( currentParent === menuItemControl.setting().menu_item_parent ) {
 						currentMenuItemControls.push( menuItemControl );
-						// @todo We should remove this item from menuItemControls now.
+						// @todo We could remove this item from menuItemControls now, for efficiency.
 					}
 				});
 				currentMenuItemControls.sort( function( a, b ) {
@@ -2077,12 +2083,32 @@
 					);
 				});
 
+				// Update class names for reordering controls.
+				if ( currentMenuItemControls.length ) {
+					_( currentMenuItemControls ).each(function( menuItemControl ) {
+						menuItemControl.container.removeClass( 'move-up-disabled move-down-disabled move-left-disabled move-right-disabled' );
+					});
+
+					currentMenuItemControls[0].container
+						.addClass( 'move-up-disabled' )
+						.addClass( 'move-right-disabled' )
+						.toggleClass( 'move-down-disabled', 1 === currentMenuItemControls.length );
+					currentMenuItemControls[ currentMenuItemControls.length - 1 ].container
+						.addClass( 'move-down-disabled' )
+						.toggleClass( 'move-up-disabled', 1 === currentMenuItemControls.length );
+				}
+
 				return currentAbsolutePosition;
 			};
 
 			reflowRecursively( menuItemControls, 0, 0, 0 );
-			menuControl._applyCardinalOrderClassNames();
-		}, 100 ),
+
+			menuSection.container.find( '.menu-item .menu-item-reorder-nav button' ).prop( 'tabIndex', 0 );
+			menuSection.container.find( '.menu-item.move-up-disabled .menus-move-up' ).prop( 'tabIndex', -1 );
+			menuSection.container.find( '.menu-item.move-down-disabled .menus-move-down' ).prop( 'tabIndex', -1 );
+			menuSection.container.find( '.menu-item.move-left-disabled .menus-move-left' ).prop( 'tabIndex', -1 );
+			menuSection.container.find( '.menu-item.move-right-disabled .menus-move-right' ).prop( 'tabIndex', -1 );
+		}, 0 ),
 
 		/**
 		 * Add a new item to this menu.

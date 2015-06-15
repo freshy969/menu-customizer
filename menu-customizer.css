@@ -194,15 +194,16 @@
 	content: '\f345';
 }
 
-/* @todo: these also need a lot of logic for disabling in JS, or very clever CSS */
-.first-item .menus-move-up,
-.first-item .menus-move-right,
-.last-item .menus-move-down,
+.move-up-disabled .menus-move-up,
+.move-down-disabled .menus-move-down,
+.move-right-disabled .menus-move-right,
+.move-left-disabled .menus-move-left,
 .menu-item-depth-0 .menus-move-left,
 .menu-item-depth-10 .menus-move-right {
 	color: #d5d5d5 !important;
 	background-color: #fff !important;
 	cursor: default;
+	pointer-events: none;
 }
 
 .menu-item-reorder-nav:before {
