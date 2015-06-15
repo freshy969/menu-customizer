@@ -76,16 +76,6 @@
 	padding: 0;
 }
 
-.wp-customizer .menu-item .item-delete:before {
-	content: "\f158";
-	font: normal 20px/1 dashicons;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	position: relative;
-	top: 5px;
-	right: 1px;
-}
-
 .wp-customizer .menu-item-settings .link-to-original {
 	padding: 5px 0;
 	border: none;
@@ -94,33 +84,12 @@
 	width: 100%;
 }
 
-.wp-customizer .menu-item-settings .link-to-original a {
-	position: relative;
-}
-
-.wp-customizer .menu-item-settings .link-to-original a:after {
-	content: "\f504";
-	font: normal 20px/1 dashicons;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	text-decoration: none !important;
-	position: relative;
-	top: 4px;
-	left: 2px;
-	display: inline-block;
-}
-
 .wp-customizer .menu-item .submitbox .submitdelete {
 	display: block;
 	float: left;
-	margin: 0;
+	margin: 6px 0 0;
 	padding: 0;
 	cursor: pointer;
-}
-
-.wp-customizer .menu-item .submitdelete:focus {
-	-webkit-box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
-	box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 /* Menu-item reordering nav. */
@@ -550,7 +519,9 @@
 
 .adding-menu-items .menu-item .item-delete:before {
 	content: "\f335";
-	font-size: 20px;
+	font: normal 20px/1 dashicons;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 	position: absolute;
 	top: 9px;
 	left: 5px;
