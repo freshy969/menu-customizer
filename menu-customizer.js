@@ -1816,6 +1816,10 @@
 					} );
 
 					_.each( menuItemControls, function( menuItemControl ) {
+						if ( false === menuItemControl.setting() ) {
+							// Skip deleted items.
+							return;
+						}
 						var setting = _.clone( menuItemControl.setting() );
 						position += 1;
 						priority += 1;
