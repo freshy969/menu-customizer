@@ -1123,7 +1123,7 @@
 						childrenItemControl.setting.set( value );
 					});
 				} else {
-					// Update the elements' values when the setting changes.
+					// Update the elements' values to match the new setting properties.
 					_.each( to, function( value, key ) {
 						if ( control.elements[ key] ) {
 							control.elements[ key ].set( to[ key ] );
@@ -1314,6 +1314,12 @@
 			}
 		},
 
+		/**
+		 * @todo This is inefficient. We don't need to parse the ID anymore to get the post ID, since it is not going to change. Let the ID be included in params.
+		 * @deprecated
+		 *
+		 * @returns {Number}
+		 */
 		getMenuItemPostId: function() {
 			var matches = this.id.match( /^nav_menu_item\[(.+?)]/ );
 			if ( ! matches ) {
@@ -1498,6 +1504,7 @@
 
 			// Skip doing anything if the item is already at the edge in the desired direction.
 			if ( ( realPosition === 0 && offset < 0 ) || ( realPosition === siblingSettings.length - 1 && offset > 0 ) ) {
+				// @todo Should we allow a menu item to be moved up to break it out of a parent? Adopt with previous or following parent?
 				return;
 			}
 
@@ -1514,8 +1521,6 @@
 
 			settingValue.position += offset;
 			control.setting.set( settingValue );
-
-			// @todo Should we allow a menu item to be moved up to break it out of a parent?
 		},
 
 		/**
@@ -2007,6 +2012,8 @@
 		 **********************************************************************/
 
 		/**
+		 * @todo This is inefficient. We don't need to parse the ID anymore to get the term ID, since it is not going to change. Let the ID be included in params.
+		 * @deprecated
 		 *
 		 * @returns {Number}
 		 */
