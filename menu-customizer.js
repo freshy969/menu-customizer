@@ -673,6 +673,10 @@
 		ready: function() {
 			var section = this;
 
+			if ( 'undefined' === typeof section.params.menu_id ) {
+				throw new Error( 'params.menu_id was not defined' );
+			}
+
 			/*
 			 * Since newly created sections won't be registered in PHP, we need to prevent the
 			 * preview's sending of the activeSections to result in this control
@@ -745,7 +749,8 @@
 						active: true,
 						settings: {
 							'default': section.id
-						}
+						},
+						menu_id: section.params.menu_id
 					}
 				} );
 				api.control.add( menuControl.id, menuControl );
@@ -759,7 +764,7 @@
 		 */
 		refreshAssignedLocations: function() {
 			var section = this,
-				menuTermId = section.getMenuTermId(),
+				menuTermId = section.params.menu_id,
 				currentAssignedLocations = [];
 			_.each( section.navMenuLocationSettings, function( setting, themeLocation ) {
 				if ( setting() === menuTermId ) {
@@ -788,16 +793,6 @@
 
 		},
 
-		/**
-		 *
-		 * @returns {Number}
-		 */
-		getMenuTermId: function() {
-			var matches = this.id.match( /^nav_menu\[(.+?)]/ ),
-				menuTermId = parseInt( matches[1], 10 );
-			return menuTermId;
-		},
-
 		onChangeExpanded: function( expanded, args ) {
 			var section = this;
 
@@ -818,6 +813,9 @@
 				if ( 'resolved' !== section.deferred.initSortables.state() ) {
 					wpNavMenu.initSortables(); // Depends on menu-to-edit ID being set above.
 					section.deferred.initSortables.resolve( wpNavMenu.menuList ); // Now MenuControl can extend the sortable.
+
+					// @todo Note that wp.customize.reflowPaneContents() is debounced, so this immediate change will show a slight flicker while priorities get updated.
+					api.control( 'nav_menu[' + String( section.params.menu_id ) + ']' ).reflowMenuItems();
 				}
 			}
 			api.Section.prototype.onChangeExpanded.call( section, expanded, args );
@@ -1005,6 +1003,10 @@
 		 * Set up the control.
 		 */
 		ready: function() {
+			if ( 'undefined' === typeof this.params.menu_item_id ) {
+				throw new Error( 'params.menu_item_id was not defined' );
+			}
+
 			this._setupControlToggle();
 			this._setupReorderUI();
 			this._setupUpdateUI();
@@ -1105,36 +1107,51 @@
 			});
 
 			control.setting.bind(function( to, from ) {
+				var itemId = control.params.menu_item_id,
+					followingSiblingItemControls = [],
+					childrenItemControls = [],
+					menuControl;
+
 				if ( false === to ) {
+					menuControl = api.control( 'nav_menu[' + String( from.nav_menu_term_id ) + ']' );
 					control.container.remove();
-					// @todo this will need to now shift up any child menu items to take this parent's place, or the children should be deleted as well.
+
+					_.each( menuControl.getMenuItemControls(), function( otherControl ) {
+						if ( from.menu_item_parent === otherControl.setting().menu_item_parent && otherControl.setting().position > from.position ) {
+							followingSiblingItemControls.push( otherControl );
+						} else if ( otherControl.setting().menu_item_parent === itemId ) {
+							childrenItemControls.push( otherControl );
+						}
+					});
+
+					// Shift all following siblings by the number of children this item has.
+					_.each( followingSiblingItemControls, function( followingSiblingItemControl ) {
+						var value = _.clone( followingSiblingItemControl.setting() );
+						value.position += childrenItemControls.length;
+						followingSiblingItemControl.setting.set( value );
+					});
+
+					// Now move the children up to be the new subsequent siblings.
+					_.each( childrenItemControls, function( childrenItemControl, i ) {
+						var value = _.clone( childrenItemControl.setting() );
+						value.position = from.position + i;
+						value.menu_item_parent = from.menu_item_parent;
+						childrenItemControl.setting.set( value );
+					});
+
+					menuControl.debouncedReflowMenuItems();
 				} else {
-					// Update the elements' values when the setting changes.
+					// Update the elements' values to match the new setting properties.
 					_.each( to, function( value, key ) {
 						if ( control.elements[ key] ) {
 							control.elements[ key ].set( to[ key ] );
 						}
 					} );
+					control.container.find( '.menu-item-data-parent-id' ).val( to.menu_item_parent );
 
 					// Handle UI updates when the position or depth (parent) change.
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
-						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
-						control.priority.set( 10 + control.setting().position );
-
-						/*
-						// @todo self._applyCardinalOrderClassNames();
-						// Get the updated depth
-						var newDepth = control.getDepth();
-
-						// Update the depth UI class
-						if ( newDepth !== depth ) {
-							control.container.data( 'item-depth', newDepth );
-							// @todo remove any existing menu-item-depth control.container.removeClass( 'menu-item-depth-' + String( depth ) );
-							control.container.addClass( 'menu-item-depth-' + String( newDepth ) );
-						}
-						*/
-
-						// @todo Make sure we apply whatever logic is present in sortstop.
+						control.getMenuControl().debouncedReflowMenuItems();
 					}
 				}
 			});
@@ -1249,6 +1266,7 @@
 
 			control.params.title = settingValue.title || '';
 			control.params.depth = control.getDepth();
+			control.container.data( 'item-depth', control.params.depth );
 			containerClasses = [
 				'menu-item',
 				'menu-item-depth-' + String( control.params.depth ),
@@ -1275,10 +1293,8 @@
 			control.params.xfn = settingValue.xfn;
 			control.params.description = settingValue.description;
 			control.params.parent = settingValue.menu_item_parent;
-			control.params.menu_item_id = control.getMenuItemPostId();
 			control.params.original_title = settingValue.original_title || '';
 
-			control.container.data( 'item-depth', control.params.depth );
 			control.container.addClass( control.params.el_classes );
 
 			api.Control.prototype.renderContent.call( control );
@@ -1298,14 +1314,6 @@
 			} else {
 				return null;
 			}
-		},
-
-		getMenuItemPostId: function() {
-			var matches = this.id.match( /^nav_menu_item\[(.+?)]/ );
-			if ( ! matches ) {
-				throw new Error( 'Failed to parse ID out setting ID: ' + this.id );
-			}
-			return parseInt( matches[1], 10 );
 		},
 
 		/**
@@ -1484,6 +1492,7 @@
 
 			// Skip doing anything if the item is already at the edge in the desired direction.
 			if ( ( realPosition === 0 && offset < 0 ) || ( realPosition === siblingSettings.length - 1 && offset > 0 ) ) {
+				// @todo Should we allow a menu item to be moved up to break it out of a parent? Adopt with previous or following parent?
 				return;
 			}
 
@@ -1500,8 +1509,6 @@
 
 			settingValue.position += offset;
 			control.setting.set( settingValue );
-
-			// @todo Should we allow a menu item to be moved up to break it out of a parent?
 		},
 
 		/**
@@ -1539,12 +1546,26 @@
 			}
 
 			if ( -1 === offset ) {
-				// Skip moving up an item that is already at the top level.
+				// Skip moving left an item that is already at the top level.
 				if ( ! settingValue.menu_item_parent ) {
 					return;
 				}
 
 				parentControl = api.control( 'nav_menu_item[' + settingValue.menu_item_parent + ']' );
+
+				// Make this control the parent of all the following siblings.
+				_( siblingControls ).chain().slice( realPosition ).each(function( siblingControl, i ) {
+					siblingControl.setting.set(
+						$.extend(
+							{},
+							siblingControl.setting(),
+							{
+								menu_item_parent: control.params.menu_item_id,
+								position: i
+							}
+						)
+					);
+				});
 
 				// Increase the positions of the parent item's subsequent children to make room for this one.
 				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
@@ -1570,30 +1591,22 @@
 				control.setting.set( settingValue );
 
 			} else if ( 1 === offset ) {
-				// Skip moving down an item that doesn't have a previous sibling.
+				// Skip moving right an item that doesn't have a previous sibling.
 				if ( realPosition === 0 ) {
 					return;
 				}
 
-				// Make the control the first child of the previous sibling.
+				// Make the control the last child of the previous sibling.
 				siblingControl = siblingControls[ realPosition - 1 ];
-				settingValue.menu_item_parent = siblingControl.getMenuItemPostId();
+				settingValue.menu_item_parent = siblingControl.params.menu_item_id;
 				settingValue.position = 0;
-				control.setting.set( settingValue );
-
-				// Shift down all of the children items of the previous sibling
 				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
-					var otherControlSettingValue;
 					if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
-						otherControlSettingValue = _.clone( otherControl.setting() );
-						otherControl.setting.set(
-							$.extend(
-								otherControlSettingValue,
-								{ position: otherControlSettingValue.position + 1 }
-							)
-						);
+						settingValue.position = Math.max( settingValue.position, otherControl.setting().position );
 					}
 				});
+				settingValue.position += 1;
+				control.setting.set( settingValue );
 			}
 		}
 	} );
@@ -1659,7 +1672,11 @@
 		 */
 		ready: function() {
 			var control = this,
-				menuId = control.getMenuTermId();
+				menuId = control.params.menu_id;
+
+			if ( 'undefined' === typeof this.params.menu_id ) {
+				throw new Error( 'params.menu_id was not defined' );
+			}
 
 			/*
 			 * Since the control is not registered in PHP, we need to prevent the
@@ -1682,7 +1699,6 @@
 			} );
 
 			this._setupAddition();
-			this._applyCardinalOrderClassNames();
 			this._setupLocations();
 			this._setupTitle();
 
@@ -1706,7 +1722,7 @@
 		 */
 		_setupModel: function() {
 			var control = this,
-				menuId = control.getMenuTermId();
+				menuId = control.params.menu_id;
 
 			control.elements = {};
 			control.elements.auto_add = new api.Element( control.container.find( 'input[type=checkbox].auto_add' ) );
@@ -1803,12 +1819,15 @@
 						position += 1;
 						priority += 1;
 						setting.position = position;
+						menuItemControl.priority( priority );
+
+						// Note that wpNavMenu will be setting this .menu-item-data-parent-id input's value.
 						setting.menu_item_parent = parseInt( menuItemControl.container.find( '.menu-item-data-parent-id' ).val(), 10 );
 						if ( ! setting.menu_item_parent ) {
 							setting.menu_item_parent = 0;
 						}
+
 						menuItemControl.setting.set( setting );
-						menuItemControl.priority( priority );
 					});
 				});
 			});
@@ -1846,7 +1865,7 @@
 		_handleDeletion: function() {
 			var control = this,
 				section,
-				menuId = control.getMenuTermId(),
+				menuId = control.params.menu_id,
 				removeSection;
 			section = api.section( control.section() );
 			removeSection = function() {
@@ -1880,24 +1899,6 @@
 			$( '#available-widgets-list .widget-inside:has(input.id_base[value=nav_menu]) select:first option[value=' + String( menuId ) + ']' ).remove();
 		},
 
-		/**
-		 * Add classes to the menu item controls to assist with styling.
-		 */
-		_applyCardinalOrderClassNames: function() {
-			this.$sectionContent.find( '.customize-control-nav_menu_item' )
-				.removeClass( 'first-item' )
-				.removeClass( 'last-item' )
-				.find( '.menus-move-down, .menus-move-up' ).prop( 'tabIndex', 0 );
-
-			this.$sectionContent.find( '.customize-control-nav_menu_item:first' )
-				.addClass( 'first-item' )
-				.find( '.menus-move-up' ).prop( 'tabIndex', -1 );
-
-			this.$sectionContent.find( '.customize-control-nav_menu_item:last' )
-				.addClass( 'last-item' )
-				.find( '.menus-move-down' ).prop( 'tabIndex', -1 );
-		},
-
 		// Setup theme location checkboxes.
 		_setupLocations: function() {
 			var control = this;
@@ -1919,15 +1920,15 @@
 				};
 
 				element = new api.Element( checkbox );
-				element.set( navMenuLocationSetting.get() === control.getMenuTermId() );
+				element.set( navMenuLocationSetting.get() === control.params.menu_id );
 
 				checkbox.on( 'change', function() {
 					// Note: We can't use element.bind( function( checked ){ ... } ) here because it will trigger a change as well.
-					navMenuLocationSetting.set( this.checked ? control.getMenuTermId() : 0 );
+					navMenuLocationSetting.set( this.checked ? control.params.menu_id : 0 );
 				} );
 
 				navMenuLocationSetting.bind(function( selectedMenuId ) {
-					element.set( selectedMenuId === control.getMenuTermId() );
+					element.set( selectedMenuId === control.params.menu_id );
 					updateSelectedMenuLabel( selectedMenuId );
 				});
 				updateSelectedMenuLabel( navMenuLocationSetting.get() );
@@ -1949,7 +1950,7 @@
 				// Empty names are not allowed (will not be saved), don't update to one.
 				if ( menu.name ) {
 					var section = control.container.closest( '.accordion-section' ),
-						menuId = control.getMenuTermId(),
+						menuId = control.params.menu_id,
 						controlTitle = section.find( '.accordion-section-title' ),
 						sectionTitle = section.find( '.customize-section-title h3' ),
 						location = section.find( '.menu-in-location' ),
@@ -1988,16 +1989,6 @@
 		 * Begin public API methods
 		 **********************************************************************/
 
-		/**
-		 *
-		 * @returns {Number}
-		 */
-		getMenuTermId: function() {
-			var matches = this.setting.id.match( /^nav_menu\[(.+?)]/ ),
-				menuTermId = parseInt( matches[1], 10 );
-			return menuTermId;
-		},
-
 		confirmDelete: function() {
 			var control = this;
 			if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
@@ -2019,6 +2010,7 @@
 
 			this.isReordering = showOrHide;
 			this.$sectionContent.toggleClass( 'reordering', showOrHide );
+			this.$sectionContent.sortable( this.isReordering ? 'disable' : 'enable' );
 
 			if ( showOrHide ) {
 				_( this.getMenuItemControls() ).each( function( formControl ) {
@@ -2028,21 +2020,107 @@
 		},
 
 		/**
-		 * @return {wp.customize.controlConstructor.menu_item[]}
+		 * @return {wp.customize.controlConstructor.nav_menu_item[]}
 		 */
 		getMenuItemControls: function() {
 			var menuControl = this,
 				menuItemControls = [],
-				menuTermId = menuControl.getMenuTermId();
+				menuTermId = menuControl.params.menu_id;
 
 			api.control.each(function( control ) {
-				if ( /^nav_menu_item\[/.test( control.id ) && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
+				if ( 'nav_menu_item' === control.params.type && control.setting() && menuTermId === control.setting().nav_menu_term_id ) {
 					menuItemControls.push( control );
 				}
 			});
 
 			return menuItemControls;
 		},
+
+		/**
+		 * Make sure that each menu item control has the proper depth.
+		 */
+		reflowMenuItems: function() {
+			var menuControl = this,
+				menuSection = api.section( 'nav_menu[' + String( menuControl.params.menu_id ) + ']' ),
+				menuItemControls = menuControl.getMenuItemControls(),
+				reflowRecursively;
+
+			reflowRecursively = function( context ) {
+				var currentMenuItemControls = [],
+					thisParent = context.currentParent;
+				_.each( context.menuItemControls, function( menuItemControl ) {
+					if ( thisParent === menuItemControl.setting().menu_item_parent ) {
+						currentMenuItemControls.push( menuItemControl );
+						// @todo We could remove this item from menuItemControls now, for efficiency.
+					}
+				});
+				currentMenuItemControls.sort( function( a, b ) {
+					return a.setting().position - b.setting().position;
+				});
+
+				_.each( currentMenuItemControls, function( menuItemControl ) {
+					// Update position.
+					context.currentAbsolutePosition += 1;
+					menuItemControl.priority.set( context.currentAbsolutePosition ); // This will change the sort order.
+
+					// Update depth.
+					if ( ! menuItemControl.container.hasClass( 'menu-item-depth-' + String( context.currentDepth ) ) ) {
+						_.each( menuItemControl.container.prop( 'className' ).match( /menu-item-depth-\d+/g ), function( className ) {
+							menuItemControl.container.removeClass( className );
+						});
+						menuItemControl.container.addClass( 'menu-item-depth-' + String( context.currentDepth ) );
+					}
+					menuItemControl.container.data( 'item-depth', context.currentDepth );
+
+					// Process any children items.
+					context.currentDepth += 1;
+					context.currentParent = menuItemControl.params.menu_item_id;
+					reflowRecursively( context );
+					context.currentDepth -= 1;
+					context.currentParent = thisParent;
+				});
+
+				// Update class names for reordering controls.
+				if ( currentMenuItemControls.length ) {
+					_( currentMenuItemControls ).each(function( menuItemControl ) {
+						menuItemControl.container.removeClass( 'move-up-disabled move-down-disabled move-left-disabled move-right-disabled' );
+					});
+
+					currentMenuItemControls[0].container
+						.addClass( 'move-up-disabled' )
+						.addClass( 'move-right-disabled' )
+						.toggleClass( 'move-down-disabled', 1 === currentMenuItemControls.length );
+					currentMenuItemControls[ currentMenuItemControls.length - 1 ].container
+						.addClass( 'move-down-disabled' )
+						.toggleClass( 'move-up-disabled', 1 === currentMenuItemControls.length );
+				}
+			};
+
+			reflowRecursively( {
+				menuItemControls: menuItemControls,
+				currentParent: 0,
+				currentDepth: 0,
+				currentAbsolutePosition: 0
+			} );
+
+			menuSection.container.find( '.menu-item .menu-item-reorder-nav button' ).prop( 'tabIndex', 0 );
+			menuSection.container.find( '.menu-item.move-up-disabled .menus-move-up' ).prop( 'tabIndex', -1 );
+			menuSection.container.find( '.menu-item.move-down-disabled .menus-move-down' ).prop( 'tabIndex', -1 );
+			menuSection.container.find( '.menu-item.move-left-disabled .menus-move-left' ).prop( 'tabIndex', -1 );
+			menuSection.container.find( '.menu-item.move-right-disabled .menus-move-right' ).prop( 'tabIndex', -1 );
+
+			menuControl.container.find( '.reorder-toggle' ).toggle( menuItemControls.length > 1 );
+		},
+
+		/**
+		 * Note that this function gets debounced so that when a lot of setting
+		 * changes are made at once, for instance when moving a menu item that
+		 * has child items, this function will only be called once all of the
+		 * settings have been updated.
+		 */
+		debouncedReflowMenuItems: _.debounce( function() {
+			this.reflowMenuItems.apply( this, arguments );
+		}, 0 ),
 
 		/**
 		 * Add a new item to this menu.
@@ -2070,7 +2148,7 @@
 				api.Menus.data.defaultSettingValues.nav_menu_item,
 				item,
 				{
-					nav_menu_term_id: menuControl.getMenuTermId(),
+					nav_menu_term_id: menuControl.params.menu_id,
 					original_title: item.title,
 					position: position
 				}
@@ -2092,13 +2170,13 @@
 				params: {
 					type: 'nav_menu_item',
 					content: '<li id="customize-control-nav_menu_item-' + String( placeholderId ) + '" class="customize-control customize-control-nav_menu_item"></li>',
-					menu_id: placeholderId,
 					section: menuControl.id,
 					priority: priority,
 					active: true,
 					settings: {
 						'default': customizeId
-					}
+					},
+					menu_item_id: placeholderId
 				},
 				previewer: api.previewer
 			} );
@@ -2107,6 +2185,7 @@
 
 			api.control.add( customizeId, menuItemControl );
 			setting.preview();
+			menuControl.debouncedReflowMenuItems();
 
 			wp.a11y.speak( api.Menus.data.l10n.itemAdded );
 
@@ -2193,7 +2272,8 @@
 					title: name,
 					customizeAction: api.Menus.data.l10n.customizingMenus,
 					type: 'menu',
-					priority: 10
+					priority: 10,
+					menu_id: placeholderId
 				}
 			} );
 			api.section.add( customizeId, menuSection );
@@ -2314,7 +2394,8 @@
 						customizeAction: api.Menus.data.l10n.customizingMenus,
 						type: 'menu',
 						priority: oldSection.priority.get(),
-						active: true
+						active: true,
+						menu_id: update.term_id
 					}
 				} );
 
@@ -2399,7 +2480,8 @@
 						active: true,
 						settings: {
 							'default': newCustomizeId
-						}
+						},
+						menu_item_id: update.post_id
 					},
 					previewer: api.previewer
 				} );
