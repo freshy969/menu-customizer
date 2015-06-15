@@ -1133,6 +1133,7 @@
 							control.elements[ key ].set( to[ key ] );
 						}
 					} );
+					control.container.find( '.menu-item-data-parent-id' ).val( to.menu_item_parent );
 
 					// Handle UI updates when the position or depth (parent) change.
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
