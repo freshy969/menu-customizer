@@ -119,8 +119,8 @@
 }
 
 .wp-customizer .menu-item .submitdelete:focus {
-	box-shadow: 0 0 0 1px #5b9dd9,
-	            0 0 2px 1px rgba(30, 140, 190, .8);
+	-webkit-box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
+	box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 /* Menu-item reordering nav. */
@@ -154,6 +154,7 @@
 	cursor: pointer;
 	background: transparent;
 	border: none;
+	-webkit-box-shadow: none;
 	box-shadow: none;
 	outline: none;
 }
@@ -213,8 +214,8 @@
 	width: 10px;
 	height: 40px;
 	background: -webkit-linear-gradient(left, rgba(250,250,250,0) 0%,rgba(250,250,250,1) 100%);
-	background: -moz-linear-gradient(left, rgba(250,250,250,0) 0%, rgba(250,250,250,1) 100%);
-	background: -ms-linear-gradient(left, rgba(250,250,250,0) 0%,rgba(250,250,250,1) 100%);
+	background: -webkit-gradient(linear, left top, right top, from(rgba(250,250,250,0)), to(rgba(250,250,250,1)));
+	background: -webkit-linear-gradient(left, rgba(250,250,250,0) 0%, rgba(250,250,250,1) 100%);
 	background: linear-gradient(to right, rgba(250,250,250,0) 0%,rgba(250,250,250,1) 100%);
 }
 
@@ -354,8 +355,8 @@
 .customize-screen-options-toggle:focus,
 #customize-controls .customize-info .customize-help-toggle:focus {
 	outline: none;
-	box-shadow: 0 0 0 1px #5b9dd9,
-	            0 0 2px 1px rgba(30, 140, 190, .8);
+	-webkit-box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
+	box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 .customize-screen-options-toggle:before {
@@ -377,7 +378,7 @@
 	display: none;
 	background: #fff;
 	border-top: 1px solid #ddd;
-	padding: 4px 15px 0px;
+	padding: 4px 15px 0;
 }
 
 .wp-customizer .metabox-prefs label {
@@ -462,6 +463,7 @@
 .control-section-nav_menu .menu .sortable-placeholder {
 	margin-top: 0;
 	margin-bottom: 1px;
+	max-width: -webkit-calc(100% - 2px);
 	max-width: calc(100% - 2px);
 	float: left;
 	display: list-item;
@@ -609,7 +611,9 @@
 button.not-a-button {
 	background: transparent;
 	border: none;
+	-webkit-box-shadow: none;
 	box-shadow: none;
+	-webkit-border-radius: 0;
 	border-radius: 0;
 	outline: 0;
 	padding: 0;
@@ -628,8 +632,8 @@ button.not-a-button {
 	position: absolute;
 	right: 5px;
 	top: 5px;
-	box-shadow: 0 0 0 1px #5b9dd9,
-	            0 0 2px 1px rgba(30, 140, 190, .8);
+	-webkit-box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
+	box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 #available-menu-items .accordion-section-content {
@@ -704,8 +708,8 @@ button.not-a-button {
 
 #available-menu-items .menu-item-handle .item-add:focus {
 	color: #23282d;
-	box-shadow: 0 0 0 1px #5b9dd9,
-	            0 0 2px 1px rgba(30, 140, 190, .8);
+	-webkit-box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
+	box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 #available-menu-items .item-add:before {
@@ -800,7 +804,6 @@ body.adding-menu-items #customize-preview {
 	padding: 0 0 0 8px;
 }
 
-
 .nav-menu-inserted-item-loading .menu-item-handle,
 .added-menu-item .menu-item-handle.loading {
 	padding: 10px 15px 10px 8px;
@@ -811,8 +814,11 @@ body.adding-menu-items #customize-preview {
 }
 
 .added-menu-item .menu-item-handle {
+	-webkit-transition-property: opacity, background, color;
 	transition-property: opacity, background, color;
+	-webkit-transition-duration: 1.25s;
 	transition-duration: 1.25s;
+	-webkit-transition-timing-function: cubic-bezier( .25, -2.5, .75, 8 );
 	transition-timing-function: cubic-bezier( .25, -2.5, .75, 8 ); /* Replacement for .hide().fadeIn('slow') in JS to add emphasis when it's loaded. */
 }
 
@@ -877,8 +883,8 @@ li.assigned-to-menu-location .add-new-menu-item {
 }
 
 .menu-delete:focus {
-	box-shadow: 0 0 0 1px #5b9dd9,
-	            0 0 2px 1px rgba(30, 140, 190, .8);
+	-webkit-box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
+	box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
 }
 
 .menu-item-handle {
