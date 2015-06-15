@@ -654,19 +654,19 @@ class WP_Customize_Menus {
 					<input type="hidden" value="custom" id="custom-menu-item-type" name="menu-item[-1][menu-item-type]" />
 					<p id="menu-item-url-wrap">
 						<label class="howto" for="custom-menu-item-url">
-							<span>URL</span>
+							<span><?php _e( 'URL' ); ?></span>
 							<input id="custom-menu-item-url" name="menu-item[-1][menu-item-url]" type="text" class="code menu-item-textbox" value="http://">
 						</label>
 					</p>
 					<p id="menu-item-name-wrap">
 						<label class="howto" for="custom-menu-item-name">
-							<span>Link Text</span>
+							<span><?php _e( 'Link Text' ); ?></span>
 							<input id="custom-menu-item-name" name="menu-item[-1][menu-item-title]" type="text" class="regular-text menu-item-textbox">
 						</label>
 					</p>
 					<p class="button-controls">
 						<span class="add-to-menu">
-							<input type="submit" class="button-secondary submit-add-to-menu right" value="Add to Menu" name="add-custom-menu-item" id="custom-menu-item-submit">
+							<input type="submit" class="button-secondary submit-add-to-menu right" value="<?php esc_attr_e( 'Add to Menu' ); ?>" name="add-custom-menu-item" id="custom-menu-item-submit">
 							<span class="spinner"></span>
 						</span>
 					</p>
@@ -682,7 +682,7 @@ class WP_Customize_Menus {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $type->name ); ?>" class="accordion-section">
 						<h4 class="accordion-section-title"><?php echo esc_html( $type->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
-						<div class="accordion-section-content" data-type="<?php echo $type->name; ?>" data-obj_type="post_type"></div>
+						<div class="accordion-section-content" data-type="<?php echo esc_attr( $type->name ); ?>" data-obj_type="post_type"></div>
 					</div>
 					<?php
 				}
@@ -694,7 +694,7 @@ class WP_Customize_Menus {
 					?>
 					<div id="available-menu-items-<?php echo esc_attr( $tax->name ); ?>" class="accordion-section">
 						<h4 class="accordion-section-title"><?php echo esc_html( $tax->label ); ?><span class="spinner"></span><button type="button" class="not-a-button"><?php _e( 'Toggle' ); ?></button></h4>
-						<div class="accordion-section-content" data-type="<?php echo $tax->name; ?>" data-obj_type="taxonomy"></div>
+						<div class="accordion-section-content" data-type="<?php echo esc_attr( $tax->name ); ?>" data-obj_type="taxonomy"></div>
 					</div>
 					<?php
 				}
