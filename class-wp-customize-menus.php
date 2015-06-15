@@ -46,7 +46,7 @@ class WP_Customize_Menus {
 
 		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
 		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
-		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
 		add_filter( 'customize_dynamic_setting_class', array( $this, 'filter_dynamic_setting_class' ), 10, 3 );
@@ -288,7 +288,7 @@ class WP_Customize_Menus {
 	 *
 	 * @since Menu Customizer 0.0
 	 */
-	public function enqueue() {
+	public function enqueue_scripts() {
 		wp_enqueue_style( 'menu-customizer' );
 		wp_enqueue_script( 'menu-customizer' );
 
