@@ -954,6 +954,18 @@
 	 * @augments wp.customize.Control
 	 */
 	api.Menus.MenuItemControl = api.Control.extend({
+
+		/**
+		 * @inheritdoc
+		 */
+		initialize: function( id, options ) {
+			var control = this;
+			api.Control.prototype.initialize.call( control, id, options );
+			control.active.validate = function() {
+				return api.section( control.section() ).active();
+			};
+		},
+
 		/**
 		 * @since Menu Customizer 0.3
 		 *
