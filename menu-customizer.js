@@ -1126,6 +1126,8 @@
 						value.menu_item_parent = from.menu_item_parent;
 						childrenItemControl.setting.set( value );
 					});
+
+					menuControl.debouncedReflowMenuItems();
 				} else {
 					// Update the elements' values to match the new setting properties.
 					_.each( to, function( value, key ) {
@@ -2102,6 +2104,8 @@
 			menuSection.container.find( '.menu-item.move-down-disabled .menus-move-down' ).prop( 'tabIndex', -1 );
 			menuSection.container.find( '.menu-item.move-left-disabled .menus-move-left' ).prop( 'tabIndex', -1 );
 			menuSection.container.find( '.menu-item.move-right-disabled .menus-move-right' ).prop( 'tabIndex', -1 );
+
+			menuControl.container.find( '.reorder-toggle' ).toggle( menuItemControls.length > 1 );
 		},
 
 		/**
@@ -2177,6 +2181,7 @@
 
 			api.control.add( customizeId, menuItemControl );
 			setting.preview();
+			menuControl.debouncedReflowMenuItems();
 
 			return menuItemControl;
 		}
