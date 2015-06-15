@@ -1545,12 +1545,26 @@
 			}
 
 			if ( -1 === offset ) {
-				// Skip moving up an item that is already at the top level.
+				// Skip moving left an item that is already at the top level.
 				if ( ! settingValue.menu_item_parent ) {
 					return;
 				}
 
 				parentControl = api.control( 'nav_menu_item[' + settingValue.menu_item_parent + ']' );
+
+				// Make this control the parent of all the following siblings.
+				_( siblingControls ).chain().slice( realPosition ).each(function( siblingControl, i ) {
+					siblingControl.setting.set(
+						$.extend(
+							{},
+							siblingControl.setting(),
+							{
+								menu_item_parent: control.params.menu_item_id,
+								position: i
+							}
+						)
+					);
+				});
 
 				// Increase the positions of the parent item's subsequent children to make room for this one.
 				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
@@ -1576,7 +1590,7 @@
 				control.setting.set( settingValue );
 
 			} else if ( 1 === offset ) {
-				// Skip moving down an item that doesn't have a previous sibling.
+				// Skip moving right an item that doesn't have a previous sibling.
 				if ( realPosition === 0 ) {
 					return;
 				}
