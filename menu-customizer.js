@@ -2038,10 +2038,11 @@
 				menuItemControls = menuControl.getMenuItemControls(),
 				reflowRecursively;
 
-			reflowRecursively = function( menuItemControls, currentParent, currentDepth, currentAbsolutePosition ) {
-				var currentMenuItemControls = [];
-				_.each( menuItemControls, function( menuItemControl ) {
-					if ( currentParent === menuItemControl.setting().menu_item_parent ) {
+			reflowRecursively = function( context ) {
+				var currentMenuItemControls = [],
+					thisParent = context.currentParent;
+				_.each( context.menuItemControls, function( menuItemControl ) {
+					if ( thisParent === menuItemControl.setting().menu_item_parent ) {
 						currentMenuItemControls.push( menuItemControl );
 						// @todo We could remove this item from menuItemControls now, for efficiency.
 					}
@@ -2052,25 +2053,24 @@
 
 				_.each( currentMenuItemControls, function( menuItemControl ) {
 					// Update position.
-					currentAbsolutePosition += 1;
-					menuItemControl.priority.set( currentAbsolutePosition ); // This will change the sort order.
+					context.currentAbsolutePosition += 1;
+					menuItemControl.priority.set( context.currentAbsolutePosition ); // This will change the sort order.
 
 					// Update depth.
-					if ( ! menuItemControl.container.hasClass( 'menu-item-depth-' + String( currentDepth ) ) ) {
+					if ( ! menuItemControl.container.hasClass( 'menu-item-depth-' + String( context.currentDepth ) ) ) {
 						_.each( menuItemControl.container.prop( 'className' ).match( /menu-item-depth-\d+/g ), function( className ) {
 							menuItemControl.container.removeClass( className );
 						});
-						menuItemControl.container.addClass( 'menu-item-depth-' + String( currentDepth ) );
+						menuItemControl.container.addClass( 'menu-item-depth-' + String( context.currentDepth ) );
 					}
-					menuItemControl.container.data( 'item-depth', currentDepth );
+					menuItemControl.container.data( 'item-depth', context.currentDepth );
 
 					// Process any children items.
-					currentAbsolutePosition += reflowRecursively(
-						menuItemControls,
-						menuItemControl.params.menu_item_id,
-						currentDepth + 1,
-						currentAbsolutePosition
-					);
+					context.currentDepth += 1;
+					context.currentParent = menuItemControl.params.menu_item_id;
+					reflowRecursively( context );
+					context.currentDepth -= 1;
+					context.currentParent = thisParent;
 				});
 
 				// Update class names for reordering controls.
