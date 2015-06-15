@@ -1581,25 +1581,17 @@
 					return;
 				}
 
-				// Make the control the first child of the previous sibling.
+				// Make the control the last child of the previous sibling.
 				siblingControl = siblingControls[ realPosition - 1 ];
 				settingValue.menu_item_parent = siblingControl.params.menu_item_id;
 				settingValue.position = 0;
-				control.setting.set( settingValue );
-
-				// Shift down all of the children items of the previous sibling
 				_( control.getMenuControl().getMenuItemControls() ).each(function( otherControl ) {
-					var otherControlSettingValue;
 					if ( otherControl.setting().menu_item_parent === settingValue.menu_item_parent ) {
-						otherControlSettingValue = _.clone( otherControl.setting() );
-						otherControl.setting.set(
-							$.extend(
-								otherControlSettingValue,
-								{ position: otherControlSettingValue.position + 1 }
-							)
-						);
+						settingValue.position = Math.max( settingValue.position, otherControl.setting().position );
 					}
 				});
+				settingValue.position += 1;
+				control.setting.set( settingValue );
 			}
 		}
 	} );
