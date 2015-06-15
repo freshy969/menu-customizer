@@ -1093,9 +1093,35 @@
 			});
 
 			control.setting.bind(function( to, from ) {
+				var itemId = control.getMenuItemPostId(),
+					followingSiblingItemControls = [],
+					childrenItemControls = [];
+
 				if ( false === to ) {
 					control.container.remove();
-					// @todo this will need to now shift up any child menu items to take this parent's place, or the children should be deleted as well.
+
+					_.each( control.getMenuControl().getMenuItemControls(), function( otherControl ) {
+						if ( from.menu_item_parent === otherControl.setting().menu_item_parent && otherControl.setting().position > from.position ) {
+							followingSiblingItemControls.push( otherControl );
+						} else if ( otherControl.setting().menu_item_parent === itemId ) {
+							childrenItemControls.push( otherControl );
+						}
+					});
+
+					// Shift all following siblings by the number of children this item has.
+					_.each( followingSiblingItemControls, function( followingSiblingItemControl ) {
+						var value = _.clone( followingSiblingItemControl.setting() );
+						value.position += childrenItemControls.length;
+						followingSiblingItemControl.setting.set( value );
+					});
+
+					// Now move the children up to be the new subsequent siblings.
+					_.each( childrenItemControls, function( childrenItemControl, i ) {
+						var value = _.clone( childrenItemControl.setting() );
+						value.position = from.position + i;
+						value.menu_item_parent = from.menu_item_parent;
+						childrenItemControl.setting.set( value );
+					});
 				} else {
 					// Update the elements' values when the setting changes.
 					_.each( to, function( value, key ) {
