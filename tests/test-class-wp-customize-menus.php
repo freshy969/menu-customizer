@@ -153,9 +153,15 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::filter_dynamic_setting_args()
 	 */
 	function test_filter_dynamic_setting_args() {
+		$menus = new WP_Customize_Menus( $this->wp_customize );
 
-		$this->markTestIncomplete( 'This test has not been implemented.' );
+		$expected = array( 'type' => 'nav_menu_item' );
+		$setting = $menus->filter_dynamic_setting_args( $this->wp_customize, 'nav_menu_item[123]' );
+		$this->assertEquals( $expected, $setting );
 
+		$setting = $menus->filter_dynamic_setting_args( $this->wp_customize, 'nav_menu[123]' );
+		$expected = array( 'type' => 'nav_menu' );
+		$this->assertEquals( $expected, $setting );
 	}
 
 	/**
