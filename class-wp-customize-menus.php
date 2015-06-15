@@ -834,8 +834,6 @@ class WP_Customize_Menus {
 	 * Render a specific menu via wp_nav_menu() using the supplied arguments.
 	 *
 	 * @see wp_nav_menu()
-	 *
-	 * @throws WP_Customize_Menus_Exception To pass around errors.
 	 */
 	function render_menu() {
 		if ( empty( $_POST[ self::RENDER_QUERY_VAR ] ) ) {
@@ -878,8 +876,3 @@ class WP_Customize_Menus {
 		wp_send_json_success( wp_nav_menu( $wp_nav_menu_args ) );
 	}
 }
-
-/**
- * Customize Menus Exception Class
- */
-class WP_Customize_Menus_Exception extends Exception {}
