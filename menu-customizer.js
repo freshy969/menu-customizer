@@ -2032,7 +2032,7 @@
 		/**
 		 * Make sure that each menu item control has the proper depth.
 		 */
-		reflowMenuItems: _.debounce( function() {
+		reflowMenuItems: function() {
 			var menuControl = this,
 				menuSection = api.section( 'nav_menu[' + String( menuControl.params.menu_id ) + ']' ),
 				menuItemControls = menuControl.getMenuItemControls(),
@@ -2087,18 +2087,21 @@
 						.addClass( 'move-down-disabled' )
 						.toggleClass( 'move-up-disabled', 1 === currentMenuItemControls.length );
 				}
-
-				return currentAbsolutePosition;
 			};
 
-			reflowRecursively( menuItemControls, 0, 0, 0 );
+			reflowRecursively( {
+				menuItemControls: menuItemControls,
+				currentParent: 0,
+				currentDepth: 0,
+				currentAbsolutePosition: 0
+			} );
 
 			menuSection.container.find( '.menu-item .menu-item-reorder-nav button' ).prop( 'tabIndex', 0 );
 			menuSection.container.find( '.menu-item.move-up-disabled .menus-move-up' ).prop( 'tabIndex', -1 );
 			menuSection.container.find( '.menu-item.move-down-disabled .menus-move-down' ).prop( 'tabIndex', -1 );
 			menuSection.container.find( '.menu-item.move-left-disabled .menus-move-left' ).prop( 'tabIndex', -1 );
 			menuSection.container.find( '.menu-item.move-right-disabled .menus-move-right' ).prop( 'tabIndex', -1 );
-		}, 0 ),
+		},
 
 		/**
 		 * Note that this function gets debounced so that when a lot of setting
@@ -2108,7 +2111,7 @@
 		 */
 		debouncedReflowMenuItems: _.debounce( function() {
 			this.reflowMenuItems.apply( this, arguments );
-		}, 10 ),
+		}, 0 ),
 
 		/**
 		 * Add a new item to this menu.
