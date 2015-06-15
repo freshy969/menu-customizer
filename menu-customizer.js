@@ -1094,12 +1094,14 @@
 			control.setting.bind(function( to, from ) {
 				var itemId = control.params.menu_item_id,
 					followingSiblingItemControls = [],
-					childrenItemControls = [];
+					childrenItemControls = [],
+					menuControl;
 
 				if ( false === to ) {
+					menuControl = api.control( 'nav_menu[' + String( from.nav_menu_term_id ) + ']' );
 					control.container.remove();
 
-					_.each( control.getMenuControl().getMenuItemControls(), function( otherControl ) {
+					_.each( menuControl.getMenuItemControls(), function( otherControl ) {
 						if ( from.menu_item_parent === otherControl.setting().menu_item_parent && otherControl.setting().position > from.position ) {
 							followingSiblingItemControls.push( otherControl );
 						} else if ( otherControl.setting().menu_item_parent === itemId ) {
@@ -1131,23 +1133,7 @@
 
 					// Handle UI updates when the position or depth (parent) change.
 					if ( to.position !== from.position || to.menu_item_parent !== from.menu_item_parent ) {
-						// @todo now we need to update the priorities and depths of all the menu item controls to reflect the new positions; there could be a MenuControl method for reflowing the menu items inside.
-						control.priority.set( 10 + control.setting().position );
-
-						/*
-						// @todo self._applyCardinalOrderClassNames();
-						// Get the updated depth
-						var newDepth = control.getDepth();
-
-						// Update the depth UI class
-						if ( newDepth !== depth ) {
-							control.container.data( 'item-depth', newDepth );
-							// @todo remove any existing menu-item-depth control.container.removeClass( 'menu-item-depth-' + String( depth ) );
-							control.container.addClass( 'menu-item-depth-' + String( newDepth ) );
-						}
-						*/
-
-						// @todo Make sure we apply whatever logic is present in sortstop.
+						control.getMenuControl().reflowMenuItems();
 					}
 				}
 			});
@@ -1262,6 +1248,7 @@
 
 			control.params.title = settingValue.title || '';
 			control.params.depth = control.getDepth();
+			control.container.data( 'item-depth', control.params.depth );
 			containerClasses = [
 				'menu-item',
 				'menu-item-depth-' + String( control.params.depth ),
@@ -1290,7 +1277,6 @@
 			control.params.parent = settingValue.menu_item_parent;
 			control.params.original_title = settingValue.original_title || '';
 
-			control.container.data( 'item-depth', control.params.depth );
 			control.container.addClass( control.params.el_classes );
 
 			api.Control.prototype.renderContent.call( control );
@@ -1824,12 +1810,15 @@
 						position += 1;
 						priority += 1;
 						setting.position = position;
+						menuItemControl.priority( priority );
+
+						// Note that wpNavMenu will be setting this .menu-item-data-parent-id input's value.
 						setting.menu_item_parent = parseInt( menuItemControl.container.find( '.menu-item-data-parent-id' ).val(), 10 );
 						if ( ! setting.menu_item_parent ) {
 							setting.menu_item_parent = 0;
 						}
+
 						menuItemControl.setting.set( setting );
-						menuItemControl.priority( priority );
 					});
 				});
 			});
@@ -2062,6 +2051,56 @@
 
 			return menuItemControls;
 		},
+
+		/**
+		 * Make sure that each menu item control has the proper depth.
+		 */
+		reflowMenuItems: _.debounce( function() {
+			var menuControl = this,
+				menuItemControls = menuControl.getMenuItemControls(),
+				reflowRecursively;
+
+			reflowRecursively = function( menuItemControls, currentParent, currentDepth, currentAbsolutePosition ) {
+				var currentMenuItemControls = [];
+				_.each( menuItemControls, function( menuItemControl ) {
+					if ( currentParent === menuItemControl.setting().menu_item_parent ) {
+						currentMenuItemControls.push( menuItemControl );
+						// @todo We should remove this item from menuItemControls now.
+					}
+				});
+				currentMenuItemControls.sort( function( a, b ) {
+					return a.setting().position - b.setting().position;
+				});
+
+				_.each( currentMenuItemControls, function( menuItemControl ) {
+					// Update position.
+					currentAbsolutePosition += 1;
+					menuItemControl.priority.set( currentAbsolutePosition ); // This will change the sort order.
+
+					// Update depth.
+					if ( ! menuItemControl.container.hasClass( 'menu-item-depth-' + String( currentDepth ) ) ) {
+						_.each( menuItemControl.container.prop( 'className' ).match( /menu-item-depth-\d+/g ), function( className ) {
+							menuItemControl.container.removeClass( className );
+						});
+						menuItemControl.container.addClass( 'menu-item-depth-' + String( currentDepth ) );
+					}
+					menuItemControl.container.data( 'item-depth', currentDepth );
+
+					// Process any children items.
+					currentAbsolutePosition += reflowRecursively(
+						menuItemControls,
+						menuItemControl.params.menu_item_id,
+						currentDepth + 1,
+						currentAbsolutePosition
+					);
+				});
+
+				return currentAbsolutePosition;
+			};
+
+			reflowRecursively( menuItemControls, 0, 0, 0 );
+			menuControl._applyCardinalOrderClassNames();
+		}, 100 ),
 
 		/**
 		 * Add a new item to this menu.
