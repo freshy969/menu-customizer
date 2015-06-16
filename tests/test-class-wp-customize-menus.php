@@ -365,17 +365,6 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test the filter_wp_nav_menu method.
-	 *
-	 * @see WP_Customize_Menus::filter_wp_nav_menu()
-	 */
-	function filter_wp_nav_menu( $nav_menu_content, $args ) {
-
-		$this->markTestIncomplete( 'This test has not been implemented.' );
-
-	}
-
-	/**
 	 * Test the hash_nav_menu_args method.
 	 *
 	 * @see WP_Customize_Menus::hash_nav_menu_args()
