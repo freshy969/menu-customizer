@@ -712,9 +712,9 @@ button.not-a-button {
 #available-menu-items .item-add:before {
 	content: "\f132";
 	font: normal 20px/1 dashicons;
-	position: absolute;
-	left: 6px;
-	top: 11px;
+	position: relative;
+	left: 2px;
+	top: 4px;
 }
 
 #available-menu-items .menu-item-handle.item-added .item-type,
