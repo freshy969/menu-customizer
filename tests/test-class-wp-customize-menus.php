@@ -274,9 +274,19 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::print_templates()
 	 */
 	function test_print_templates() {
-
-		$this->markTestIncomplete( 'This test has not been implemented.' );
-
+		do_action( 'customize_register', $this->wp_customize );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
+		ob_start();
+		$menus->print_templates();
+		$template = ob_get_clean();
+		$expected = sprintf(
+			'<button type="button" class="menus-move-up">%1$s</button><button type="button" class="menus-move-down">%2$s</button><button type="button" class="menus-move-left">%3$s</button><button type="button" class="menus-move-right">%4$s</button>',
+			esc_html__( 'Move up' ),
+			esc_html__( 'Move down' ),
+			esc_html__( 'Move one level up' ),
+			esc_html__( 'Move one level down' )
+		);
+		$this->assertContains( $expected, $template );
 	}
 
 	/**
