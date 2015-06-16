@@ -56,22 +56,22 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test the test_load_available_items_ajax method.
+	 * Test the ajax_test_load_available_items method.
 	 *
-	 * @see WP_Customize_Menus::load_available_items_ajax()
+	 * @see WP_Customize_Menus::ajax_load_available_items()
 	 */
-	function test_load_available_items_ajax() {
+	function test_ajax_load_available_items() {
 
 		$this->markTestIncomplete( 'This test has not been implemented.' );
 
 	}
 
 	/**
-	 * Test the search_available_items_ajax method.
+	 * Test the ajax_search_available_items method.
 	 *
-	 * @see WP_Customize_Menus::search_available_items_ajax()
+	 * @see WP_Customize_Menus::ajax_search_available_items()
 	 */
-	function test_search_available_items_ajax() {
+	function test_ajax_search_available_items() {
 
 		$this->markTestIncomplete( 'This test has not been implemented.' );
 
