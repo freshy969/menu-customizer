@@ -1750,7 +1750,7 @@
 			control.container.find( '.menu-delete' ).on( 'click', function( event ) {
 				event.stopPropagation();
 				event.preventDefault();
-				control.confirmDelete();
+				control.setting.set( false );
 			});
 		},
 
@@ -1973,13 +1973,6 @@
 		/***********************************************************************
 		 * Begin public API methods
 		 **********************************************************************/
-
-		confirmDelete: function() {
-			var control = this;
-			if ( confirm( api.Menus.data.l10n.deleteWarn ) ) {
-				control.setting.set( false );
-			}
-		},
 
 		/**
 		 * Enable/disable the reordering UI
