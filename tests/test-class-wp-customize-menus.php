@@ -344,6 +344,32 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::filter_wp_nav_menu()
 	 */
 	function test_filter_wp_nav_menu() {
+		do_action( 'customize_register', $this->wp_customize );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
+		$args = $menus->filter_wp_nav_menu_args( array(
+			'echo'            => true,
+			'fallback_cb'     => 'wp_page_menu',
+			'walker'          => '',
+		) );
+		ob_start();
+		wp_nav_menu( $args );
+		$nav_menu_content = ob_get_clean();
+		$object_args = json_decode( json_encode( $args ), false );
+		$result = $menus->filter_wp_nav_menu( $nav_menu_content, $object_args );
+		$expected = sprintf(
+			'<div id="partial-refresh-menu-container-%1$d" class="partial-refresh-menu-container" data-instance-number="%1$d">%2$s</div>',
+			$args['instance_number'],
+			$nav_menu_content
+		);
+		$this->assertEquals( $expected, $result );
+	}
+
+	/**
+	 * Test the filter_wp_nav_menu method.
+	 *
+	 * @see WP_Customize_Menus::filter_wp_nav_menu()
+	 */
+	function filter_wp_nav_menu( $nav_menu_content, $args ) {
 
 		$this->markTestIncomplete( 'This test has not been implemented.' );
 
