@@ -44,8 +44,8 @@ class WP_Customize_Menus {
 		$this->register_styles( wp_styles() );
 		$this->register_scripts( wp_scripts() );
 
-		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'load_available_items_ajax' ) );
-		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'search_available_items_ajax' ) );
+		add_action( 'wp_ajax_load-available-menu-items-customizer', array( $this, 'ajax_load_available_items' ) );
+		add_action( 'wp_ajax_search-available-menu-items-customizer', array( $this, 'ajax_search_available_items' ) );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'customize_register', array( $this, 'customize_register' ), 11 ); // Needs to run after core Navigation section is set up.
 		add_filter( 'customize_dynamic_setting_args', array( $this, 'filter_dynamic_setting_args' ), 10, 2 );
@@ -61,7 +61,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.3
 	 * @access public
 	 */
-	public function load_available_items_ajax() {
+	public function ajax_load_available_items() {
 		check_ajax_referer( 'customize-menus', 'customize-menus-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
@@ -153,7 +153,7 @@ class WP_Customize_Menus {
 	 * @since Menu Customizer 0.4
 	 * @access public
 	 */
-	public function search_available_items_ajax() {
+	public function ajax_search_available_items() {
 		check_ajax_referer( 'customize-menus', 'customize-menus-nonce' );
 
 		if ( ! current_user_can( 'edit_theme_options' ) ) {
