@@ -2205,7 +2205,7 @@
 					panel: 'menus',
 					title: name,
 					customizeAction: api.Menus.data.l10n.customizingMenus,
-					type: 'menu',
+					type: 'nav_menu',
 					priority: 10,
 					menu_id: placeholderId
 				}
