@@ -1,4 +1,4 @@
-/* global _wpCustomizeMenusSettings, confirm, wpNavMenu, console */
+/* global _wpCustomizeMenusSettings, wpNavMenu, console */
 ( function( api, wp, $ ) {
 	'use strict';
 
