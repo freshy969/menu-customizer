@@ -383,9 +383,21 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::export_preview_data()
 	 */
 	function test_export_preview_data() {
-
-		$this->markTestIncomplete( 'This test has not been implemented.' );
-
+		do_action( 'customize_register', $this->wp_customize );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
+		ob_start();
+		$_SERVER['REQUEST_URI'] = '/wp-admin'; 
+		$menus->export_preview_data();
+		$data = ob_get_clean();
+		$this->assertContains( '_wpCustomizePreviewMenusExports', $data );
+		$this->assertContains( 'renderQueryVar', $data );
+		$this->assertContains( 'renderNonceValue', $data );
+		$this->assertContains( 'renderNoncePostKey', $data );
+		$this->assertContains( 'requestUri', $data );
+		$this->assertContains( 'theme', $data );
+		$this->assertContains( 'previewCustomizeNonce', $data );
+		$this->assertContains( 'navMenuInstanceArgs', $data );
+		$this->assertContains( 'requestUri', $data );
 	}
 
 	/**
