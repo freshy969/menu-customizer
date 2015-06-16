@@ -295,9 +295,33 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::available_items_template()
 	 */
 	function test_available_items_template() {
-
-		$this->markTestIncomplete( 'This test has not been implemented.' );
-
+		do_action( 'customize_register', $this->wp_customize );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
+		ob_start();
+		$menus->available_items_template();
+		$template = ob_get_clean();
+		$expected = sprintf( 'Customizing &#9656; %s', esc_html( $this->wp_customize->get_panel( 'menus' )->title ) );
+		$this->assertContains( $expected, $template );
+		$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'object' );
+		if ( $post_types ) {
+			foreach ( $post_types as $type ) {
+				$expected = '<div id="available-menu-items-' . esc_attr( $type->name ) . '" class="accordion-section">
+						<h4 class="accordion-section-title">' . esc_html( $type->label ) . '<span class="spinner"></span><button type="button" class="not-a-button">' . __( 'Toggle' ) . '</button></h4>
+						<div class="accordion-section-content" data-type="' . esc_attr( $type->name ) . '" data-obj_type="post_type"></div>
+					</div>';
+				$this->assertContains( $expected, $template );
+			}
+		}
+		$taxonomies = get_taxonomies( array( 'show_in_nav_menus' => true ), 'object' );
+		if ( $taxonomies ) {
+			foreach ( $taxonomies as $tax ) {
+				$expected = '<div id="available-menu-items-' . esc_attr( $tax->name ) . '" class="accordion-section">
+						<h4 class="accordion-section-title">' . esc_html( $tax->label ) . '<span class="spinner"></span><button type="button" class="not-a-button">' . __( 'Toggle' ) . '</button></h4>
+						<div class="accordion-section-content" data-type="' . esc_attr( $tax->name ) . '" data-obj_type="taxonomy"></div>
+					</div>';
+				$this->assertContains( $expected, $template );
+			}
+		}
 	}
 
 	/**
