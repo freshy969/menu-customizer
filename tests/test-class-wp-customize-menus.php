@@ -305,17 +305,17 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 		$post_types = get_post_types( array( 'show_in_nav_menus' => true ), 'object' );
 		if ( $post_types ) {
 			foreach ( $post_types as $type ) {
-				$this->assertContains( '<div id="available-menu-items-' . esc_attr( $type->name ) . '" class="accordion-section">', $template );
-				$this->assertContains( '<h4 class="accordion-section-title">' . esc_html( $type->label ) . '<span class="spinner"></span><button type="button" class="not-a-button">' . __( 'Toggle' ) . '</button></h4>', $template );
-				$this->assertContains( '<div class="accordion-section-content" data-type="' . esc_attr( $type->name ) . '" data-obj_type="post_type"></div>', $template );
+				$this->assertContains( 'available-menu-items-' . esc_attr( $type->name ), $template );
+				$this->assertContains( '<h4 class="accordion-section-title">' . esc_html( $type->label ), $template );
+				$this->assertContains( 'data-type="' . esc_attr( $type->name ) . '" data-obj_type="post_type"', $template );
 			}
 		}
 		$taxonomies = get_taxonomies( array( 'show_in_nav_menus' => true ), 'object' );
 		if ( $taxonomies ) {
 			foreach ( $taxonomies as $tax ) {
-				$this->assertContains( '<div id="available-menu-items-' . esc_attr( $tax->name ) . '" class="accordion-section">', $template );
-				$this->assertContains( '<h4 class="accordion-section-title">' . esc_html( $tax->label ) . '<span class="spinner"></span><button type="button" class="not-a-button">' . __( 'Toggle' ) . '</button></h4>', $template );
-				$this->assertContains( '<div class="accordion-section-content" data-type="' . esc_attr( $tax->name ) . '" data-obj_type="taxonomy"></div>', $template );
+				$this->assertContains( 'available-menu-items-' . esc_attr( $tax->name ), $template );
+				$this->assertContains( '<h4 class="accordion-section-title">' . esc_html( $tax->label ), $template );
+				$this->assertContains( 'data-type="' . esc_attr( $tax->name ) . '" data-obj_type="taxonomy"', $template );
 			}
 		}
 	}
