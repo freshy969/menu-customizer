@@ -381,9 +381,11 @@ class Test_WP_Customize_Menus extends WP_UnitTestCase {
 	 * @see WP_Customize_Menus::customize_preview_enqueue_deps()
 	 */
 	function test_customize_preview_enqueue_deps() {
-
-		$this->markTestIncomplete( 'This test has not been implemented.' );
-
+		do_action( 'customize_register', $this->wp_customize );
+		$menus = new WP_Customize_Menus( $this->wp_customize );
+		$menus->customize_preview_enqueue_deps();
+		$this->assertTrue( wp_script_is( 'customize-menus-preview' ) );
+		$this->assertEquals( 10, has_action( 'wp_print_footer_scripts', array( $menus, 'export_preview_data' ) ) );
 	}
 
 	/**
