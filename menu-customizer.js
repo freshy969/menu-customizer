@@ -832,9 +832,7 @@
 		 */
 		attachEvents: function() {
 			var section = this;
-			this.container.on( 'click', '.add-menu-toggle', function( event ) {
-				event.preventDefault();
-
+			this.container.on( 'click', '.add-menu-toggle', function() {
 				if ( section.expanded() ) {
 					section.collapse();
 				} else {
@@ -852,9 +850,9 @@
 		 */
 		onChangeExpanded: function( expanded ) {
 			var section = this,
-			    button = section.container.find( '.add-menu-toggle' ),
+				button = section.container.find( '.add-menu-toggle' ),
 				content = section.container.find( '.new-menu-section-content' ),
-			    customizer = section.container.closest( '.wp-full-overlay-sidebar-content' );
+				customizer = section.container.closest( '.wp-full-overlay-sidebar-content' );
 			if ( expanded ) {
 				button.addClass( 'open' );
 				content.slideDown( 'fast', function() {
@@ -1034,10 +1032,7 @@
 
 			// Handle clicks for up/down/left-right on the reorder nav.
 			$reorderNav = control.container.find( '.menu-item-reorder-nav' );
-			$reorderNav.find( '.menus-move-up, .menus-move-down, .menus-move-left, .menus-move-right' ).on( 'click keypress', function( event ) {
-				if ( 'keypress' === event.type && ( 13 !== event.which && 32 !== event.which ) ) {
-					return;
-				}
+			$reorderNav.find( '.menus-move-up, .menus-move-down, .menus-move-left, .menus-move-right' ).on( 'click', function() {
 				var moveBtn = $( this );
 				moveBtn.focus();
 
@@ -1155,9 +1150,7 @@
 			// Configure delete button.
 			$removeBtn = control.container.find( '.item-delete' );
 
-			$removeBtn.on( 'click', function( e ) {
-				e.preventDefault();
-
+			$removeBtn.on( 'click', function() {
 				// Find an adjacent element to add focus to when this menu item goes away
 				var $adjacentFocusTarget;
 				if ( control.container.next().is( '.customize-control-nav_menu_item' ) ) {
