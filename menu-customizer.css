@@ -92,6 +92,11 @@
 	cursor: pointer;
 }
 
+.wp-customizer .menu-item .submitbox .submitdelete:focus {
+	-webkit-box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
+	box-shadow: 0 0 0 1px #5b9dd9, 0 0 2px 1px rgba(30, 140, 190, .8);
+}
+
 /* Menu-item reordering nav. */
 #customize-theme-controls button.reorder-toggle {
 	padding: 5px 8px;
@@ -538,17 +543,18 @@
 	transform: rotate(45deg);
 }
 
-.adding-menu-items .menu-item .item-delete {
+.menu-item-bar .item-delete {
 	color: #a00;
 	position: absolute;
-	top: 1px;
-	right: 1px;
+	top: 2px;
+	right: -19px;
 	width: 30px;
 	height: 38px;
 	cursor: pointer;
+	display: none;
 }
 
-.adding-menu-items .menu-item .item-delete:before {
+.menu-item-bar .item-delete:before {
 	content: "\f335";
 	font: normal 20px/1 dashicons;
 	-webkit-font-smoothing: antialiased;
@@ -558,13 +564,17 @@
 	left: 5px;
 }
 
-.adding-menu-items .menu-item .item-delete:hover,
-.adding-menu-items .menu-item .item-delete:focus {
+.menu-item-bar .item-delete:hover,
+.menu-item-bar .item-delete:focus {
 	color: #f00;
 }
 
-.adding-menu-items .menu-item-handle .item-edit {
+.adding-menu-items .menu-item-bar .item-edit {
 	display: none;
+}
+
+.adding-menu-items .menu-item-bar .item-delete {
+	display: block;
 }
 
 #available-menu-items .item {
