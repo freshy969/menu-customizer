@@ -442,11 +442,6 @@
 				control.collapseForm();
 			} );
 
-			// Move delete buttons into the title bar.
-			_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
-				control.toggleDeletePosition( true );
-			} );
-
 			this.$el.find( '.selected' ).removeClass( 'selected' );
 
 			this.$search.focus();
@@ -458,13 +453,6 @@
 
 			if ( options.returnFocus && this.currentMenuControl ) {
 				this.currentMenuControl.container.find( '.add-new-menu-item' ).focus();
-			}
-
-			// Move delete buttons back out of the title bar.
-			if ( this.currentMenuControl ) {
-				_( this.currentMenuControl.getMenuItemControls() ).each( function( control ) {
-					control.toggleDeletePosition( false );
-				} );
 			}
 
 			this.currentMenuControl = null;
@@ -1379,26 +1367,6 @@
 		},
 
 		/**
-		* Move the control's delete button up to the title bar or down to the control body.
-		*
-		* @param {boolean|undefined} [top] If not supplied, will be inverse of current visibility.
-		*/
-		toggleDeletePosition: function( top ) {
-			var button, handle, actions;
-			button = this.container.find( '.item-delete' );
-			handle = this.container.find( '.menu-item-handle' );
-			actions = this.container.find( '.menu-item-actions' );
-
-			if ( top ) {
-				button.find( 'span' ).addClass( 'screen-reader-text' );
-				handle.append( button );
-			} else {
-				button.find( 'span' ).removeClass( 'screen-reader-text' );
-				actions.append( button );
-			}
-		},
-
-		/**
 		 * Expand the containing menu section, expand the form, and focus on
 		 * the first input in the control.
 		 */
@@ -2158,8 +2126,6 @@
 				},
 				previewer: api.previewer
 			} );
-
-			menuItemControl.toggleDeletePosition( true );
 
 			api.control.add( customizeId, menuItemControl );
 			setting.preview();
