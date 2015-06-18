@@ -52,4 +52,5 @@ function menu_customizer_init( $wp_customize ) {
 
 	$wp_customize->menus = new WP_Customize_Menus( $wp_customize );
 }
-add_action( 'customize_register', 'menu_customizer_init', 1 );
+// Plugin has been merged into core, https://core.trac.wordpress.org/changeset/32806.
+// add_action( 'customize_register', 'menu_customizer_init', 1 );
